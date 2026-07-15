@@ -14,7 +14,7 @@ export function LandingHeader() {
             <span className="font-mono text-sm font-extrabold text-zinc-950">T</span>
           </div>
           <span className="font-serif text-lg font-semibold tracking-wider text-white">
-            TSAI <span className="text-cyan-400">SPOTLIGHT</span>
+            Transcendental Sports <span className="text-cyan-400">AI</span>
           </span>
         </div>
 

@@ -1,0 +1,64 @@
+# Build TSAI Landing Page → push to Google Artifact Registry → update Cloud Run.
+substitutions:
+  _IMAGE_NAME: tsai-landing-page-v2
+  _SERVICE_NAME: tsai-landing-page-v2
+  _RUN_REGION: us-west1
+  _TSAI_DGX_ORIGIN: "https://spark-62db.tail18f71b.ts.net:8443"
+  _NEXT_PUBLIC_SUPABASE_URL: "https://spark-62db.tail18f71b.ts.net:8443/supabase"
+  _NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
+  _API_GATEWAY_URL: "https://spark-62db.tail18f71b.ts.net:8443"
+  _APP_VERSION: ""
+
+steps:
+  - id: docker-build-push
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [[ -z "${_APP_VERSION}" ]]; then
+          echo "ERROR: set _APP_VERSION substitution (from root VERSION via deploy.sh)" >&2
+          exit 1
+        fi
+        IMAGE="${_RUN_REGION}-docker.pkg.dev/${PROJECT_ID}/tsai-frontends/${_IMAGE_NAME}"
+        docker build \
+          --platform linux/amd64 \
+          -f infra/builds/cloudrun/Dockerfile \
+          --build-arg "TSAI_DGX_ORIGIN=${_TSAI_DGX_ORIGIN}" \
+          --build-arg "NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL}" \
+          --build-arg "NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
+          --build-arg "API_GATEWAY_URL=${_API_GATEWAY_URL}" \
+          -t "$${IMAGE}:$BUILD_ID" \
+          -t "$${IMAGE}:latest" \
+          -t "$${IMAGE}:${_APP_VERSION}" \
+          .
+        docker push "$${IMAGE}:$BUILD_ID"
+        docker push "$${IMAGE}:latest"
+        docker push "$${IMAGE}:${_APP_VERSION}"
+
+  - id: cloud-run-deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        IMAGE="${_RUN_REGION}-docker.pkg.dev/${PROJECT_ID}/tsai-frontends/${_IMAGE_NAME}:$BUILD_ID"
+        
+        # We use 'update' instead of 'deploy' because the service topology 
+        # is fully managed by Terraform in tsai-toolchain.
+        gcloud run services update "${_SERVICE_NAME}" \
+          --project="${PROJECT_ID}" \
+          --region="${_RUN_REGION}" \
+          --image="$${IMAGE}" \
+          --quiet
+        
+        gcloud run services describe "${_SERVICE_NAME}" \
+          --project="${PROJECT_ID}" \
+          --region="${_RUN_REGION}" \
+          --format='value(status.url)'
+
+options:
+  logging: GCS_ONLY
+logsBucket: "gs://tsai-cloudbuild-logs-${PROJECT_ID}"

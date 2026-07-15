@@ -1,0 +1,11 @@
+.gcloudignore
+.git
+.gitignore
+.claude
+.run
+.vscode
+node_modules/
+.next/
+conductor/
+docs/
+scripts/
