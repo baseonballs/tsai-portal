@@ -12,6 +12,7 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { RinkTelemetryChart } from "@/components/landing/RinkTelemetryChart";
+import { TechnologyPlatform } from "@/components/landing/TechnologyPlatform";
 import { landingPageCopy } from "@/data/landingPageCopy";
 import { PlayerTelemetry } from "@/data/players-telemetry";
 
@@ -186,6 +187,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* 3.5. TECHNOLOGY PLATFORM */}
+      <TechnologyPlatform />
 
       {/* 4. PRICING & BETA ACCESS */}
       <section id="pricing" className="relative z-10 border-b border-white/5 bg-zinc-950/20 py-24 sm:py-32">

@@ -23,13 +23,21 @@ export interface DocCategory {
   link: string;
 }
 
+export interface TechModule {
+  id: string;
+  title: string;
+  subtitle: string;
+  features: string[];
+  icon: string;
+}
+
 export const landingPageCopy = {
   hero: {
     badge: "Spotlight Beta Program",
-    title: "Zero-hardware capture. Clinical-grade analytics.",
-    subtitle: "Welcome to Unified Sports Intelligence. Spotlight translates raw rink film into a shared coaching language. Upload your games, run automated intelligence passes, and unlock cinematic analysis suites that families, scouts, and players actually understand.",
+    title: "Pro teams have a film room. Everyone else has a phone full of footage.",
+    subtitle: "A multi-billion-dollar developmental sport is flying blind. Spotlight is the web-scale workspace bringing decision-grade video intelligence to grassroots hockey at SaaS economics.",
     primaryCta: "Apply for Beta Access",
-    secondaryCta: "Explore the Docs"
+    secondaryCta: "Explore the Platform"
   },
   ecosystem: {
     eyebrow: "The Architecture of Performance",
@@ -87,6 +95,46 @@ export const landingPageCopy = {
       description: "Feedback is only valuable if it is lived. Periodical is Spotlight's custom distribution engine. It packages whiteboard sketches, tagged clips, and coaching annotations into personalized journals and micro-loops. Instead of filing video away, athletes receive tailored, mobile-first digests directly to their dashboards and inbox—transforming screen time into active development time.",
       cta: "See Periodical in Action"
     }
+  },
+  technology: {
+    eyebrow: "The Moat · MASCE Engine",
+    title: "Software margins on a hardware moat.",
+    subtitle: "Most AI guesses. Ours is auditable. By running our Multi-Agent Sports Cognition Engine (MASCE) on our owned hybrid GPU fabric, we collapsed the economics of automated video analysis.",
+    modules: [
+      {
+        id: "detect",
+        title: "The MASCE Engine",
+        subtitle: ">92% Deterministic Prediction",
+        features: [
+          "A pipeline of specialized agents builds a provenance-tagged event ledger.",
+          "Doesn't hand a game to a chatbot and hope.",
+          "Every run self-checks against 14 physics and hockey rules."
+        ],
+        icon: "Camera"
+      },
+      {
+        id: "track",
+        title: "Semantic Chronology",
+        subtitle: "L1 → L4 Architecture",
+        features: [
+          "Atomic facts (Nano) roll deterministically up to shifts (Meso) and game stats (Macro).",
+          "YOLO tracking stabilized into consistent identities, grounded by OCR scoreboards.",
+          "Timeline never drifts. Reproducible, not summarized."
+        ],
+        icon: "Network"
+      },
+      {
+        id: "deploy",
+        title: "The Cost Unlock",
+        subtitle: "From $200 to $0.17 per game",
+        features: [
+          "Owned on-premise GPU fabric eliminates crippling cloud compute costs.",
+          "Processes a full 90-minute 1080p game in under 60 minutes for pennies.",
+          "Scale-to-zero cloud keeps fixed overhead near zero, producing 94% margins."
+        ],
+        icon: "Server"
+      }
+    ] as TechModule[]
   },
   pricing: {
     eyebrow: "Plans & Seasons",
@@ -157,7 +205,7 @@ export const landingPageCopy = {
         tagline: "The professional standard for academy rosters.",
         features: [
           "Priority GPU encoding queue (NVENC-accelerated)",
-          "Automated LiveBarn game stitching & reconstruction",
+          "Automated rink game stitching & reconstruction",
           "EdgeIQ advanced biomechanics panels",
           "Developer API access & webhook triggers",
           "Dedicated program success manager"
@@ -179,7 +227,7 @@ export const landingPageCopy = {
           "Temporal Job Orchestration & state handoffs",
           "MinIO S3 storage integration & retention settings",
           "GPU-accelerated NVENC transcoding rules",
-          "LiveBarn multi-angle video stitching engine"
+          "Multi-angle rink video stitching engine"
         ],
         link: "/dashboard/docs/ecosystem"
       },

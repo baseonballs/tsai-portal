@@ -79,7 +79,26 @@ systemd_state() {
 }
 
 cmd_start() {
-  local pid pnpm_bin
+  local pid pnpm_bin systemd
+  systemd="$(systemd_state)"
+  if [[ "$systemd" != "not-installed" ]]; then
+    if [[ "$systemd" == "active" ]]; then
+      log "already running (systemd active)"
+      return 0
+    fi
+    log "starting systemd unit $UNIT_NAME"
+    systemctl --user start "$UNIT_NAME"
+    sleep 3
+    local post_http
+    post_http="$(http_code)"
+    if [[ "$post_http" =~ ^[1-5][0-9][0-9]$ ]]; then
+      log "ready (HTTP $post_http, systemd active)"
+    else
+      log "started systemd unit — waiting for HTTP (check systemctl --user status $UNIT_NAME)"
+    fi
+    return 0
+  fi
+
   pid="$(read_pid)"
   if is_pid_alive "$pid"; then
     log "already running (pid $pid)"
@@ -99,15 +118,23 @@ cmd_start() {
   echo $! >"$PID_FILE"
   sleep 2
 
-  if [[ "$(http_code)" == "200" ]]; then
-    log "ready (pid $(read_pid))"
+  local post_http
+  post_http="$(http_code)"
+  if [[ "$post_http" =~ ^[1-5][0-9][0-9]$ ]]; then
+    log "ready (HTTP $post_http, pid $(read_pid))"
   else
     log "started pid $(read_pid) — waiting for HTTP (check $LOG_FILE)"
   fi
 }
 
 cmd_stop() {
-  local pid
+  local pid systemd
+  systemd="$(systemd_state)"
+  if [[ "$systemd" != "not-installed" ]]; then
+    log "stopping systemd unit $UNIT_NAME"
+    systemctl --user stop "$UNIT_NAME" || true
+  fi
+
   pid="$(read_pid)"
   if is_pid_alive "$pid"; then
     log "stopping pid $pid"
@@ -140,11 +167,11 @@ cmd_status() {
   local pid running http systemd
   pid="$(read_pid)"
   http="$(http_code)"
+  systemd="$(systemd_state)"
   running="false"
-  if is_pid_alive "$pid" || [[ "$http" == "200" ]]; then
+  if is_pid_alive "$pid" || [[ "$systemd" == "active" ]] || [[ "$http" =~ ^[1-5][0-9][0-9]$ ]]; then
     running="true"
   fi
-  systemd="$(systemd_state)"
 
   if [[ "$json" == "true" ]]; then
     printf '{"running":%s,"pid":"%s","host":"%s","port":%s,"httpCode":"%s","systemd":"%s","logFile":"%s","repoRoot":"%s","localUrl":"http://127.0.0.1:%s"}' \
@@ -174,6 +201,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=${ROOT}
+Environment=PATH=$(dirname "${pnpm_bin}"):/usr/local/bin:/usr/bin:/bin
 Environment=NODE_OPTIONS=--max-http-header-size=131072
 Environment=TSAI_LANDING_RUN_DIR=${RUN_DIR}
 ExecStart=${pnpm_bin} dev
