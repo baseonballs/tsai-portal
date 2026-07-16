@@ -2,25 +2,111 @@
 
 import React, { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { googleOAuthQueryParams } from "@/utils/auth/google-oauth";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
+  const searchParams = useSearchParams();
+  const urlError = searchParams?.get("error");
+  const oauthCallbackFailed = urlError === "auth-callback-failed";
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrorMsg(null);
+
+    const supabase = createClient();
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+        setIsLoading(false);
+      } else {
+        window.location.href = "/";
+      }
+    } catch (err: any) {
+      setErrorMsg("An unexpected error occurred");
+      setIsLoading(false);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    setError(null);
+    setErrorMsg(null);
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const supabase = createClient();
+
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
+      if (origin.startsWith("http://") && !origin.includes("localhost")) {
+        setErrorMsg(
+          "Open the app at localhost for Google sign-in — OAuth redirect hosts must be localhost (or https). A LAN IP will not work.",
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      let settingsReachable = false;
+      let googleEnabled = false;
+      try {
+        const settingsRes = await fetch(`${origin}/supabase/auth/v1/settings`);
+        if (settingsRes.ok) {
+          settingsReachable = true;
+          const settings = await settingsRes.json();
+          googleEnabled = Boolean(settings.external?.google);
+        }
+      } catch {
+        // handled below
+      }
+
+      if (!settingsReachable) {
+        setErrorMsg("The sign-in service is not reachable right now. Try again in a moment.");
+        setIsLoading(false);
+        return;
+      }
+      if (!googleEnabled) {
+        setErrorMsg("Google sign-in is not enabled on the auth server.");
+        setIsLoading(false);
+        return;
+      }
+
+      const nextAfterAuth = searchParams?.get("next") ?? "/";
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+          redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(nextAfterAuth)}`,
+          queryParams: googleOAuthQueryParams(origin),
+          skipBrowserRedirect: true,
+        }
       });
-      if (error) throw error;
+
+      if (error) {
+        setErrorMsg(error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      if (data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
+
+      setErrorMsg("OAuth did not return a redirect URL.");
+      setIsLoading(false);
     } catch (err: any) {
-      setError(err.message || "An error occurred during sign in.");
+      setErrorMsg("An unexpected error occurred during Google sign-in");
       setIsLoading(false);
     }
   };
@@ -38,9 +124,9 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {error && (
+        {(errorMsg || oauthCallbackFailed) && (
           <div className="mb-6 rounded-lg bg-red-500/10 p-4 text-sm text-red-400">
-            {error}
+            {oauthCallbackFailed ? "Google sign-in could not complete. Please try again." : errorMsg}
           </div>
         )}
 
@@ -71,10 +157,65 @@ export default function LoginPage() {
           {isLoading ? "Connecting..." : "Continue with Google"}
         </button>
 
+        <div className="relative my-6 flex items-center">
+          <div className="flex-grow border-t border-zinc-800"></div>
+          <span className="mx-4 shrink text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            or
+          </span>
+          <div className="flex-grow border-t border-zinc-800"></div>
+        </div>
+
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              placeholder="admin@tsai.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-2.5 text-sm text-zinc-100 shadow-inner transition-all focus-within:border-cyan-500/70 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-2.5 text-sm text-zinc-100 shadow-inner transition-all focus-within:border-cyan-500/70 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+              required
+            />
+          </div>
+          
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="mt-2 w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-md transition-colors hover:bg-blue-500 disabled:opacity-50"
+          >
+            {isLoading ? "Authenticating..." : "Login"}
+          </button>
+        </form>
+
         <div className="mt-8 text-center text-xs text-zinc-500">
           By continuing, you agree to our Terms of Service and Privacy Policy.
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4"><div className="text-zinc-500">Loading...</div></div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
