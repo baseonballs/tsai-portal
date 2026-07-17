@@ -18,21 +18,24 @@ export function LandingHeader() {
           </span>
         </div>
 
-        <nav className="hidden items-center gap-8 text-sm font-medium text-zinc-400 md:flex">
-          <a href="#ecosystem" className="transition-colors hover:text-white">
+        <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-400 lg:flex">
+          <Link href="/coachs-corner" className="transition-colors hover:text-white">
+            Coach's Corner
+          </Link>
+          <Link href="/players-development" className="transition-colors hover:text-white">
+            Player's Development
+          </Link>
+          <Link href="/spotlight-and-periodical" className="transition-colors hover:text-white">
             Spotlight & Periodical
-          </a>
-          <a href="#pricing" className="transition-colors hover:text-white">
-            Pricing
-          </a>
-          <a href="#docs" className="transition-colors hover:text-white">
-            Docs
-          </a>
+          </Link>
+          <Link href="/technology-solutions" className="transition-colors hover:text-white">
+            Tech Solutions
+          </Link>
         </nav>
 
         <div className="flex items-center gap-4">
           <Link
-            href="/dashboard/default"
+            href="/login"
             className="rounded-md border border-white/10 bg-zinc-900/50 px-4 py-1.5 text-xs font-semibold text-zinc-300 transition-all hover:border-white/20 hover:text-white"
           >
             Sign In

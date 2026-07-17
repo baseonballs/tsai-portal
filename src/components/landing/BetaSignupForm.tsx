@@ -48,8 +48,8 @@ export function BetaSignupForm() {
           TSAI Spotlight is currently in private beta. Submit your details below to request a workspace licensing seat.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+        <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>
+          <div suppressHydrationWarning>
             <label className="mb-1.5 block font-mono text-xs tracking-wider text-zinc-500 uppercase">
               Contact Name
             </label>
@@ -65,7 +65,7 @@ export function BetaSignupForm() {
             />
           </div>
 
-          <div>
+          <div suppressHydrationWarning>
             <label className="mb-1.5 block font-mono text-xs tracking-wider text-zinc-500 uppercase">
               Email Address
             </label>
@@ -81,7 +81,7 @@ export function BetaSignupForm() {
             />
           </div>
 
-          <div>
+          <div suppressHydrationWarning>
             <label className="mb-1.5 block font-mono text-xs tracking-wider text-zinc-500 uppercase">
               Program / Organization
             </label>
@@ -96,7 +96,7 @@ export function BetaSignupForm() {
             />
           </div>
 
-          <div>
+          <div suppressHydrationWarning>
             <label className="mb-1.5 block font-mono text-xs tracking-wider text-zinc-500 uppercase">
               Primary Role
             </label>
