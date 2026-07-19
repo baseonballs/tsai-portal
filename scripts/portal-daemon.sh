@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# TSAI Landing Page dev daemon — start | stop | restart | status | install | uninstall
+# TSAI Portal dev daemon — start | stop | restart | status | install | uninstall
 #
 # Binds 127.0.0.1:3040 (pnpm dev).
 # Watson command center invokes this script on the Spark host.
 #
-#   ./scripts/landing-daemon.sh start
-#   ./scripts/landing-daemon.sh status --json
+#   ./scripts/portal-daemon.sh start
+#   ./scripts/portal-daemon.sh status --json
 #
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-RUN_DIR="${TSAI_LANDING_RUN_DIR:-$ROOT/.run}"
-PID_FILE="$RUN_DIR/landing.pid"
-LOG_FILE="$RUN_DIR/landing.log"
-PORT="${TSAI_LANDING_PORT:-3040}"
-HOST="${TSAI_LANDING_HOST:-127.0.0.1}"
-UNIT_NAME="tsai-landing.service"
+RUN_DIR="${TSAI_PORTAL_RUN_DIR:-$ROOT/.run}"
+PID_FILE="$RUN_DIR/portal.pid"
+LOG_FILE="$RUN_DIR/portal.log"
+PORT="${TSAI_PORTAL_PORT:-3040}"
+HOST="${TSAI_PORTAL_HOST:-127.0.0.1}"
+UNIT_NAME="tsai-portal.service"
 SYSTEMD_UNIT="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/$UNIT_NAME"
 
 usage() {
@@ -33,7 +33,7 @@ EOF
 
 mkdir -p "$RUN_DIR"
 
-log() { printf '[landing-daemon] %s\n' "$*" >&2; }
+log() { printf '[portal-daemon] %s\n' "$*" >&2; }
 
 read_pid() {
   if [[ -f "$PID_FILE" ]]; then
@@ -112,7 +112,7 @@ cmd_start() {
 
   cd "$ROOT"
   : >"$LOG_FILE"
-  log "starting Landing Page at http://${HOST}:${PORT} (log: $LOG_FILE)"
+  log "starting Portal at http://${HOST}:${PORT} (log: $LOG_FILE)"
   nohup env NODE_OPTIONS="${NODE_OPTIONS:---max-http-header-size=131072}" \
     "$pnpm_bin" dev >>"$LOG_FILE" 2>&1 &
   echo $! >"$PID_FILE"
@@ -194,7 +194,7 @@ cmd_install() {
 
   cat >"$SYSTEMD_UNIT" <<EOF
 [Unit]
-Description=TSAI Landing Page (Next.js dev on 127.0.0.1:${PORT})
+Description=TSAI Portal (Next.js dev on 127.0.0.1:${PORT})
 After=network-online.target
 Wants=network-online.target
 
@@ -203,7 +203,7 @@ Type=simple
 WorkingDirectory=${ROOT}
 Environment=PATH=$(dirname "${pnpm_bin}"):/usr/local/bin:/usr/bin:/bin
 Environment=NODE_OPTIONS=--max-http-header-size=131072
-Environment=TSAI_LANDING_RUN_DIR=${RUN_DIR}
+Environment=TSAI_PORTAL_RUN_DIR=${RUN_DIR}
 ExecStart=${pnpm_bin} dev
 Restart=on-failure
 RestartSec=5

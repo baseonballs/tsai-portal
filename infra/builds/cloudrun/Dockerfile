@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Production Next.js standalone image for Google Cloud Run (PORT 8080).
 # Build from repository root:
-#   docker build -f infra/builds/cloudrun/Dockerfile -t tsai-landing-page-v2:local .
+#   docker build -f infra/builds/cloudrun/Dockerfile -t tsai-portal:local .
 
 ARG NODE_VERSION=22-bookworm
 
@@ -10,7 +10,7 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 FROM node:${NODE_VERSION} AS builder
 WORKDIR /app

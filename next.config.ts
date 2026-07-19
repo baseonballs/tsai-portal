@@ -5,6 +5,7 @@ const SUPABASE_REST_ORIGIN = process.env.TSAI_SUPABASE_REST_ORIGIN ?? 'http://lo
 
 const nextConfig: any = {
   /* config options here */
+  output: "standalone",
   reactCompiler: true,
   allowedDevOrigins: [
     '127.0.0.1',
@@ -14,6 +15,21 @@ const nextConfig: any = {
     'landing.dev.tsai.local'
   ],
   async rewrites() {
+    const dgx = (process.env.TSAI_DGX_ORIGIN ?? "").trim().replace(/\/$/, "");
+
+    if (process.env.TSAI_DEPLOY_TARGET === "cloudrun" && dgx) {
+      return [
+        {
+          source: "/supabase/auth/v1/:path*",
+          destination: `${dgx}/supabase/auth/v1/:path*`,
+        },
+        {
+          source: "/supabase/rest/v1/:path*",
+          destination: `${dgx}/supabase/rest/v1/:path*`,
+        },
+      ];
+    }
+
     return [
       {
         source: "/supabase/auth/v1/:path*",

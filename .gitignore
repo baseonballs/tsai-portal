@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local run logs and federated docs
+/.run/
+/src/content/docs/
+

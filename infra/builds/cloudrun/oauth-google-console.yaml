@@ -1,0 +1,67 @@
+# Documentation-as-Code: Google Cloud Console OAuth 2.0 Web Client Configuration
+# 
+# Since GCP does not expose APIs to automate the external OAuth client credentials,
+# use this file in version control to track the current required configuration
+# for the Google API Console (Credentials -> Web application).
+
+client_name: Spark Shared Web Application Client
+
+authorized_javascript_origins:
+  # --- Localhost Dev ---
+  - http://localhost:3000
+  - http://127.0.0.1:3000
+  - http://localhost:3010
+  - http://127.0.0.1:3010
+  - http://localhost:3080
+  - http://127.0.0.1:3080
+  - http://localhost:3040
+  - http://127.0.0.1:3040
+
+  # --- Tailscale Network (dev / debug) ---
+  - http://spark-62db.tail18f71b.ts.net:3000
+  - https://spark-62db.tail18f71b.ts.net:3000
+  - http://spark-62db.tail18f71b.ts.net:3010
+  - https://spark-62db.tail18f71b.ts.net:3010
+  - http://spark-62db.tail18f71b.ts.net:3080
+  - https://spark-62db.tail18f71b.ts.net:3080
+  - http://spark-62db.tail18f71b.ts.net:3040
+  - https://spark-62db.tail18f71b.ts.net:3040
+
+  # --- Funnel Gateways ---
+  - https://spark-62db.tail18f71b.ts.net:8443
+  - https://spark-62db.tail18f71b.ts.net:8444
+
+  # --- GCP Cloud Run (App Services) ---
+  - https://tsai-player-journal-usioswhvqq-uc.a.run.app
+  - https://tsai-periodical-usioswhvqq-uw.a.run.app
+  - https://tsai-periodical-480200193728.us-west1.run.app
+  - https://tsai-portal-usioswhvqq-uw.a.run.app
+  - https://tsai-portal-480200193728.us-west1.run.app
+
+authorized_redirect_uris:
+  # --- Localhost Dev callbacks ---
+  - http://localhost:3000/supabase/auth/v1/callback
+  - http://localhost:3010/supabase/auth/v1/callback
+  - http://localhost:3080/supabase/auth/v1/callback
+  - http://localhost:3040/supabase/auth/v1/callback
+
+  # --- Tailscale Network callbacks ---
+  - http://spark-62db.tail18f71b.ts.net:3000/supabase/auth/v1/callback
+  - https://spark-62db.tail18f71b.ts.net:3000/supabase/auth/v1/callback
+  - http://spark-62db.tail18f71b.ts.net:3010/supabase/auth/v1/callback
+  - https://spark-62db.tail18f71b.ts.net:3010/supabase/auth/v1/callback
+  - http://spark-62db.tail18f71b.ts.net:3080/supabase/auth/v1/callback
+  - https://spark-62db.tail18f71b.ts.net:3080/supabase/auth/v1/callback
+  - http://spark-62db.tail18f71b.ts.net:3040/supabase/auth/v1/callback
+  - https://spark-62db.tail18f71b.ts.net:3040/supabase/auth/v1/callback
+
+  # --- Funnel Gateway callbacks ---
+  - https://spark-62db.tail18f71b.ts.net:8443/supabase/auth/v1/callback
+  - https://spark-62db.tail18f71b.ts.net:8444/supabase/auth/v1/callback
+
+  # --- GCP Cloud Run (App Services) callbacks ---
+  - https://tsai-player-journal-usioswhvqq-uc.a.run.app/supabase/auth/v1/callback
+  - https://tsai-periodical-usioswhvqq-uw.a.run.app/supabase/auth/v1/callback
+  - https://tsai-periodical-480200193728.us-west1.run.app/supabase/auth/v1/callback
+  - https://tsai-portal-usioswhvqq-uw.a.run.app/supabase/auth/v1/callback
+  - https://tsai-portal-480200193728.us-west1.run.app/supabase/auth/v1/callback

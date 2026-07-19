@@ -1,7 +1,7 @@
 # Build TSAI Landing Page → push to Google Artifact Registry → update Cloud Run.
 substitutions:
-  _IMAGE_NAME: tsai-landing-page-v2
-  _SERVICE_NAME: tsai-landing-page-v2
+  _IMAGE_NAME: tsai-portal
+  _SERVICE_NAME: tsai-portal
   _RUN_REGION: us-west1
   _TSAI_DGX_ORIGIN: "https://spark-62db.tail18f71b.ts.net:8443"
   _NEXT_PUBLIC_SUPABASE_URL: "https://spark-62db.tail18f71b.ts.net:8443/supabase"
