@@ -8,6 +8,11 @@ export function resolveServerAuthUrl(origin?: string): string {
     return `${origin}/supabase`
   }
 
+  if (process.env.TSAI_DEPLOY_TARGET === "cloudrun") {
+    const port = process.env.PORT?.trim() || '8080'
+    return `http://127.0.0.1:${port}/supabase`
+  }
+
   if (envUrl) {
     return envUrl
   }

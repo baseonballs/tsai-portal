@@ -1,16 +1,16 @@
 {
-  "name": "tsai-landing",
+  "name": "tsai-portal",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3040",
-    "build": "next build",
+    "build": "[ -f ./scripts/copy-docs.sh ] && bash ./scripts/copy-docs.sh || true && next build",
     "start": "next start",
     "lint": "eslint",
-    "daemon:start": "./scripts/landing-daemon.sh start",
-    "daemon:stop": "./scripts/landing-daemon.sh stop",
-    "daemon:restart": "./scripts/landing-daemon.sh restart",
-    "daemon:status": "./scripts/landing-daemon.sh status"
+    "daemon:start": "./scripts/portal-daemon.sh start",
+    "daemon:stop": "./scripts/portal-daemon.sh stop",
+    "daemon:restart": "./scripts/portal-daemon.sh restart",
+    "daemon:status": "./scripts/portal-daemon.sh status"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
@@ -20,9 +20,11 @@
     "d3": "^7.9.0",
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
+    "next-mdx-remote": "^6.0.0",
     "radix-ui": "^1.6.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0"
   },

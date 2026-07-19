@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TSAI Portal
+
+The public landing page, interactive multi-application documentation portal, and athlete/coach entry portal for the TSAI Spark platform.
 
 ## Getting Started
 
-First, run the development server:
+### 1. Prerequisites
+Ensure you have the latest `pnpm` installed and have generated the local `.env.local` configuration.
 
+### 2. Sibling Repositories Documentation Federation
+The portal bundles documentation from sibling repositories (`tsai-spotlight`, `tsai-periodical`, and `tsai-watson`). To build or run the portal, copy these docs into the workspace:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Run Development Server
+```bash
+pnpm dev
+```
+The application will start on `http://localhost:3040`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Infrastructure & Deployments
 
-## Learn More
+For instructions on deploying the application to Google Cloud Run, custom DNS/domain proxying, and configuring Google Cloud Console OAuth 2.0 Credentials, please refer to the dedicated infrastructure documentation:
 
-To learn more about Next.js, take a look at the following resources:
+👉 **[Cloud Run Deployment & OAuth Configuration Guide](file:///home/micon/dev/tsai/tsai-portal/infra/builds/cloudrun/README.md)**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* The canonical **Source of Truth (SoT)** for Google Console OAuth Allowed Origins and Redirect URIs is defined in **[oauth-google-console.yaml](file:///home/micon/dev/tsai/tsai-portal/infra/builds/cloudrun/oauth-google-console.yaml)**.

@@ -35,24 +35,24 @@ export const landingPageCopy = {
   hero: {
     badge: "Spotlight Beta Program",
     title: "Pro teams have a film room. Everyone else has a phone full of footage.",
-    subtitle: "A multi-billion-dollar developmental sport is flying blind. Spotlight is the web-scale workspace bringing decision-grade video intelligence to grassroots hockey at SaaS economics.",
+    subtitle: "Spotlight is the cinematic, high-fidelity development platform bringing decision-grade video intelligence and captive AI to grassroots youth hockey—transforming raw recordings into an interactive classroom.",
     primaryCta: "Apply for Beta Access",
     secondaryCta: "Explore the Platform"
   },
   ecosystem: {
     eyebrow: "The Architecture of Performance",
     title: "Four cinematic suites. One unified tape.",
-    subtitle: "Spotlight doesn't just display video. It reconstructs game files through four distinct analytical lenses, then distributes tailored learning loops directly to your athletes.",
+    subtitle: "Spotlight reconstructs raw game files through four distinct analytical lenses, then distributes tailored learning loops directly to your athletes.",
     tiers: [
       {
         id: "encore",
         name: "Encore",
-        tagline: "The Storyteller",
-        description: "The media-forward coaching studio built to capture and command attention. Stage deck, live reviews, playlist lanes, report vaults, and caption studio.",
+        tagline: "The Coach Workbench",
+        description: "The media-forward coaching studio built to capture and command athlete attention. Features our SOTA Coach Workbench, dual-playback split-screen, and strict sub-second timestamp locking.",
         keyFeatures: [
-          "Turns MASCE-enriched games into teaching moments athletes replay on the bus",
-          "Collaborative video review hubs with frame-accurate video sandboxes",
-          "Synchronized events sharing a unified vocabulary between staff and players"
+          "Interactive Coach Workbench wrapping tactical curation in deep-slate frosted glass",
+          "Dual-Playback Split-Screen side-by-side analysis (NHL benchmark vs Skater)",
+          "Strict timestamp locking to scrub, pause, and sync reference clips instantly"
         ]
       },
       {
@@ -90,25 +90,25 @@ export const landingPageCopy = {
       }
     ] as AppTier[],
     periodical: {
-      eyebrow: "Personalized Distribution",
+      eyebrow: "Accountability Through Collaboration",
       title: "Periodical: Personalized journals and micro-loops delivered to the palm of their hand.",
-      description: "Feedback is only valuable if it is lived. Periodical is Spotlight's custom distribution engine. It packages whiteboard sketches, tagged clips, and coaching annotations into personalized journals and micro-loops. Instead of filing video away, athletes receive tailored, mobile-first digests directly to their dashboards and inbox—transforming screen time into active development time.",
+      description: "Feedback is only valuable if it is lived. Periodical is the collaborative bridge connecting coach intent with player execution. It packages whiteboard sketches, tagged clips, and coaching annotations into personalized journals and micro-loops. With daily athlete journaling and interactive planners (macro, meso, micro cycles), players reflect on their decisions and take ownership of their development.",
       cta: "See Periodical in Action"
     }
   },
   technology: {
-    eyebrow: "The Moat · MASCE Engine",
+    eyebrow: "The AI Edge · MASCE Engine",
     title: "Software margins on a hardware moat.",
     subtitle: "Most AI guesses. Ours is auditable. By running our Multi-Agent Sports Cognition Engine (MASCE) on our owned hybrid GPU fabric, we collapsed the economics of automated video analysis.",
     modules: [
       {
         id: "detect",
-        title: "The MASCE Engine",
+        title: "Captive AI Engine",
         subtitle: ">92% Deterministic Prediction",
         features: [
-          "A pipeline of specialized agents builds a provenance-tagged event ledger.",
-          "Doesn't hand a game to a chatbot and hope.",
-          "Every run self-checks against 14 physics and hockey rules."
+          "Stop scrubbing through hours of footage manually: query plays semantically in plain language",
+          "A pipeline of specialized agents builds a provenance-tagged event ledger",
+          "Every run self-checks against 14 physics and hockey rules to prevent drift"
         ],
         icon: "Camera"
       },
@@ -117,9 +117,9 @@ export const landingPageCopy = {
         title: "Semantic Chronology",
         subtitle: "L1 → L4 Architecture",
         features: [
-          "Atomic facts (Nano) roll deterministically up to shifts (Meso) and game stats (Macro).",
-          "YOLO tracking stabilized into consistent identities, grounded by OCR scoreboards.",
-          "Timeline never drifts. Reproducible, not summarized."
+          "Atomic facts (Nano) roll deterministically up to shifts (Meso) and game stats (Macro)",
+          "YOLO tracking stabilized into consistent identities, grounded by OCR scoreboards",
+          "Timeline never drifts: reproducible, auditable, and not summarized"
         ],
         icon: "Network"
       },
@@ -128,9 +128,9 @@ export const landingPageCopy = {
         title: "The Cost Unlock",
         subtitle: "From $200 to $0.17 per game",
         features: [
-          "Owned on-premise GPU fabric eliminates crippling cloud compute costs.",
-          "Processes a full 90-minute 1080p game in under 60 minutes for pennies.",
-          "Scale-to-zero cloud keeps fixed overhead near zero, producing 94% margins."
+          "Owned on-premise GPU fabric eliminates crippling cloud compute costs",
+          "Processes a full 90-minute 1080p game in under 60 minutes for pennies",
+          "Scale-to-zero cloud keeps fixed overhead near zero, producing 94% margins"
         ],
         icon: "Server"
       }
@@ -162,7 +162,7 @@ export const landingPageCopy = {
         tagline: "Own the skater's journey.",
         features: [
           "Dedicated skater dossier & progress benchmarks",
-          "Personalized Periodical journals & micro-loops",
+          "Personalized Periodical journals & daily skater journals",
           "Telemetry feeds & highlight exports",
           "Parent-safe feedback panels"
         ],
@@ -177,8 +177,9 @@ export const landingPageCopy = {
         features: [
           "All Family tier features",
           "Custom playlist lanes & sandbox curation",
-          "Advanced drawing & caption studio annotations",
-          "Interactive report vault exports"
+          "Advanced drawing, Coach Clipboard & caption studio",
+          "Interactive report vaults",
+          "Strict micro-loop window controls"
         ],
         ctaText: "Upgrade to Pro",
         popular: true
@@ -193,6 +194,7 @@ export const landingPageCopy = {
           "Full Tempest possession indexing & flow lines",
           "Collaborative video review workspaces",
           "Periodical roster-wide broadcast engine",
+          "Real-time Watch Telemetry Board dashboard",
           "Standard support & setup"
         ],
         ctaText: "Onboard Team",
@@ -207,8 +209,8 @@ export const landingPageCopy = {
           "Priority GPU encoding queue (NVENC-accelerated)",
           "Automated rink game stitching & reconstruction",
           "EdgeIQ advanced biomechanics panels",
-          "Developer API access & webhook triggers",
-          "Dedicated program success manager"
+          "Watch Telemetry with loop-frequency diagnostics",
+          "Developer API access & webhook triggers"
         ],
         ctaText: "Contact Sales",
         popular: false

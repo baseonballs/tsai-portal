@@ -45,7 +45,7 @@ export function BetaSignupForm() {
       <div className="relative z-10">
         <h3 className="mb-2 font-serif text-2xl font-normal text-white">Apply for Beta Access</h3>
         <p className="mb-6 text-sm text-zinc-400">
-          TSAI Spotlight is currently in private beta. Submit your details below to request a workspace licensing seat.
+          TSAI Portal is currently in private beta. Submit your details below to request a workspace licensing seat.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>

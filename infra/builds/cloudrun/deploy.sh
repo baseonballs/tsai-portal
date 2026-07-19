@@ -4,8 +4,8 @@
 # Environment variables:
 #   PROJECT_ID     (default: tsai-18832)
 #   REGION         (default: us-west1)
-#   SERVICE        (default: tsai-landing-page-v2)
-#   IMAGE_NAME     (default: tsai-landing-page-v2)
+#   SERVICE        (default: tsai-portal)
+#   IMAGE_NAME     (default: tsai-portal)
 #   DEPLOY_VIA     "cloudbuild" (default) or "local"
 #
 set -euo pipefail
@@ -28,8 +28,8 @@ DOCKER_VERSION_TAG="${APP_VERSION//\//-}"
 
 PROJECT_ID="${PROJECT_ID:-tsai-18832}"
 REGION="${REGION:-us-west1}"
-SERVICE="${SERVICE:-tsai-landing-page-v2}"
-IMAGE_NAME="${IMAGE_NAME:-tsai-landing-page-v2}"
+SERVICE="${SERVICE:-tsai-portal}"
+IMAGE_NAME="${IMAGE_NAME:-tsai-portal}"
 DEPLOY_VIA="${DEPLOY_VIA:-cloudbuild}"
 
 TSAI_DGX_ORIGIN="${TSAI_DGX_ORIGIN:-https://spark-62db.tail18f71b.ts.net:8443}"
@@ -48,6 +48,12 @@ echo "→ image=${REGION}-docker.pkg.dev/${PROJECT_ID}/tsai-frontends/${IMAGE_NA
 echo "→ dgx_origin=$TSAI_DGX_ORIGIN"
 echo "→ supabase_url=$NEXT_PUBLIC_SUPABASE_URL"
 echo "→ api_gateway_url=$API_GATEWAY_URL"
+
+# Ensure latest documentation is copied into workspace prior to packaging
+if [[ -f "./scripts/copy-docs.sh" ]]; then
+  echo "→ Copying docs from sibling repos before build..."
+  bash ./scripts/copy-docs.sh
+fi
 
 gcloud config set project "$PROJECT_ID" >/dev/null
 

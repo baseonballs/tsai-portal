@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TSAI Spotlight — Unified Sports Intelligence",
-  description: "Unified Sports Intelligence Platform powered by MASCE. Experience the Future of Insight.",
+  title: "TSAI Portal - Transcendental Sports Web Portal",
+  description: "Transcendental Sports Web Portal powered by MASCE. Experience the Future of Insight.",
 };
 
 export default function RootLayout({
