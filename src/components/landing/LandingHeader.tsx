@@ -39,8 +39,8 @@ export function LandingHeader() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-indigo-600 shadow-lg shadow-cyan-500/10">
             <span className="font-mono text-sm font-extrabold text-zinc-950">T</span>
           </div>
-          <Link href="/" className="font-serif text-lg font-semibold tracking-wider text-white hover:opacity-90 transition-opacity">
-            Transcendental Sports <span className="text-cyan-400">AI</span>
+          <Link href="/" className="font-serif text-lg font-semibold tracking-wider hover:opacity-90 transition-opacity">
+            <span className="text-amber-400">Transcendental Sports</span> <span className="text-cyan-400">AI</span>
           </Link>
         </div>
 

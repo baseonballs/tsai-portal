@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { 
@@ -13,16 +13,28 @@ import {
   Lock, 
   Repeat, 
   Send, 
-  BarChart 
+  BarChart,
+  Sparkles,
+  Flame,
+  Zap,
+  CheckCircle,
+  TrendingUp,
+  Award,
+  Users,
+  Mic,
+  Smile,
+  Shield
 } from "lucide-react";
 
 export default function PlayersDevelopmentPage() {
+  const [activeTab, setActiveTab] = useState<"Drop" | "Readback" | "Rip">("Drop");
+
   return (
-    <div className="relative min-h-screen bg-zinc-950 font-sans text-zinc-100 antialiased selection:bg-cyan-500/35 selection:text-white">
+    <div className="relative min-h-screen bg-zinc-950 font-sans text-zinc-100 antialiased selection:bg-indigo-500/35 selection:text-white">
       {/* Dynamic Background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-900/20 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-900/20 blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] rounded-full bg-indigo-900/15 blur-[140px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] rounded-full bg-fuchsia-900/15 blur-[140px]" />
       </div>
 
       <LandingHeader />
@@ -31,183 +43,254 @@ export default function PlayersDevelopmentPage() {
         
         {/* HERO */}
         <section className="px-6 py-24 sm:py-32 lg:px-8 text-center max-w-5xl mx-auto">
-          <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-zinc-300 mb-8 backdrop-blur-sm">
-            Version v0.1.72.beta
+          <div className="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-indigo-400 mb-8 backdrop-blur-md">
+            <span className="mr-2 h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
+            The Athlete's Growth Continuum · Teams Beta Program
           </div>
-          <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-6">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">Spotlight & Periodical</span>
+
+          <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-6 leading-[1.1]">
+            From passive film to<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-amber-400">
+              active growth.
+            </span>
           </h1>
-          <p className="text-xl md:text-2xl font-light text-zinc-300 italic mb-12">
-            The Next Evolution in Elite Youth Ice Hockey Development
+
+          <p className="text-xl md:text-2xl font-light text-zinc-300 italic mb-12 max-w-3xl mx-auto leading-relaxed">
+            Spotlight & Periodical unlock sports intelligence to guide, measure, and accelerate athlete growth on the path to their full potential.
           </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="#filmroom" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all transform hover:scale-105">
+              Enter The Film Room
+            </a>
+            <a href="#superpowers" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-indigo-300 flex items-center justify-center gap-1.5 py-4 px-6 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all">
+              See the 4 Superpowers <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
         </section>
 
-        {/* THE GAP */}
-        <section className="px-6 py-20 lg:px-8 border-y border-white/5 bg-black/20 backdrop-blur-md">
+        {/* THE GAP BETWEEN THEORY & EXECUTION */}
+        <section className="px-6 py-20 lg:px-8 border-y border-white/5 bg-black/40 backdrop-blur-md">
           <div className="mx-auto max-w-4xl text-center">
             <h2 className="text-3xl md:text-5xl font-serif text-white mb-8">
-              ⚡ The Gap Between Theory & Execution is Closing
+              ⚡ The Film Shows the Turnover.<br />
+              <span className="text-indigo-400">Periodical Shows the Hesitation.</span>
             </h2>
             <div className="space-y-6 text-lg text-zinc-400 leading-relaxed max-w-3xl mx-auto text-left">
               <p>
-                For decades, coaches have possessed elite tactical knowledge, yet struggled to effectively transfer it to youth athletes in a way that sticks. The whiteboard is forgotten the moment the players step on the ice. The video sessions are passive. The engagement ends when practice is over.
+                Spotlight can find every D-zone giveaway in forty-one seconds. It can prove an athlete looped a 3-second teaching window fourteen times. But there's a layer of the game no camera reaches: <strong className="text-white">what the player was thinking when the puck left her stick.</strong>
               </p>
               <p className="text-2xl text-white font-serif text-center py-4 border-y border-white/10 my-8">
-                Until now.
+                Was it fear of the forecheck? A read she made too late?
               </p>
               <p>
-                Welcome to the <strong className="text-white">Spotlight Platform</strong> and <strong className="text-white">Periodical</strong> — a seamless, dual-engine ecosystem explicitly engineered to accelerate the youth sport development process. We aren't just offering a video tool; we are providing a <strong className="text-cyan-400">cinematic, high-fidelity development lifecycle</strong> driven by state-of-the-art (SOTA) captive AI and an immersive glassmorphic viewing experience.
-              </p>
-              <p className="text-center font-medium text-white italic pt-4">
-                Spotlight redefines how coaches teach. Periodical redefines how players learn. Together, they redefine how teams win.
+                The answer isn't in the pixels. It's in the player — and until now, it stayed there. Periodical is where the player tells you. Spotlight is what makes the telling actionable.
               </p>
             </div>
           </div>
         </section>
 
-        {/* PERIODICAL SECTION */}
-        <section className="px-6 py-24 lg:px-8">
+        {/* THE LOOP IN ACTION: FILM ROOM & READ-BACK */}
+        <section id="filmroom" className="px-6 py-24 lg:px-8 bg-zinc-950">
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">📖 Periodical: Building the Ultimate Hockey IQ</h2>
+              <span className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400 uppercase">Inside Periodical</span>
+              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">The Film Room Experience</h2>
               <p className="text-lg text-zinc-400 max-w-3xl mx-auto">
-                At the core of elite development is consistent, active engagement. <strong className="text-white">Periodical</strong> bridges the gap between rink sessions, transforming passive athletes into active students of the game through a collaborative platform built for the modern youth athlete.
+                Where the coach's cut lands inside the athlete's day and turns into a coach-reviewed rep on the record.
               </p>
             </div>
 
-            <div className="bg-indigo-950/20 border border-indigo-500/20 rounded-2xl p-8 mb-16 max-w-3xl mx-auto text-center backdrop-blur-sm">
-              <h3 className="text-indigo-400 font-semibold uppercase tracking-widest text-sm mb-3">Accountability Through Collaboration</h3>
-              <p className="text-zinc-300 text-lg">
-                Periodical isn't just a diary; it's a dynamic bridge connecting coach intent with player execution.
-              </p>
+            {/* TAB SELECTOR */}
+            <div className="flex justify-center gap-3 mb-12">
+              {[
+                { id: "Drop" as const, label: "01 / The Drop", sub: "Cinematic Tile" },
+                { id: "Readback" as const, label: "02 / The Read-back", sub: "Reflect & Rate" },
+                { id: "Rip" as const, label: "03 / The Rip", sub: "Superpower Level Up" }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-6 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    activeTab === tab.id
+                      ? "border-indigo-500 bg-indigo-950/40 text-white shadow-lg shadow-indigo-500/10"
+                      : "border-white/5 bg-zinc-900/40 text-zinc-400 hover:bg-zinc-900"
+                  }`}
+                >
+                  <span className="text-sm font-serif font-bold block">{tab.label}</span>
+                  <span className="text-[10px] text-zinc-500 font-mono">{tab.sub}</span>
+                </button>
+              ))}
             </div>
 
-            <h3 className="text-2xl font-serif text-white mb-8 text-center">The Foundation of Engagement</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-8 hover:bg-zinc-900/60 hover:border-indigo-500/30 transition-all transform hover:-translate-y-2">
-                <Target className="w-10 h-10 text-indigo-400 mb-6" />
-                <h4 className="text-xl font-serif text-white mb-4">Interactive Planners & Agendas</h4>
-                <p className="text-zinc-400 leading-relaxed text-sm">
-                  Move beyond group texts and PDF schedules. Seamlessly map out weekly macro, meso, and micro-cycles. Align your team on tactical themes <em className="text-zinc-200">before</em> they ever lace up their skates.
-                </p>
-              </div>
-              <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-8 hover:bg-zinc-900/60 hover:border-indigo-500/30 transition-all transform hover:-translate-y-2">
-                <Brain className="w-10 h-10 text-indigo-400 mb-6" />
-                <h4 className="text-xl font-serif text-white mb-4">Player Journaling</h4>
-                <p className="text-zinc-400 leading-relaxed text-sm">
-                  Repetition builds muscle memory; reflection builds Hockey IQ. Periodical encourages daily journaling, prompting players to reflect on their own shifts, evaluate their decisions, and take ownership of their development.
-                </p>
-              </div>
-              <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-8 hover:bg-zinc-900/60 hover:border-indigo-500/30 transition-all transform hover:-translate-y-2">
-                <MessageSquare className="w-10 h-10 text-indigo-400 mb-6" />
-                <h4 className="text-xl font-serif text-white mb-4">Coach-Player Feedback Loops</h4>
-                <p className="text-zinc-400 leading-relaxed text-sm">
-                  Create a continuous, asynchronous dialogue. Coaches can review journals, gauge comprehension, and provide actionable, personalized feedback directly within the platform.
-                </p>
-              </div>
+            {/* TAB CONTENT DEMO */}
+            <div className="bg-black/60 border border-indigo-500/30 rounded-2xl p-8 max-w-4xl mx-auto backdrop-blur-xl shadow-2xl">
+              {activeTab === "Drop" && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-fuchsia-400">New Drop Arrived · 7:14 PM</span>
+                    <span className="text-xs font-mono text-zinc-400">From Coach Dave</span>
+                  </div>
+                  <div className="bg-fuchsia-950/20 border border-fuchsia-500/30 rounded-xl p-6 relative overflow-hidden">
+                    <div className="text-xs font-mono uppercase tracking-widest text-fuchsia-400 mb-2">Be a Threat</div>
+                    <h3 className="text-xl font-serif text-white font-bold mb-3 font-serif">"Watch for this — you're a shooter. Trust it."</h3>
+                    <p className="text-sm text-zinc-300 italic mb-4">
+                      "3 moments bound to your goal: 'Shoot first, look second.'"
+                    </p>
+                    <div className="text-xs text-zinc-400 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                        <CheckCircle className="w-4 h-4" /> Opened 7:31 PM
+                      </span>
+                      <span className="text-zinc-500">3 moments · ~48s</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-zinc-400 text-center italic">
+                    The tile is the daily-open magnet: a kid opens the app and there's a cut waiting, in her superpower's color, about the exact thing she's working on.
+                  </p>
+                </div>
+              )}
+
+              {activeTab === "Readback" && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">The Read-back · Journal Entry</span>
+                    <span className="text-xs font-mono text-zinc-400">9:30 PM</span>
+                  </div>
+                  <div className="bg-zinc-900/80 p-6 rounded-xl border border-white/10">
+                    <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">Prompt: Did you see the shot before the pass?</span>
+                    <p className="text-base font-serif italic text-zinc-200 mb-4 bg-black/40 p-4 rounded border border-white/5">
+                      "Yeah — I had it and I looked away. I do that when I'm not sure I'll score. Next game I'm shooting the first one that opens."
+                    </p>
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="text-xs text-zinc-400 flex items-center gap-1.5">
+                        <Mic className="w-3.5 h-3.5 text-cyan-400" /> Voice-to-text recorded
+                      </span>
+                      <span className="text-xs font-mono text-fuchsia-400 font-semibold bg-fuchsia-500/10 border border-fuchsia-500/20 px-3 py-1 rounded-full">
+                        Self-Rating: 3 / 5 (Be a Threat)
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-zinc-400 text-center italic">
+                    Talking is lower friction than writing for a fourteen-year-old. The rating starts a second series: what the coach's cuts are moving.
+                  </p>
+                </div>
+              )}
+
+              {activeTab === "Rip" && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">The Rip · Superpower Level Up</span>
+                    <span className="text-xs font-mono text-amber-400 font-bold">+1 Rep Recorded</span>
+                  </div>
+                  <div className="bg-amber-950/20 border border-amber-500/30 rounded-xl p-6 text-center">
+                    <div className="text-5xl font-serif text-white font-bold mb-2">3.4 <span className="text-2xl text-emerald-400 font-sans">▲</span></div>
+                    <div className="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-4">Be a Threat Trend (Baseline 2.6)</div>
+                    <p className="text-sm text-zinc-300 max-w-lg mx-auto leading-relaxed">
+                      Rivalry game tonight: 5 shots on net, 2 goals. Spotlight tagged the reads automatically, and the fuchsia ring filled with a coach-reviewed point.
+                    </p>
+                  </div>
+                  <p className="text-sm text-zinc-400 text-center italic">
+                    That's a superpower being built in real time — and every lap of the loop is on the record.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </section>
 
-        {/* SPOTLIGHT SECTION */}
-        <section className="px-6 py-24 lg:px-8 bg-black/40 border-t border-white/5 backdrop-blur-md">
+        {/* THE 4 SUPERPOWERS */}
+        <section id="superpowers" className="px-6 py-24 lg:px-8 bg-zinc-900/40 border-t border-white/5">
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">🧠 Spotlight Coach's Corner: The AI-Powered Workbench</h2>
+              <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">The Four Pillars of Skill</span>
+              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Four Superpowers. One Rising Line.</h2>
               <p className="text-lg text-zinc-400 max-w-3xl mx-auto">
-                The newly unveiled <strong className="text-white">Coach Workbench</strong> is a powerhouse of tactical curation wrapped in a stunning, deep-slate frosted glass aesthetic. It gives coaches broadcast-level analytical tools without the broadcast-level complexity.
+                Development stops being a vague word and becomes four tangible superpowers an athlete can actually chase.
               </p>
             </div>
 
-            <div className="bg-cyan-950/20 border border-cyan-500/30 rounded-2xl p-8 mb-16 max-w-4xl mx-auto text-center shadow-[0_0_40px_rgba(6,182,212,0.1)]">
-              <h3 className="text-cyan-400 font-semibold uppercase tracking-widest text-sm mb-3 flex items-center justify-center gap-2">
-                <Search className="w-4 h-4" /> Captive AI Discovery Engine
-              </h3>
-              <p className="text-zinc-300 text-lg">
-                Stop scrubbing through hours of footage manually. Use semantic, AI-driven queries (e.g., <em className="text-cyan-200">"Show me strong-side puck protection on a zone entry"</em>) to instantly surface the perfect tactical reference from our internal library or YouTube.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-              <div>
-                <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/10 pb-4">Next-Generation Value Drivers</h3>
-                <ul className="space-y-8">
-                  <li className="flex gap-4">
-                    <div className="shrink-0 w-12 h-12 rounded-full bg-cyan-950/50 border border-cyan-500/30 flex items-center justify-center">
-                      <Layers className="w-5 h-5 text-cyan-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-serif text-white mb-2">Dual-Playback Split-Screen Analysis</h4>
-                      <p className="text-zinc-400 text-sm leading-relaxed">The ultimate teaching mechanic. Play a master reference clip of an NHL pro side-by-side with your own player's execution video. Compare posture, spacing, and decision-making in real time.</p>
-                    </div>
-                  </li>
-                  <li className="flex gap-4">
-                    <div className="shrink-0 w-12 h-12 rounded-full bg-cyan-950/50 border border-cyan-500/30 flex items-center justify-center">
-                      <Lock className="w-5 h-5 text-cyan-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-serif text-white mb-2">Strict Timestamp Locking</h4>
-                      <p className="text-zinc-400 text-sm leading-relaxed">Our SOTA playback engine locks the master reference and the player's execution video together within a sub-second tolerance. Pause, rewind, or scrub the master clip, and the player's video syncs instantly.</p>
-                    </div>
-                  </li>
-                  <li className="flex gap-4">
-                    <div className="shrink-0 w-12 h-12 rounded-full bg-cyan-950/50 border border-cyan-500/30 flex items-center justify-center">
-                      <Repeat className="w-5 h-5 text-cyan-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-serif text-white mb-2">Micro-Loop Windows</h4>
-                      <p className="text-zinc-400 text-sm leading-relaxed">Define exact start and end boundaries to trap players in a highly-focused 3-second loop. Force them to absorb the precise tactical mechanic being taught without distractions.</p>
-                    </div>
-                  </li>
-                </ul>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-zinc-900/60 border border-amber-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(245,158,11,0.05)]">
+                <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded">rExplode</span>
+                <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Explode</h3>
+                <p className="text-xs text-amber-300 italic mb-4 font-serif">"First three steps. Explode and go."</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">First-step acceleration, gap closing, and explosive breakout drive.</p>
               </div>
 
-              <div>
-                <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/10 pb-4">Must-Have Workflow Tools</h3>
-                <ul className="space-y-8">
-                  <li className="flex gap-4">
-                    <div className="shrink-0 w-12 h-12 rounded-full bg-indigo-950/50 border border-indigo-500/30 flex items-center justify-center">
-                      <Send className="w-5 h-5 text-indigo-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-serif text-white mb-2">Active Roster Clipboards</h4>
-                      <p className="text-zinc-400 text-sm leading-relaxed">Curate personalized playlists of reference clips. Draw up your tactical annotations, overlay structured feedback logs, and push them directly to a specific player or the entire team.</p>
-                    </div>
-                  </li>
-                  <li className="flex gap-4">
-                    <div className="shrink-0 w-12 h-12 rounded-full bg-indigo-950/50 border border-indigo-500/30 flex items-center justify-center">
-                      <BarChart className="w-5 h-5 text-indigo-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-serif text-white mb-2">Real-Time Watch Telemetry</h4>
-                      <p className="text-zinc-400 text-sm leading-relaxed">Never wonder if your players did their homework again. The Telemetry Board tracks exactly who watched your assignments, how many times they looped the critical moments, and their average view duration.</p>
-                    </div>
-                  </li>
-                </ul>
+              <div className="bg-zinc-900/60 border border-cyan-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(6,182,212,0.05)]">
+                <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded">rOwnPuck</span>
+                <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Own the Puck</h3>
+                <p className="text-xs text-cyan-300 italic mb-4 font-serif">"Hold it a beat. Make them come."</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">Puck protection on forehand hip, scanning before retrievals, composure.</p>
+              </div>
+
+              <div className="bg-zinc-900/60 border border-fuchsia-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(217,70,239,0.05)]">
+                <span className="text-xs font-mono font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2.5 py-1 rounded">rThreat</span>
+                <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Be a Threat</h3>
+                <p className="text-xs text-fuchsia-300 italic mb-4 font-serif">"Shoot first, look second."</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">Shot-first mentality, net-front presence, aggressive slot reads.</p>
+              </div>
+
+              <div className="bg-zinc-900/60 border border-emerald-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(16,185,129,0.05)]">
+                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded">rQuickFeet</span>
+                <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Quick Feet</h3>
+                <p className="text-xs text-emerald-300 italic mb-4 font-serif">"Light feet. Strong edges."</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">Agility, edge control, dynamic speed changes in tight spaces.</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* WHY SPOTLIGHT */}
-        <section className="px-6 py-32 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 to-zinc-900 text-center relative overflow-hidden">
-          <div className="mx-auto max-w-4xl relative z-10">
-            <h2 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-8">
-              🏆 Why Spotlight?
+        {/* 4 VOICES ACCOUNTABILITY ROSTER */}
+        <section className="px-6 py-24 lg:px-8 bg-zinc-950 border-t border-white/5">
+          <div className="mx-auto max-w-5xl">
+            <div className="text-center mb-16">
+              <span className="text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase">One Plan · Four Voices</span>
+              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Development is a Team Sport</h2>
+              <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+                Youth development fails in the gaps between the people who care. Periodical puts everyone on the same page.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-black/40 border border-amber-500/30 rounded-xl p-6">
+                <div className="text-xs uppercase font-mono font-bold text-amber-400 mb-2">The Player</div>
+                <h4 className="text-lg font-serif text-white mb-2">Drives It</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">Sets goals, journals daily, owns the plan. Reflection turns a kid into a student of the game.</p>
+              </div>
+              <div className="bg-black/40 border border-blue-500/30 rounded-xl p-6">
+                <div className="text-xs uppercase font-mono font-bold text-blue-400 mb-2">The Coach</div>
+                <div className="text-lg font-serif text-white mb-2">Guides It</div>
+                <p className="text-xs text-zinc-400 leading-relaxed">Cuts moments in the Cut Room, answers in feedback loops, aligns personal goals with team macro-cycles.</p>
+              </div>
+              <div className="bg-black/40 border border-emerald-500/30 rounded-xl p-6">
+                <div className="text-xs uppercase font-mono font-bold text-emerald-400 mb-2">The Mentor</div>
+                <div className="text-lg font-serif text-white mb-2">Supports It</div>
+                <p className="text-xs text-zinc-400 leading-relaxed">Skills trainers attach drill progressions and log observations that feed the AI insight engine.</p>
+              </div>
+              <div className="bg-black/40 border border-fuchsia-500/30 rounded-xl p-6">
+                <div className="text-xs uppercase font-mono font-bold text-fuchsia-400 mb-2">The Parent</div>
+                <div className="text-lg font-serif text-white mb-2">Sees It</div>
+                <p className="text-xs text-zinc-400 leading-relaxed">Visibility without interference: milestones, streaks, and progress — the car ride home gets a lot better.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* TEAMS BETA CTA */}
+        <section className="px-6 py-32 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-indigo-950/20 to-zinc-950 text-center relative overflow-hidden">
+          <div className="mx-auto max-w-3xl relative z-10">
+            <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">Teams Beta Program</span>
+            <h2 className="mt-6 text-5xl md:text-7xl font-serif tracking-tight text-white mb-8">
+              Start your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-amber-400">growth continuum.</span>
             </h2>
-            <p className="text-2xl font-light text-cyan-400 italic mb-8">
-              Spotlight is not just software—it is a competitive advantage.
-            </p>
-            <p className="text-lg text-zinc-300 leading-relaxed mb-12 max-w-3xl mx-auto">
-              By wrapping SOTA video analysis and Captive AI inside a premium, immersive interface, Spotlight commands the attention of the modern youth athlete. When paired with the collaborative strength of Periodical, it transforms standard youth hockey organizations into <strong className="text-white">elite development academies.</strong>
+            <p className="text-xl text-zinc-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+              Empower your athletes with the tools of tomorrow. Join the Teams Beta Program today.
             </p>
             
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-10 max-w-2xl mx-auto backdrop-blur-lg">
-              <h3 className="text-2xl font-serif text-white mb-6">Are you ready to change the way your team sees the game?</h3>
-              <p className="text-zinc-400 mb-8">Join the Spotlight Platform today and empower your athletes with the tools of tomorrow.</p>
-              <a href="#" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
-                Start your journey <ArrowRight className="w-5 h-5" />
+            <div className="flex justify-center">
+              <a href="#" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-10 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all transform hover:scale-105">
+                Join the Teams Beta Program <ArrowRight className="w-5 h-5" />
               </a>
             </div>
           </div>

@@ -7,10 +7,10 @@ import * as d3 from "d3";
 import { PlayerTelemetry, PLAYERS_DATA } from "@/data/players-telemetry";
 
 interface RinkTelemetryChartProps {
-  onHoverPlayer: (player: PlayerTelemetry | null) => void;
+  onHoverPlayer?: (player: PlayerTelemetry | null) => void;
 }
 
-export function RinkTelemetryChart({ onHoverPlayer }: RinkTelemetryChartProps) {
+export function RinkTelemetryChart({ onHoverPlayer = () => {} }: RinkTelemetryChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerTelemetry | null>(null);
 
