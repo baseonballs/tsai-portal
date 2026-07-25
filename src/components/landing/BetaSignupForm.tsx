@@ -16,7 +16,7 @@ export function BetaSignupForm() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email) {
       toast.error("Please fill in your name and email address.");
@@ -24,17 +24,37 @@ export function BetaSignupForm() {
     }
 
     setSubmitting(true);
-    // Simulate API registration
-    setTimeout(() => {
-      setSubmitting(false);
-      toast.success("Beta request submitted! Your account is queued for administrator approval.");
+    try {
+      const res = await fetch("/api/beta-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contact_name: formData.name,
+          email: formData.email,
+          organization: formData.org,
+          primary_role: formData.role,
+          submission_source: "technology_solutions",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to submit request.");
+      }
+
+      toast.success(data.message || "Beta request submitted! Your account is queued for administrator approval.");
       setFormData({
         name: "",
         email: "",
         org: "",
         role: "coach",
       });
-    }, 1500);
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred submitting your request.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
