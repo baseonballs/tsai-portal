@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getOrCreateVisitorId, trackEvent } from "@/lib/telemetry/tracker";
 
 export function BetaSignupForm() {
   const [formData, setFormData] = useState({
@@ -23,6 +24,7 @@ export function BetaSignupForm() {
       return;
     }
 
+    const visitorId = getOrCreateVisitorId();
     setSubmitting(true);
     try {
       const res = await fetch("/api/beta-requests", {
@@ -34,6 +36,7 @@ export function BetaSignupForm() {
           organization: formData.org,
           primary_role: formData.role,
           submission_source: "technology_solutions",
+          visitor_id: visitorId,
         }),
       });
 
@@ -42,6 +45,16 @@ export function BetaSignupForm() {
       if (!res.ok) {
         throw new Error(data.error || "Failed to submit request.");
       }
+
+      // Track conversion event
+      trackEvent({
+        event_type: "conversion_submit",
+        event_category: "onboarding",
+        event_properties: {
+          role: formData.role,
+          organization: formData.org,
+        },
+      });
 
       toast.success(data.message || "Beta request submitted! Your account is queued for administrator approval.");
       setFormData({
