@@ -52,8 +52,8 @@ export function LandingHeader() {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-400 lg:flex">
-          <Link href="/coachs-corner" className="transition-colors hover:text-white">
-            Coach's Corner
+          <Link href="/locker-room" className="transition-colors hover:text-white">
+            The Locker Room
           </Link>
           <Link href="/players-development" className="transition-colors hover:text-white">
             Player's Development
@@ -127,11 +127,11 @@ export function LandingHeader() {
         <div className="lg:hidden border-b border-white/10 bg-zinc-950/95 backdrop-blur-xl px-6 py-6 space-y-4">
           <nav className="flex flex-col gap-4 text-base font-medium text-zinc-300">
             <Link 
-              href="/coachs-corner" 
+              href="/locker-room" 
               onClick={() => setMobileMenuOpen(false)}
               className="hover:text-white transition-colors py-1 border-b border-white/5"
             >
-              Coach's Corner
+              The Locker Room
             </Link>
             <Link 
               href="/players-development" 

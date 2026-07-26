@@ -14,6 +14,15 @@ const nextConfig: any = {
     'spark-62db.tail18f71b.ts.net',
     'landing.dev.tsai.local'
   ],
+  async redirects() {
+    return [
+      {
+        source: "/coachs-corner",
+        destination: "/locker-room",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     const dgx = (process.env.TSAI_DGX_ORIGIN ?? "").trim().replace(/\/$/, "");
 
