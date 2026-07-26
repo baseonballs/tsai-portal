@@ -83,7 +83,7 @@ export function LandingHeader() {
         {/* Structured Grouped Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-1 text-sm font-medium text-zinc-300">
           
-          {/* GROUP 1: Development Hub Dropdown (Coach's Corner, The Locker Room, Player's Development) */}
+          {/* GROUP 1: Player & Coach Dropdown (Coach's Corner, The Locker Room, Player's Development) */}
           <div className="relative" ref={devHubRef}>
             <button
               onClick={() => setDevHubOpen(!devHubOpen)}
@@ -95,7 +95,7 @@ export function LandingHeader() {
               aria-expanded={devHubOpen}
             >
               <Users className="h-3.5 w-3.5 text-cyan-400" />
-              <span>Development Hub</span>
+              <span>Player & Coach</span>
               <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${devHubOpen ? "rotate-180 text-cyan-400" : "text-zinc-500"}`} />
             </button>
 
@@ -103,7 +103,7 @@ export function LandingHeader() {
             {devHubOpen && (
               <div className="absolute top-full left-0 mt-2 w-80 rounded-2xl border border-white/10 bg-zinc-950/95 p-3 backdrop-blur-2xl shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 px-3 py-1 font-semibold">
-                  Player & Coach Ecosystem
+                  Player & Coach Destinations
                 </div>
 
                 <div className="mt-1 space-y-1">
@@ -255,10 +255,10 @@ export function LandingHeader() {
       {mobileMenuOpen && (
         <div className="lg:hidden border-b border-white/10 bg-zinc-950/98 backdrop-blur-2xl px-6 py-6 space-y-6">
           
-          {/* Section 1: Development Hub */}
+          {/* Section 1: Player & Coach */}
           <div>
             <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-semibold mb-3">
-              Player & Coach Development Hub
+              Player & Coach Destinations
             </div>
             <div className="flex flex-col gap-2">
               <Link 
