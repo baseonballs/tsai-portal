@@ -31,19 +31,22 @@ export function LandingHeader() {
     window.location.href = "/";
   };
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-zinc-950/40 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-        <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-zinc-950/80 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Logo */}
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-indigo-600 shadow-lg shadow-cyan-500/10">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-indigo-600 shadow-lg shadow-cyan-500/10 shrink-0">
             <span className="font-mono text-sm font-extrabold text-zinc-950">T</span>
           </div>
-          <Link href="/" className="font-serif text-lg font-semibold tracking-wider hover:opacity-90 transition-opacity">
+          <Link href="/" className="font-serif text-base sm:text-lg font-semibold tracking-wider hover:opacity-90 transition-opacity truncate">
             <span className="text-white">Transcendental Sports</span> <span className="text-cyan-400">AI</span>
           </Link>
         </div>
 
+        {/* Desktop Navigation */}
         <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-400 lg:flex">
           <Link href="/coachs-corner" className="transition-colors hover:text-white">
             Coach's Corner
@@ -68,15 +71,15 @@ export function LandingHeader() {
           )}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {user ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <span className="hidden sm:inline text-xs text-zinc-400 max-w-[120px] truncate">
                 {user.email}
               </span>
               <button
                 onClick={handleSignOut}
-                className="rounded-md border border-white/10 bg-zinc-900/50 px-4 py-1.5 text-xs font-semibold text-zinc-300 transition-all hover:border-white/20 hover:text-white cursor-pointer"
+                className="rounded-md border border-white/10 bg-zinc-900/50 px-3 sm:px-4 py-1.5 text-xs font-semibold text-zinc-300 transition-all hover:border-white/20 hover:text-white cursor-pointer"
               >
                 Sign Out
               </button>
@@ -84,7 +87,7 @@ export function LandingHeader() {
           ) : (
             <button
               disabled
-              className="rounded-md border border-white/10 bg-zinc-900/30 px-4 py-1.5 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-50"
+              className="hidden sm:inline-block rounded-md border border-white/10 bg-zinc-900/30 px-3 sm:px-4 py-1.5 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-50"
               title="Sign In disabled"
             >
               Sign In
@@ -92,13 +95,80 @@ export function LandingHeader() {
           )}
           <button
             disabled
-            className="rounded-md border border-white/10 bg-zinc-900/30 px-4 py-1.5 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-50"
+            className="hidden sm:inline-block rounded-md border border-white/10 bg-zinc-900/30 px-3 sm:px-4 py-1.5 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-50"
             title="Beta Program disabled"
           >
             Beta Program
           </button>
+
+          {/* Mobile Hamburger Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 text-zinc-400 hover:text-white rounded-lg focus:outline-none"
+            aria-label="Toggle mobile menu"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
       </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-b border-white/10 bg-zinc-950/95 backdrop-blur-xl px-6 py-6 space-y-4">
+          <nav className="flex flex-col gap-4 text-base font-medium text-zinc-300">
+            <Link 
+              href="/coachs-corner" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="hover:text-white transition-colors py-1 border-b border-white/5"
+            >
+              Coach's Corner
+            </Link>
+            <Link 
+              href="/players-development" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="hover:text-white transition-colors py-1 border-b border-white/5"
+            >
+              Player's Development
+            </Link>
+            <Link 
+              href="/spotlight-and-periodical" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="hover:text-white transition-colors py-1 border-b border-white/5"
+            >
+              Spotlight &amp; Periodical
+            </Link>
+            <Link 
+              href="/technology-solutions" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="hover:text-white transition-colors py-1 border-b border-white/5"
+            >
+              Tech Solutions
+            </Link>
+            <Link 
+              href="/pricing" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="hover:text-white transition-colors py-1 border-b border-white/5"
+            >
+              Pricing
+            </Link>
+            {user && (
+              <Link 
+                href="/docs" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-cyan-400 font-semibold py-1"
+              >
+                Docs
+              </Link>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

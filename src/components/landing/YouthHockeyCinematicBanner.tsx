@@ -206,11 +206,11 @@ export function YouthHockeyCinematicBanner() {
       <div className="gallery-slideshow-grain pointer-events-none absolute inset-0 opacity-25" />
 
       {/* 4. HIGH-LEVEL PROGRAM BADGE (MOVED HIGHER ABOVE CYAN HUD FRAME) */}
-      <div className="absolute top-4 sm:top-7 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
-        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/40 bg-black/85 px-5 py-2 text-xs font-semibold tracking-wide text-zinc-200 backdrop-blur-xl shadow-xl shadow-cyan-500/15 hover:border-cyan-400 transition-all">
-          <span className="relative flex h-2.5 w-2.5">
+      <div className="absolute top-3 sm:top-7 left-1/2 -translate-x-1/2 z-30 pointer-events-auto max-w-[92%] sm:max-w-none">
+        <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full border border-cyan-500/40 bg-black/85 px-3 sm:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold tracking-wide text-zinc-200 backdrop-blur-xl shadow-xl shadow-cyan-500/15 hover:border-cyan-400 transition-all">
+          <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-cyan-500"></span>
           </span>
           <span className="text-cyan-400 font-bold tracking-wider">Spotlight</span>
           <span className="text-zinc-500">·</span>
@@ -221,10 +221,10 @@ export function YouthHockeyCinematicBanner() {
       </div>
 
       {/* 5. TACTICAL HUD RETICLES & CORNER BRACKETS (CYAN FRAME RECTANGLE) */}
-      <div className="pointer-events-none absolute left-6 right-6 sm:left-12 sm:right-12 top-16 sm:top-20 bottom-6 sm:bottom-10 border border-cyan-500/20 rounded-3xl z-10 flex flex-col justify-between p-4">
+      <div className="pointer-events-none absolute left-3 right-3 sm:left-12 sm:right-12 top-14 sm:top-20 bottom-3 sm:bottom-10 border border-cyan-500/20 rounded-2xl sm:rounded-3xl z-10 flex flex-col justify-between p-2.5 sm:p-4">
         {/* Top Corners */}
-        <div className="flex justify-between items-center text-[10px] font-mono text-cyan-400/70 tracking-wider">
-          <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded border border-cyan-500/30">
+        <div className="flex justify-between items-center text-[9px] sm:text-[10px] font-mono text-cyan-400/70 tracking-wider">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-black/60 backdrop-blur-md px-2 sm:px-3 py-1 rounded border border-cyan-500/30">
             <Crosshair className="w-3 h-3 text-cyan-400 animate-spin" style={{ animationDuration: "10s" }} />
             <span>AI RINK TRACKING • 60 FPS</span>
           </div>
@@ -235,29 +235,29 @@ export function YouthHockeyCinematicBanner() {
         </div>
 
         {/* Bottom Corners */}
-        <div className="flex justify-between items-center text-[10px] font-mono text-zinc-400">
-          <div className="flex items-center gap-3">
+        <div className="flex justify-between items-center text-[9px] sm:text-[10px] font-mono text-zinc-400">
+          <div className="flex items-center gap-2 sm:gap-3">
             <span className="text-cyan-400">POS: [{Math.round(mousePos.x)}, {Math.round(mousePos.y)}]</span>
             <span className="hidden md:inline text-zinc-600">|</span>
             <span className="hidden md:inline">SUPERPOWER MATRIX v2.4</span>
           </div>
-          <div className="text-right text-indigo-400 font-semibold">
+          <div className="text-right text-indigo-400 font-semibold truncate max-w-[120px] sm:max-w-none">
             {BACKGROUNDS[activeIndex].tag}
           </div>
         </div>
       </div>
 
       {/* 6. MAIN HERO CONTENT CONTAINER */}
-      <div className="relative z-20 max-w-5xl mx-auto text-center pt-10 sm:pt-12">
+      <div className="relative z-20 max-w-5xl mx-auto text-center pt-14 sm:pt-16 px-4">
 
         {/* MAIN HEADLINE WITH DUAL-THEME GLOW */}
-        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif tracking-tight text-white mb-6 leading-[1.08] drop-shadow-2xl">
+        <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif tracking-tight text-white mb-4 sm:mb-6 leading-[1.15] sm:leading-[1.08] drop-shadow-2xl">
           Where{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-rose-500 font-medium">
             video intelligence
           </span>{" "}
-          meets<br />
-          <span className="relative inline-block mt-1">
+          meets<br className="hidden sm:inline" />{" "}
+          <span className="relative inline-block sm:mt-1">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-fuchsia-400 font-medium">
               player reflection
             </span>
@@ -268,65 +268,65 @@ export function YouthHockeyCinematicBanner() {
         </h1>
 
         {/* DUAL THEME PILL BADGES */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono">
-            <Film className="w-3.5 h-3.5 text-cyan-400" />
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+          <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-[11px] sm:text-xs font-mono">
+            <Film className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             <span>Spotlight Video Reasoning</span>
           </div>
           <span className="text-zinc-600 text-sm font-bold">×</span>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 text-xs font-mono">
-            <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-xs font-mono">
+            <BookOpen className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
             <span>Periodical Athlete Journal</span>
           </div>
         </div>
 
         {/* SUBTITLE */}
-        <p className="text-lg sm:text-xl md:text-2xl font-light text-zinc-300 max-w-3xl mx-auto leading-relaxed mb-10 drop-shadow">
+        <p className="text-sm sm:text-xl md:text-2xl font-light text-zinc-300 max-w-3xl mx-auto leading-relaxed mb-8 sm:mb-10 drop-shadow px-2">
           Unlocking sports intelligence to guide, measure, and accelerate youth athlete growth on the path to their full potential.
         </p>
 
         {/* CTA BUTTONS */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 sm:mb-16">
           <button 
             disabled
-            className="w-full sm:w-auto rounded-full border border-white/10 bg-zinc-900/40 px-8 py-4 text-sm font-bold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto rounded-full border border-white/10 bg-zinc-900/40 px-6 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-sm font-bold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
           >
-            <Lock className="w-4 h-4 text-zinc-500" />
+            <Lock className="w-4 h-4 text-zinc-500 shrink-0" />
             <span>Apply for Teams Beta Access (Inactive)</span>
           </button>
 
           <Link 
             href="/coachs-corner" 
-            className="w-full sm:w-auto text-sm font-semibold leading-6 text-zinc-200 hover:text-white flex items-center justify-center gap-2 py-4 px-7 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-md transition-all shadow-md"
+            className="w-full sm:w-auto text-xs sm:text-sm font-semibold leading-6 text-zinc-200 hover:text-white flex items-center justify-center gap-2 py-3.5 sm:py-4 px-6 sm:px-7 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-md transition-all shadow-md"
           >
-            <Eye className="w-4 h-4 text-indigo-400" />
+            <Eye className="w-4 h-4 text-indigo-400 shrink-0" />
             <span>Explore Coach's Corner</span>
-            <ArrowRight className="w-4 h-4 text-cyan-400" />
+            <ArrowRight className="w-4 h-4 text-cyan-400 shrink-0" />
           </Link>
         </div>
 
         {/* QUICK STATS STRIP */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left border-t border-white/15 pt-8 bg-black/40 p-6 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left border-t border-white/15 pt-6 sm:pt-8 bg-black/40 p-4 sm:p-6 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl">
           <div>
-            <div className="text-2xl sm:text-3xl font-serif text-white font-bold flex items-center gap-1.5">
+            <div className="text-xl sm:text-3xl font-serif text-white font-bold flex items-center gap-1.5">
               <span>41s</span>
               <Sparkles className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="text-xs text-zinc-400 mt-1">Natural Language Discovery &amp; Semantic Searches</div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-cyan-400 flex items-baseline gap-1.5">
+            <div className="text-xl sm:text-3xl font-serif font-bold text-cyan-400 flex items-baseline gap-1.5">
               <span>8</span>
-              <span className="text-lg text-cyan-300 font-sans font-semibold">Superpowers</span>
+              <span className="text-base sm:text-lg text-cyan-300 font-sans font-semibold">Superpowers</span>
             </div>
             <div className="text-xs text-zinc-400 mt-1">Explode, Own Puck, Threat, Read the Play, Wall Master &amp; more</div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-indigo-400">The Loop</div>
+            <div className="text-xl sm:text-3xl font-serif font-bold text-indigo-400">The Loop</div>
             <div className="text-xs text-zinc-400 mt-1">Cut Rooms × Journal Loops, Continuous Feedback</div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-fuchsia-400">5 Voices</div>
+            <div className="text-xl sm:text-3xl font-serif font-bold text-fuchsia-400">5 Voices</div>
             <div className="text-xs text-zinc-400 mt-1">Player, Coach, Trainer, Parent &amp; Scout</div>
           </div>
         </div>
