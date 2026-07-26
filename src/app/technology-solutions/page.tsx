@@ -447,7 +447,7 @@ export default function TechnologySolutionsPage() {
           <div className="mx-auto max-w-3xl relative z-10">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Teams Beta Program · Now Forming</span>
             <h2 className="mt-6 text-4xl font-serif tracking-tight text-white sm:text-6xl leading-tight">
-              Bring <span className="text-white font-semibold">Transcendental Sports <span className="text-cyan-400 font-sans">AI</span></span> to your team.
+              Bring <span className="text-zinc-400/80 font-semibold">Transcendental Sports </span><span className="text-cyan-400/80 font-sans">AI</span> to your team.
             </h2>
             <p className="mt-6 text-lg text-zinc-300 max-w-2xl mx-auto font-light">
               Join the founding cohort of youth ice hockey coaching staffs and clubs. Request early access for your team today.

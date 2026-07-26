@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
+import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
 import { 
   ArrowRight, 
   Target, 
@@ -315,7 +316,7 @@ export default function PlayersDevelopmentPage() {
         </section>
 
         {/* TEAMS BETA CTA */}
-        <section className="px-6 py-32 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-indigo-950/20 to-zinc-950 text-center relative overflow-hidden">
+        <section id="beta" className="px-6 py-32 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-indigo-950/20 to-zinc-950 text-center relative overflow-hidden">
           <div className="mx-auto max-w-3xl relative z-10">
             <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">Teams Beta Program</span>
             <h2 className="mt-6 text-5xl md:text-7xl font-serif tracking-tight text-white mb-8">
@@ -325,10 +326,8 @@ export default function PlayersDevelopmentPage() {
               Empower your athletes with the tools of tomorrow. Join the Teams Beta Program today.
             </p>
             
-            <div className="flex justify-center">
-              <a href="#" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-10 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all transform hover:scale-105">
-                Join the Teams Beta Program <ArrowRight className="w-5 h-5" />
-              </a>
+            <div className="mt-12 text-left max-w-2xl mx-auto">
+              <BetaSignupForm />
             </div>
           </div>
         </section>

@@ -6,7 +6,7 @@ export function LandingFooter() {
   return (
     <footer className="relative z-10 border-t border-white/5 bg-zinc-950/60 py-12 text-center text-xs text-zinc-500">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row lg:px-8">
-        <p>© 2026 Transcendental Sports AI LLC (TSAI). All rights reserved.</p>
+        <p>© 2026 Transcendental Sports AI LLC. All rights reserved.</p>
         <div className="flex gap-6">
           <a href="/legal/privacy" className="transition-colors hover:text-white">
             Privacy

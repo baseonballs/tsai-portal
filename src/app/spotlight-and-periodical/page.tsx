@@ -3,6 +3,7 @@
 import React from "react";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
+import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
 import { ArrowRight, BrainCircuit, Activity, Repeat, FileText, Target, ShieldCheck, Zap, BarChart2 } from "lucide-react";
 
 export default function SpotlightAndPeriodicalPage() {
@@ -193,10 +194,8 @@ export default function SpotlightAndPeriodicalPage() {
               Get the complete ecosystem — Spotlight's intelligence and Periodical's bridge — live on your team's roster for the season.
             </p>
             
-            <div className="mt-12 flex justify-center">
-              <a href="#" className="rounded-full bg-white px-10 py-4 text-base font-semibold text-zinc-950 shadow-lg hover:bg-cyan-50 transition-all transform hover:scale-105">
-                Apply for Teams Beta Access
-              </a>
+            <div className="mt-12 text-left max-w-2xl mx-auto">
+              <BetaSignupForm />
             </div>
           </div>
         </section>

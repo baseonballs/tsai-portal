@@ -62,7 +62,7 @@ export default function Home() {
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
               <span className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400 uppercase">The Synergy</span>
-              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Spotlight Sees the Game. Periodical Hears the Player.</h2>
+              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Spotlight <span className="text-amber-400/70">Sees</span> the Game. Periodical <span className="text-cyan-400/70">Hears</span> the Player.</h2>
               <p className="text-lg text-zinc-400 max-w-3xl mx-auto leading-relaxed">
                 Spotlight's telemetry tells Periodical what the player <em className="text-white">did</em>. Periodical's journals tell Spotlight what the player <em className="text-white">thought</em>. The AI connects both—keeping coaches and mentors right at the heart of the loop.
               </p>
@@ -125,7 +125,7 @@ export default function Home() {
           <div className="mx-auto max-w-3xl relative z-10">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Teams Beta Program · Now Forming</span>
             <h2 className="mt-6 text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
-              Bring <span className="text-white font-semibold">Transcendental Sports <span className="text-cyan-400 font-sans">AI</span></span> to your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">team.</span>
+              Bring <span className="text-zinc-400/80 font-semibold">Transcendental Sports </span><span className="text-cyan-400/80 font-sans">AI</span> to your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">team.</span>
             </h2>
             <p className="mt-6 text-lg text-zinc-300 max-w-2xl mx-auto">
               Join the founding cohort of youth ice hockey coaching staffs and clubs. Request early access for your team today.

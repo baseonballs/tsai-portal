@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { TheLoopIllustration } from "@/components/landing/TheLoopIllustration";
+import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
 import { 
   ArrowRight, 
   Play, 
@@ -534,10 +535,8 @@ export default function CoachsCornerPage() {
               The Teams Beta Program is opening to a limited cohort of youth ice hockey coaching staffs and clubs. Founding teams don't just get early access — they shape what this becomes.
             </p>
             
-            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="#" className="w-full sm:w-auto rounded-full bg-white px-10 py-4 text-base font-semibold text-zinc-950 shadow-lg hover:bg-cyan-50 transition-all transform hover:scale-105">
-                Apply for Teams Beta Access
-              </a>
+            <div className="mt-12 text-left max-w-2xl mx-auto">
+              <BetaSignupForm />
             </div>
             <p className="mt-8 text-xs text-zinc-500 uppercase tracking-widest font-mono">
               Stop scrubbing. Connect the dots. · Rolling staff approvals
