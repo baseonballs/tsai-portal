@@ -216,10 +216,10 @@ export function LockerRoomHub() {
               {/* Call-to-Action Buttons */}
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
                 <Link
-                  href="/locker-room"
+                  href={activeStall.id === "coach" ? "/coachs-corner" : "/locker-room"}
                   className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 text-xs sm:text-sm font-semibold text-zinc-950 transition-all hover:bg-cyan-400 shadow-lg shadow-cyan-500/20 active:scale-95 min-h-[48px]"
                 >
-                  <span>{copy.primaryCta}</span>
+                  <span>{activeStall.id === "coach" ? "Explore Coach's Corner" : copy.primaryCta}</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
