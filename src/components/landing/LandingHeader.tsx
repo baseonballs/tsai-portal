@@ -70,11 +70,16 @@ export function LandingHeader() {
               className="h-9 w-9 object-contain rounded-full bg-zinc-900/90 p-0.5 border border-white/15 shadow-lg shadow-cyan-500/10 shrink-0"
             />
             <div className="flex flex-col">
-              <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-white leading-none whitespace-nowrap">
-                TSAI <span className="text-cyan-400 font-sans font-semibold text-xs ml-1 uppercase tracking-wider bg-cyan-500/10 border border-cyan-500/20 px-1.5 py-0.5 rounded">Beta</span>
-              </span>
-              <span className="text-[10px] text-zinc-400 tracking-wider font-sans hidden sm:inline-block">
-                Transcendental Sports AI
+              <div className="flex items-center gap-2">
+                <span className="font-serif text-lg sm:text-xl font-bold tracking-tight text-white leading-none whitespace-nowrap">
+                  Spotlight
+                </span>
+                <span className="text-cyan-400 font-sans font-semibold text-[10px] uppercase tracking-wider bg-cyan-500/10 border border-cyan-500/25 px-1.5 py-0.5 rounded-full shadow-sm">
+                  Beta
+                </span>
+              </div>
+              <span className="text-[10px] text-zinc-400 tracking-wider font-sans hidden sm:inline-block mt-0.5">
+                Sports Intelligence Platform
               </span>
             </div>
           </Link>
