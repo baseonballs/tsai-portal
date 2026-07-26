@@ -14,8 +14,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TSAI Portal - Transcendental Sports AI Web Portal",
-  description: "Transcendental Sports AI Web Portal powered by MASCE. Experience the Future of Insight.",
+  title: {
+    default: "Transcend - Sports Intelligence",
+    template: "%s | Transcend - Sports Intelligence",
+  },
+  description: "Transcend is the decision-grade sports intelligence platform powered by MASCE and The Loop.",
+  icons: {
+    icon: [
+      { url: "/logos/tsai-emblem-full.png" },
+    ],
+    shortcut: ["/logos/tsai-emblem-full.png"],
+    apple: [
+      { url: "/logos/tsai-emblem-full.png" },
+    ],
+  },
 };
 
 export default function RootLayout({
