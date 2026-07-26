@@ -72,7 +72,7 @@ export function LandingHeader() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="font-serif text-lg sm:text-xl font-bold tracking-tight text-white leading-none whitespace-nowrap">
-                  Spotlight
+                  Transcend
                 </span>
                 <span className="text-cyan-400 font-sans font-semibold text-[10px] uppercase tracking-wider bg-cyan-500/10 border border-cyan-500/25 px-1.5 py-0.5 rounded-full shadow-sm">
                   Beta
