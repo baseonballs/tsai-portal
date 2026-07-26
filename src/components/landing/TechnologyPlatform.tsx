@@ -113,7 +113,7 @@ export function TechnologyPlatform() {
             
             <div className="relative z-10 mt-12 text-center">
                <p className="text-xs text-zinc-400 font-mono">
-                 Deterministic Provenance-Tagged Event Ledger • 14-Point Integrity Audit
+                 Deterministic Provenance-Tagged Event &amp; Possession Ledgers • 14-Point Integrity Audit
                </p>
             </div>
           </div>

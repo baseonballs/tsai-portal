@@ -64,7 +64,7 @@ export default function PlayersDevelopmentPage() {
               Enter The Film Room
             </a>
             <a href="#superpowers" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-indigo-300 flex items-center justify-center gap-1.5 py-4 px-6 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all">
-              See the 4 Superpowers <ArrowRight className="w-4 h-4" />
+              Explore All Superpowers <ArrowRight className="w-4 h-4" />
             </a>
           </div>
         </section>
@@ -198,14 +198,14 @@ export default function PlayersDevelopmentPage() {
           </div>
         </section>
 
-        {/* THE 4 SUPERPOWERS */}
+        {/* THE 8 SUPERPOWERS */}
         <section id="superpowers" className="px-6 py-24 lg:px-8 bg-zinc-900/40 border-t border-white/5">
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">The Four Pillars of Skill</span>
-              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Four Superpowers. One Rising Line.</h2>
+              <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">The Pillars of Hockey Skill</span>
+              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Eight Superpowers. One Rising Line.</h2>
               <p className="text-lg text-zinc-400 max-w-3xl mx-auto">
-                Development stops being a vague word and becomes four tangible superpowers an athlete can actually chase.
+                Development stops being a vague word and becomes eight tangible superpowers an athlete can actually chase.
               </p>
             </div>
 
@@ -237,41 +237,78 @@ export default function PlayersDevelopmentPage() {
                 <p className="text-xs text-emerald-300 italic mb-4 font-serif">"Light feet. Strong edges."</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">Agility, edge control, dynamic speed changes in tight spaces.</p>
               </div>
+
+              <div className="bg-zinc-900/60 border border-indigo-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(99,102,241,0.05)]">
+                <span className="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded">rReadPlay</span>
+                <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Read the Play</h3>
+                <p className="text-xs text-indigo-300 italic mb-4 font-serif">"See two passes ahead."</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">Spatial vision, ice scanning, dynamic lane mapping, high-IQ positioning.</p>
+              </div>
+
+              <div className="bg-zinc-900/60 border border-rose-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(244,63,94,0.05)]">
+                <span className="text-xs font-mono font-bold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded">rWinBattle</span>
+                <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Win the Battle</h3>
+                <p className="text-xs text-rose-300 italic mb-4 font-serif">"Low leverage. Heavy stick."</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">Corner grinding, 1v1 battle win rates, net-front leverage, puck recovery.</p>
+              </div>
+
+              <div className="bg-zinc-900/60 border border-violet-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(139,92,246,0.05)]">
+                <span className="text-xs font-mono font-bold text-violet-400 bg-violet-500/10 px-2.5 py-1 rounded">rWallMaster</span>
+                <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Hard Along Walls</h3>
+                <p className="text-xs text-violet-300 italic mb-4 font-serif">"Clean wall chips. Seal boards."</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">Board battles, wall pins, rim retrievals, chips past pressing defenders.</p>
+              </div>
+
+              <div className="bg-zinc-900/60 border border-sky-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(14,165,233,0.05)]">
+                <span className="text-xs font-mono font-bold text-sky-400 bg-sky-500/10 px-2.5 py-1 rounded">rDotDominance</span>
+                <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Dot Dominance</h3>
+                <p className="text-xs text-sky-300 italic mb-4 font-serif">"Own the dot. Set the tempo."</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">Face-off win technique, quick-stick reaction, tie-up leverage, situational wins.</p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 4 VOICES ACCOUNTABILITY ROSTER */}
+        {/* 5 VOICES ACCOUNTABILITY ROSTER */}
         <section className="px-6 py-24 lg:px-8 bg-zinc-950 border-t border-white/5">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-7xl">
             <div className="text-center mb-16">
-              <span className="text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase">One Plan · Four Voices</span>
+              <span className="text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase">One Plan · Five Voices</span>
               <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Development is a Team Sport</h2>
               <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
                 Youth development fails in the gaps between the people who care. Periodical puts everyone on the same page.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-black/40 border border-amber-500/30 rounded-xl p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+              <div className="bg-black/40 border border-amber-500/30 rounded-xl p-6 hover:border-amber-500/50 transition-all">
                 <div className="text-xs uppercase font-mono font-bold text-amber-400 mb-2">The Player</div>
                 <h4 className="text-lg font-serif text-white mb-2">Drives It</h4>
                 <p className="text-xs text-zinc-400 leading-relaxed">Sets goals, journals daily, owns the plan. Reflection turns a kid into a student of the game.</p>
               </div>
-              <div className="bg-black/40 border border-blue-500/30 rounded-xl p-6">
+
+              <div className="bg-black/40 border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition-all">
                 <div className="text-xs uppercase font-mono font-bold text-blue-400 mb-2">The Coach</div>
                 <div className="text-lg font-serif text-white mb-2">Guides It</div>
                 <p className="text-xs text-zinc-400 leading-relaxed">Cuts moments in the Cut Room, answers in feedback loops, aligns personal goals with team macro-cycles.</p>
               </div>
-              <div className="bg-black/40 border border-emerald-500/30 rounded-xl p-6">
-                <div className="text-xs uppercase font-mono font-bold text-emerald-400 mb-2">The Mentor</div>
-                <div className="text-lg font-serif text-white mb-2">Supports It</div>
-                <p className="text-xs text-zinc-400 leading-relaxed">Skills trainers attach drill progressions and log observations that feed the AI insight engine.</p>
+
+              <div className="bg-black/40 border border-emerald-500/30 rounded-xl p-6 hover:border-emerald-500/50 transition-all">
+                <div className="text-xs uppercase font-mono font-bold text-emerald-400 mb-2">The Trainer</div>
+                <div className="text-lg font-serif text-white mb-2">Supports &amp; Develops It</div>
+                <p className="text-xs text-zinc-400 leading-relaxed">Skills &amp; private trainers attach drill progressions, off-ice work, and log observations that feed the AI insight engine.</p>
               </div>
-              <div className="bg-black/40 border border-fuchsia-500/30 rounded-xl p-6">
+
+              <div className="bg-black/40 border border-fuchsia-500/30 rounded-xl p-6 hover:border-fuchsia-500/50 transition-all">
                 <div className="text-xs uppercase font-mono font-bold text-fuchsia-400 mb-2">The Parent</div>
-                <div className="text-lg font-serif text-white mb-2">Sees It</div>
-                <p className="text-xs text-zinc-400 leading-relaxed">Visibility without interference: milestones, streaks, and progress — the car ride home gets a lot better.</p>
+                <div className="text-lg font-serif text-white mb-2">Cultivates It</div>
+                <p className="text-xs text-zinc-400 leading-relaxed">Embraces the sacrifice. Visibility without interference: milestones, streaks, and progress — the car ride home gets a lot better.</p>
+              </div>
+
+              <div className="bg-black/40 border border-cyan-500/30 rounded-xl p-6 hover:border-cyan-500/50 transition-all">
+                <div className="text-xs uppercase font-mono font-bold text-cyan-400 mb-2">The Scout</div>
+                <div className="text-lg font-serif text-white mb-2">Evaluates It</div>
+                <p className="text-xs text-zinc-400 leading-relaxed">The ultimate voice for the last mile: verified shift dossiers, objective scouting reports, and high-performance evaluation for advancement.</p>
               </div>
             </div>
           </div>

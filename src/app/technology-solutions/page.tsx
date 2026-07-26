@@ -248,7 +248,7 @@ export default function TechnologySolutionsPage() {
                 <div className="bg-black/50 border border-cyan-500/20 p-6 rounded-2xl">
                   <div className="flex items-center gap-3 mb-2">
                     <Brain className="w-5 h-5 text-cyan-400" />
-                    <h4 className="font-serif text-lg text-white">4-Voice Accountability Network</h4>
+                    <h4 className="font-serif text-lg text-white">Multi-Voice Accountability Network</h4>
                   </div>
                   <p className="text-sm text-zinc-400 leading-relaxed">Player drives, Coach guides, Mentor supports, Parent sees—bringing everyone into one loop.</p>
                 </div>
@@ -289,11 +289,11 @@ export default function TechnologySolutionsPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 shrink-0 text-cyan-500 mt-0.5" />
-                    <span>A pipeline of specialized agents builds a provenance-tagged event ledger.</span>
+                    <span>A pipeline of specialized agents builds provenance-tagged event and possession ledgers.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 shrink-0 text-cyan-500 mt-0.5" />
-                    <span>Every run self-checks against 14 physics & hockey rules to prevent drift.</span>
+                    <span>Every analytics run self-checks against 14 physics & hockey rules to prevent drift.</span>
                   </li>
                 </ul>
               </div>
@@ -332,7 +332,7 @@ export default function TechnologySolutionsPage() {
                   The Cost Unlock
                 </h3>
                 <span className="mt-1 font-mono text-[10px] tracking-widest text-emerald-400 uppercase block mb-6">
-                  From $200 to $0.17 per game
+                  From $30 to $1.17 per game
                 </span>
                 <ul className="space-y-3 text-sm text-zinc-400">
                   <li className="flex items-start gap-2">
@@ -391,7 +391,7 @@ export default function TechnologySolutionsPage() {
                 
                 <div className="relative z-10 mt-10 text-center">
                   <p className="text-xs text-zinc-400 font-mono">
-                    Deterministic Provenance-Tagged Event Ledger · 14-Point Hockey Integrity Audit
+                    Deterministic Provenance-Tagged Event &amp; Possession Ledgers · 14-Point Hockey Integrity Audit
                   </p>
                 </div>
               </div>
@@ -447,7 +447,7 @@ export default function TechnologySolutionsPage() {
           <div className="mx-auto max-w-3xl relative z-10">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Teams Beta Program · Now Forming</span>
             <h2 className="mt-6 text-4xl font-serif tracking-tight text-white sm:text-6xl leading-tight">
-              Bring <span className="text-amber-400 font-semibold">Transcendental Sports</span> to your team.
+              Bring <span className="text-white font-semibold">Transcendental Sports <span className="text-cyan-400 font-sans">AI</span></span> to your team.
             </h2>
             <p className="mt-6 text-lg text-zinc-300 max-w-2xl mx-auto font-light">
               Join the founding cohort of youth ice hockey coaching staffs and clubs. Request early access for your team today.

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
+import { TheLoopIllustration } from "@/components/landing/TheLoopIllustration";
 import { 
   ArrowRight, 
   Play, 
@@ -33,7 +34,7 @@ import {
 } from "lucide-react";
 
 export default function CoachsCornerPage() {
-  const [activeSuperpower, setActiveSuperpower] = useState<"Explode" | "OwnPuck" | "Threat" | "QuickFeet">("Threat");
+  const [activeSuperpower, setActiveSuperpower] = useState<"Explode" | "OwnPuck" | "Threat" | "QuickFeet" | "ReadPlay" | "WinBattle" | "WallMaster" | "DotDominance">("Threat");
 
   const superpowers = [
     {
@@ -57,7 +58,7 @@ export default function CoachsCornerPage() {
       text: "text-cyan-400",
       badgeBg: "bg-cyan-500/20",
       glow: "shadow-[0_0_25px_rgba(6,182,212,0.15)]",
-      cue: '"Hold it a beat. Make them come to me."',
+      cue: '"Hold it a beat. Make them come."',
       tag: "rOwnPuck",
     },
     {
@@ -69,7 +70,7 @@ export default function CoachsCornerPage() {
       text: "text-fuchsia-400",
       badgeBg: "bg-fuchsia-500/20",
       glow: "shadow-[0_0_25px_rgba(217,70,239,0.2)]",
-      cue: '"Shoot first, look second. Drive the net."',
+      cue: '"Shoot first, look second."',
       tag: "rThreat",
     },
     {
@@ -81,8 +82,56 @@ export default function CoachsCornerPage() {
       text: "text-emerald-400",
       badgeBg: "bg-emerald-500/20",
       glow: "shadow-[0_0_25px_rgba(16,185,129,0.15)]",
-      cue: '"Light feet. Strong edges. Change of speed."',
+      cue: '"Light feet. Strong edges."',
       tag: "rQuickFeet",
+    },
+    {
+      id: "ReadPlay" as const,
+      name: "Read the Play",
+      hue: "indigo",
+      border: "border-indigo-500/40",
+      bg: "bg-indigo-500/10",
+      text: "text-indigo-400",
+      badgeBg: "bg-indigo-500/20",
+      glow: "shadow-[0_0_25px_rgba(99,102,241,0.15)]",
+      cue: '"See two passes ahead."',
+      tag: "rReadPlay",
+    },
+    {
+      id: "WinBattle" as const,
+      name: "Win the Battle",
+      hue: "rose",
+      border: "border-rose-500/40",
+      bg: "bg-rose-500/10",
+      text: "text-rose-400",
+      badgeBg: "bg-rose-500/20",
+      glow: "shadow-[0_0_25px_rgba(244,63,94,0.15)]",
+      cue: '"Low leverage. Heavy stick."',
+      tag: "rWinBattle",
+    },
+    {
+      id: "WallMaster" as const,
+      name: "Hard Along Walls",
+      hue: "violet",
+      border: "border-violet-500/40",
+      bg: "bg-violet-500/10",
+      text: "text-violet-400",
+      badgeBg: "bg-violet-500/20",
+      glow: "shadow-[0_0_25px_rgba(139,92,246,0.15)]",
+      cue: '"Clean wall chips. Seal boards."',
+      tag: "rWallMaster",
+    },
+    {
+      id: "DotDominance" as const,
+      name: "Dot Dominance",
+      hue: "sky",
+      border: "border-sky-500/40",
+      bg: "bg-sky-500/10",
+      text: "text-sky-400",
+      badgeBg: "bg-sky-500/20",
+      glow: "shadow-[0_0_25px_rgba(14,165,233,0.15)]",
+      cue: '"Own the dot. Set the tempo."',
+      tag: "rDotDominance",
     },
   ];
 
@@ -167,23 +216,7 @@ export default function CoachsCornerPage() {
               "The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots."
             </blockquote>
 
-            {/* 6 STAGES CONTINUUM */}
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 max-w-5xl mx-auto">
-              {[
-                { step: "01", title: "Spot it", desc: "AI surfaces reads in seconds", color: "border-cyan-500/30 text-cyan-400" },
-                { step: "02", title: "Cut it", desc: "Bind superpower & goal", color: "border-indigo-500/30 text-indigo-400" },
-                { step: "03", title: "Send it", desc: "Push directed cut + voice", color: "border-purple-500/30 text-purple-400" },
-                { step: "04", title: "The Drop", desc: "Lands in player journal", color: "border-fuchsia-500/30 text-fuchsia-400" },
-                { step: "05", title: "Read-back", desc: "Player reflects & self-rates", color: "border-emerald-500/30 text-emerald-400" },
-                { step: "06", title: "The Rip", desc: "Superpower levels up on record", color: "border-amber-500/30 text-amber-400" },
-              ].map((stage, i) => (
-                <div key={i} className={`bg-black/50 border ${stage.color.split(" ")[0]} rounded-xl p-4 text-left backdrop-blur-sm relative group hover:bg-zinc-900/60 transition-all`}>
-                  <span className={`text-xs font-mono font-bold ${stage.color.split(" ")[1]} block mb-1`}>{stage.step}</span>
-                  <h4 className="text-base font-serif text-white font-semibold mb-1">{stage.title}</h4>
-                  <p className="text-[11px] text-zinc-400 leading-tight">{stage.desc}</p>
-                </div>
-              ))}
-            </div>
+            <TheLoopIllustration />
           </div>
         </section>
 

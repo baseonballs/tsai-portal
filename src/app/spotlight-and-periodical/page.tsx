@@ -72,7 +72,7 @@ export default function SpotlightAndPeriodicalPage() {
               {/* Spotlight Engine */}
               <div className="rounded-2xl border border-cyan-500/30 bg-black/50 p-8 hover:border-cyan-500/50 transition-colors shadow-2xl">
                 <div className="text-[10px] font-semibold tracking-widest text-cyan-400 uppercase mb-4 font-mono">Engine 01 · The Intelligence</div>
-                <h3 className="text-3xl font-serif text-white mb-4">Spotlight</h3>
+                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-rose-500 mb-4">Spotlight</h3>
                 <p className="text-zinc-300 text-lg mb-6 border-b border-white/10 pb-6 font-light">Sees the game with AI precision and proves what happened.</p>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3">
@@ -81,7 +81,7 @@ export default function SpotlightAndPeriodicalPage() {
                   </li>
                   <li className="flex items-start gap-3">
                     <ShieldCheck className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-400 text-sm"><strong className="text-white">Cut Room & Superpower Rail</strong> — directed cuts, dual-playback split screen, locked micro-loops.</p>
+                    <p className="text-zinc-400 text-sm"><strong className="text-white">Cut Room &amp; Superpower Rail</strong> — directed cuts, dual-playback split screen, locked micro-loops.</p>
                   </li>
                   <li className="flex items-start gap-3">
                     <BarChart2 className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
@@ -93,20 +93,20 @@ export default function SpotlightAndPeriodicalPage() {
               {/* Periodical Engine */}
               <div className="rounded-2xl border border-indigo-500/30 bg-black/50 p-8 hover:border-indigo-500/50 transition-colors shadow-2xl">
                 <div className="text-[10px] font-semibold tracking-widest text-indigo-400 uppercase mb-4 font-mono">Engine 02 · The Bridge</div>
-                <h3 className="text-3xl font-serif text-white mb-4">Periodical</h3>
+                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 mb-4">Periodical</h3>
                 <p className="text-zinc-300 text-lg mb-6 border-b border-white/10 pb-6 font-light">Hears the player and turns reflection into a shared plan.</p>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3">
                     <Target className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-400 text-sm"><strong className="text-white">Personal Plans & Goals</strong> — objectives the player sets, shaped with coaches, mentors, and parents.</p>
+                    <p className="text-zinc-400 text-sm"><strong className="text-white">Personal Plans &amp; Goals</strong> — objectives the player sets, shaped with coaches, trainers, parents, and scouts.</p>
                   </li>
                   <li className="flex items-start gap-3">
                     <FileText className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-400 text-sm"><strong className="text-white">Player Journaling & Read-back</strong> — daily prompts that turn every shift into a coach-reviewed rep.</p>
+                    <p className="text-zinc-400 text-sm"><strong className="text-white">Player Journaling &amp; Read-back</strong> — daily prompts that turn every shift into a coach-reviewed rep.</p>
                   </li>
                   <li className="flex items-start gap-3">
                     <Repeat className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-400 text-sm"><strong className="text-white">4-Voice Feedback Loops</strong> — continuous dialogue between player, coach, mentor, and parent.</p>
+                    <p className="text-zinc-400 text-sm"><strong className="text-white">Multi-Voice Feedback Loops</strong> — continuous dialogue between player, coach, trainer, parent, and scout.</p>
                   </li>
                 </ul>
               </div>

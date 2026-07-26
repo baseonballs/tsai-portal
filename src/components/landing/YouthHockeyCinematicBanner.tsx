@@ -1,0 +1,342 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { 
+  ArrowRight, 
+  Target, 
+  Sparkles, 
+  BrainCircuit, 
+  Activity, 
+  Eye, 
+  Film, 
+  BookOpen, 
+  Zap, 
+  ShieldCheck,
+  Crosshair,
+  Lock
+} from "lucide-react";
+
+const BACKGROUNDS = [
+  { 
+    url: "/images/bg_youth_hockey_ai_hero_1.png", 
+    animation: "gallery-ken-zoom-in",
+    tag: "SPOTLIGHT AI INFERENCE",
+    title: "Real-time Video Intelligence"
+  },
+  { 
+    url: "/images/bg_youth_hockey_ai_hero_2.png", 
+    animation: "gallery-ken-drift-up",
+    tag: "PERIODICAL JOURNAL DROP",
+    title: "Youth Athlete Reflection"
+  },
+];
+
+export function YouthHockeyCinematicBanner() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const mountTimer = setTimeout(() => setMounted(true), 0);
+
+    const slideDuration = 6000;
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % BACKGROUNDS.length);
+    }, slideDuration);
+
+    return () => {
+      clearTimeout(mountTimer);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Particle & Telemetry Canvas Animation
+  useEffect(() => {
+    if (!mounted) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let width = (canvas.width = canvas.parentElement?.clientWidth || window.innerWidth);
+    let height = (canvas.height = canvas.parentElement?.clientHeight || 600);
+
+    const handleResize = () => {
+      if (!canvas || !canvas.parentElement) return;
+      width = canvas.width = canvas.parentElement.clientWidth;
+      height = canvas.height = canvas.parentElement.clientHeight;
+    };
+    window.addEventListener("resize", handleResize);
+
+    // Create ice crystal particles
+    const particles = Array.from({ length: 45 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() * 2 + 0.5,
+      speedX: (Math.random() - 0.5) * 0.4,
+      speedY: -Math.random() * 0.6 - 0.2,
+      opacity: Math.random() * 0.6 + 0.2,
+      pulse: Math.random() * Math.PI,
+    }));
+
+    // Scanning laser beam state
+    let scanY = 0;
+    let scanSpeed = 1.2;
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw horizontal HUD grid lines
+      ctx.strokeStyle = "rgba(6, 182, 212, 0.05)";
+      ctx.lineWidth = 1;
+      const gridSize = 40;
+      for (let x = 0; x < width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // Draw Ice Crystal Particles
+      particles.forEach((p) => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+        p.pulse += 0.03;
+
+        if (p.y < 0) p.y = height;
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+
+        const currentOpacity = p.opacity + Math.sin(p.pulse) * 0.2;
+        ctx.fillStyle = `rgba(165, 243, 252, ${Math.max(0.1, Math.min(0.8, currentOpacity))})`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "rgba(6, 182, 212, 0.8)";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // FLAG: Set to true to re-enable moving up & down laser sweep line animation
+      const ENABLE_SCAN_LINE_ANIMATION = false;
+
+      if (ENABLE_SCAN_LINE_ANIMATION) {
+        scanY += scanSpeed;
+        if (scanY > height || scanY < 0) scanSpeed = -scanSpeed;
+
+        const grad = ctx.createLinearGradient(0, scanY - 15, 0, scanY + 15);
+        grad.addColorStop(0, "rgba(6, 182, 212, 0)");
+        grad.addColorStop(0.5, "rgba(6, 182, 212, 0.25)");
+        grad.addColorStop(1, "rgba(6, 182, 212, 0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, scanY - 15, width, 30);
+
+        ctx.strokeStyle = "rgba(34, 211, 238, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, scanY);
+        ctx.lineTo(width, scanY);
+        ctx.stroke();
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [mounted]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  return (
+    <section 
+      onMouseMove={handleMouseMove}
+      className="gallery-slideshow relative min-h-[85vh] flex items-center justify-center overflow-hidden border-b border-white/10 bg-zinc-950 px-6 py-20 lg:px-8"
+      data-framing="immersive"
+    >
+      {/* 1. CINEMATIC BACKGROUND SLIDESHOW LAYER */}
+      {BACKGROUNDS.map((bg, index) => (
+        <div
+          key={bg.url}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            index === activeIndex ? "opacity-45" : "opacity-0"
+          }`}
+        >
+          {index === activeIndex && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={bg.url}
+              alt="Youth Hockey Video Intelligence & Reflection"
+              className={`h-full w-full object-cover object-center ${bg.animation}`}
+            />
+          )}
+        </div>
+      ))}
+
+      {/* 2. ATMOSPHERIC SHADING & VIGNETTE */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-zinc-950/40" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_10%,_#09090b_90%)]" />
+      
+      {/* Spotlight Overhead Cone Beam */}
+      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-cyan-500/20 via-indigo-500/10 to-transparent blur-3xl opacity-60 rounded-full" />
+
+      {/* 3. DYNAMIC CANVAS PARTICLES & HUD SCANNER */}
+      <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-0 opacity-70" />
+
+      {/* Film Grain Texture Overlay */}
+      <div className="gallery-slideshow-grain pointer-events-none absolute inset-0 opacity-25" />
+
+      {/* 4. HIGH-LEVEL PROGRAM BADGE (MOVED HIGHER ABOVE CYAN HUD FRAME) */}
+      <div className="absolute top-4 sm:top-7 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/40 bg-black/85 px-5 py-2 text-xs font-semibold tracking-wide text-zinc-200 backdrop-blur-xl shadow-xl shadow-cyan-500/15 hover:border-cyan-400 transition-all">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+          </span>
+          <span className="text-cyan-400 font-bold tracking-wider">Spotlight</span>
+          <span className="text-zinc-500">·</span>
+          <span className="text-indigo-400 font-bold tracking-wider">Periodical</span>
+          <span className="text-zinc-500">·</span>
+          <span className="text-white font-bold tracking-wider">Teams</span> <span className="text-zinc-400 font-semibold">Beta Program</span>
+        </div>
+      </div>
+
+      {/* 5. TACTICAL HUD RETICLES & CORNER BRACKETS (CYAN FRAME RECTANGLE) */}
+      <div className="pointer-events-none absolute left-6 right-6 sm:left-12 sm:right-12 top-16 sm:top-20 bottom-6 sm:bottom-10 border border-cyan-500/20 rounded-3xl z-10 flex flex-col justify-between p-4">
+        {/* Top Corners */}
+        <div className="flex justify-between items-center text-[10px] font-mono text-cyan-400/70 tracking-wider">
+          <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded border border-cyan-500/30">
+            <Crosshair className="w-3 h-3 text-cyan-400 animate-spin" style={{ animationDuration: "10s" }} />
+            <span>AI RINK TRACKING • 60 FPS</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded border border-indigo-500/30">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>LIVE TELEMETRY: YOUTH ICE HOCKEY LOOP</span>
+          </div>
+        </div>
+
+        {/* Bottom Corners */}
+        <div className="flex justify-between items-center text-[10px] font-mono text-zinc-400">
+          <div className="flex items-center gap-3">
+            <span className="text-cyan-400">POS: [{Math.round(mousePos.x)}, {Math.round(mousePos.y)}]</span>
+            <span className="hidden md:inline text-zinc-600">|</span>
+            <span className="hidden md:inline">SUPERPOWER MATRIX v2.4</span>
+          </div>
+          <div className="text-right text-indigo-400 font-semibold">
+            {BACKGROUNDS[activeIndex].tag}
+          </div>
+        </div>
+      </div>
+
+      {/* 6. MAIN HERO CONTENT CONTAINER */}
+      <div className="relative z-20 max-w-5xl mx-auto text-center pt-10 sm:pt-12">
+
+        {/* MAIN HEADLINE WITH DUAL-THEME GLOW */}
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif tracking-tight text-white mb-6 leading-[1.08] drop-shadow-2xl">
+          Where{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-rose-500 font-medium">
+            video intelligence
+          </span>{" "}
+          meets<br />
+          <span className="relative inline-block mt-1">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-fuchsia-400 font-medium">
+              player reflection
+            </span>
+            <span className="text-white">.</span>
+            {/* Underline reflection glow */}
+            <span className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 rounded-full blur-xs opacity-80" />
+          </span>
+        </h1>
+
+        {/* DUAL THEME PILL BADGES */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono">
+            <Film className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Spotlight Video Reasoning</span>
+          </div>
+          <span className="text-zinc-600 text-sm font-bold">×</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 text-xs font-mono">
+            <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Periodical Athlete Journal</span>
+          </div>
+        </div>
+
+        {/* SUBTITLE */}
+        <p className="text-lg sm:text-xl md:text-2xl font-light text-zinc-300 max-w-3xl mx-auto leading-relaxed mb-10 drop-shadow">
+          Unlocking sports intelligence to guide, measure, and accelerate youth athlete growth on the path to their full potential.
+        </p>
+
+        {/* CTA BUTTONS */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <button 
+            disabled
+            className="w-full sm:w-auto rounded-full border border-white/10 bg-zinc-900/40 px-8 py-4 text-sm font-bold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
+          >
+            <Lock className="w-4 h-4 text-zinc-500" />
+            <span>Apply for Teams Beta Access (Inactive)</span>
+          </button>
+
+          <Link 
+            href="/coachs-corner" 
+            className="w-full sm:w-auto text-sm font-semibold leading-6 text-zinc-200 hover:text-white flex items-center justify-center gap-2 py-4 px-7 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-md transition-all shadow-md"
+          >
+            <Eye className="w-4 h-4 text-indigo-400" />
+            <span>Explore Coach's Corner</span>
+            <ArrowRight className="w-4 h-4 text-cyan-400" />
+          </Link>
+        </div>
+
+        {/* QUICK STATS STRIP */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left border-t border-white/15 pt-8 bg-black/40 p-6 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl">
+          <div>
+            <div className="text-2xl sm:text-3xl font-serif text-white font-bold flex items-center gap-1.5">
+              <span>41s</span>
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+            </div>
+            <div className="text-xs text-zinc-400 mt-1">Natural Language Discovery &amp; Semantic Searches</div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-cyan-400 flex items-baseline gap-1.5">
+              <span>8</span>
+              <span className="text-lg text-cyan-300 font-sans font-semibold">Superpowers</span>
+            </div>
+            <div className="text-xs text-zinc-400 mt-1">Explode, Own Puck, Threat, Read the Play, Wall Master &amp; more</div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-indigo-400">The Loop</div>
+            <div className="text-xs text-zinc-400 mt-1">Cut Rooms × Journal Loops, Continuous Feedback</div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-fuchsia-400">5 Voices</div>
+            <div className="text-xs text-zinc-400 mt-1">Player, Coach, Trainer, Parent &amp; Scout</div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Slideshow Progress Bar */}
+      <div className="absolute bottom-0 left-0 z-20 h-[3px] w-full bg-white/10">
+        <div key={activeIndex} className="gallery-slideshow-progress-bar h-full bg-gradient-to-r from-cyan-400 to-indigo-500" />
+      </div>
+    </section>
+  );
+}

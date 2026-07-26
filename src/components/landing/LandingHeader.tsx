@@ -40,7 +40,7 @@ export function LandingHeader() {
             <span className="font-mono text-sm font-extrabold text-zinc-950">T</span>
           </div>
           <Link href="/" className="font-serif text-lg font-semibold tracking-wider hover:opacity-90 transition-opacity">
-            <span className="text-amber-400">Transcendental Sports</span> <span className="text-cyan-400">AI</span>
+            <span className="text-white">Transcendental Sports</span> <span className="text-cyan-400">AI</span>
           </Link>
         </div>
 
@@ -56,6 +56,10 @@ export function LandingHeader() {
           </Link>
           <Link href="/technology-solutions" className="transition-colors hover:text-white">
             Tech Solutions
+          </Link>
+          <span className="text-zinc-700 select-none font-light">|</span>
+          <Link href="/pricing" className="transition-colors hover:text-white">
+            Pricing
           </Link>
           {user && (
             <Link href="/docs" className="text-cyan-400 font-semibold transition-colors hover:text-cyan-300">
@@ -78,19 +82,21 @@ export function LandingHeader() {
               </button>
             </div>
           ) : (
-            <Link
-              href="/login"
-              className="rounded-md border border-white/10 bg-zinc-900/50 px-4 py-1.5 text-xs font-semibold text-zinc-300 transition-all hover:border-white/20 hover:text-white"
+            <button
+              disabled
+              className="rounded-md border border-white/10 bg-zinc-900/30 px-4 py-1.5 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-50"
+              title="Sign In disabled"
             >
               Sign In
-            </Link>
+            </button>
           )}
-          <a
-            href="#beta-access"
-            className="rounded-md bg-cyan-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md shadow-cyan-950/20 transition-all hover:bg-cyan-500 active:scale-98"
+          <button
+            disabled
+            className="rounded-md border border-white/10 bg-zinc-900/30 px-4 py-1.5 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-50"
+            title="Beta Program disabled"
           >
             Beta Program
-          </a>
+          </button>
         </div>
       </div>
     </header>
