@@ -8,6 +8,7 @@ import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
 import { RinkTelemetryChart } from "@/components/landing/RinkTelemetryChart";
 import { YouthHockeyCinematicBanner } from "@/components/landing/YouthHockeyCinematicBanner";
 import { TheLoopIllustration } from "@/components/landing/TheLoopIllustration";
+import { LockerRoomHub } from "@/components/landing/LockerRoomHub";
 import { 
   ArrowRight, 
   Search, 
@@ -80,8 +81,8 @@ export default function Home() {
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Telemetry Board (dwell time, loop counts)</li>
                 </ul>
                 <div className="mt-8 pt-6 border-t border-white/10">
-                  <Link href="/coachs-corner" className="text-cyan-400 hover:text-cyan-300 font-semibold text-xs flex items-center gap-1">
-                    Explore Coach's Corner <ArrowRight className="w-3.5 h-3.5" />
+                  <Link href="/locker-room" className="text-cyan-400 hover:text-cyan-300 font-semibold text-xs flex items-center gap-1">
+                    Step Into The Locker Room <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
@@ -105,6 +106,9 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* THE LOCKER ROOM INTERACTIVE SHOWCASE */}
+        <LockerRoomHub />
 
         {/* RINK TELEMETRY CHART COMPONENT */}
         <section className="px-6 py-24 lg:px-8 border-t border-white/5 bg-zinc-900/40">

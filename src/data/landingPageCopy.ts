@@ -31,6 +31,19 @@ export interface TechModule {
   icon: string;
 }
 
+export interface LockerRoomStall {
+  id: "athlete" | "coach" | "scout" | "trainer";
+  role: string;
+  title: string;
+  persona: string;
+  badge: string;
+  hue: "cyan" | "amber" | "emerald" | "violet";
+  icon: string;
+  focus: string;
+  quote: string;
+  features: string[];
+}
+
 export const landingPageCopy = {
   hero: {
     badge: "Spotlight Beta Program",
@@ -38,6 +51,79 @@ export const landingPageCopy = {
     subtitle: "Spotlight is the mordern, high-fidelity player development platform bringing decision-grade video intelligence and captive AI to grassroots youth hockey—transforming raw recordings into an interactive playground.",
     primaryCta: "Apply for Beta Access",
     secondaryCta: "Explore the Platform"
+  },
+  lockerRoom: {
+    eyebrow: "The Sanctuary of Intentional Development",
+    title: "Development doesn't start on the ice. It starts in the Locker Room.",
+    subtitle: "The unified space where pre-skate intent meets post-skate video intelligence, connecting coaches, players, scouts, and trainers in one shared developmental rhythm.",
+    primaryCta: "Step Into The Locker Room",
+    secondaryCta: "Explore Player Journals",
+    stalls: [
+      {
+        id: "athlete" as const,
+        role: "Athlete Stall",
+        title: "Micro-Loops & Daily Reflections",
+        persona: "Skater",
+        badge: "Periodical Journal",
+        hue: "cyan" as const,
+        icon: "User",
+        focus: "Pre-skate focus briefing and post-skate micro-loop reflections",
+        quote: '"Set 3 focus goals before stepping onto the ice. Review 15s micro-loop debriefs after."',
+        features: [
+          "Personalized 15-second micro-loop clips delivered directly to player mobile devices",
+          "Pre-skate intent briefing for key skills (Explode, Own Puck, Threat, Quick Feet)",
+          "Daily reflection journal with self-scoring and coach annotation feedback loops"
+        ]
+      },
+      {
+        id: "coach" as const,
+        role: "Coach Workbench",
+        title: "Tactical Curation & Whiteboards",
+        persona: "Head Coach",
+        badge: "Encore Studio",
+        hue: "amber" as const,
+        icon: "ShieldCheck",
+        focus: "Tactical curation, split-screen benchmarks, and sub-second clip tagging",
+        quote: '"Whiteboard annotations tied directly to video timestamps. Bench talk translated instantly."',
+        features: [
+          "Interactive Coach Workbench wrapped in deep-slate frosted glass",
+          "Dual-Playback Split-Screen side-by-side analysis (NHL benchmark vs Skater)",
+          "Instant broadcast engine pushing tagged clips directly to player Periodical journals"
+        ]
+      },
+      {
+        id: "scout" as const,
+        role: "Scout Observatory",
+        title: "Possession & Threat Topology",
+        persona: "Evaluator",
+        badge: "EdgeIQ & Tempest",
+        hue: "emerald" as const,
+        icon: "BarChart2",
+        focus: "Possession flow lines, threat mapping, and developmental delta tracking",
+        quote: '"Scout player progression over time—track zone residence, danger creation, and tilt."',
+        features: [
+          "Layered danger topology indexing how spatial risk is created or denied",
+          "Tempest possession console tracking zone entry success and momentum shifts",
+          "Dossier-style scouting reports built for placement meetings and progress reviews"
+        ]
+      },
+      {
+        id: "trainer" as const,
+        role: "Skill Scientist",
+        title: "Kinetic Surfaces & Skill Arcs",
+        persona: "Development Lead",
+        badge: "Stratus Lab",
+        hue: "violet" as const,
+        icon: "Zap",
+        focus: "Micro-skill sequencing, 3D rink twins, and season-long development blueprints",
+        quote: '"Sequences what we drill this week, how we know it stuck, and what unlocks next."',
+        features: [
+          "Holographic 3D rink twins mapping skater kinetic pathways and acceleration vectors",
+          "Neural coaching lab providing plain-language developmental roadmaps",
+          "Progress barometers easily recognized by coaches, players, and parents"
+        ]
+      }
+    ] as LockerRoomStall[]
   },
   ecosystem: {
     eyebrow: "AI-Powered Cloud Architecture for Sports Intelligence",
