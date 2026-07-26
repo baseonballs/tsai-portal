@@ -40,7 +40,7 @@ export const landingPageCopy = {
     secondaryCta: "Explore the Platform"
   },
   ecosystem: {
-    eyebrow: "The Architecture of Sports Intelligence",
+    eyebrow: "AI-Powered Cloud Architecture for Sports Intelligence",
     title: "Two synergistic applications, and four sub-stack programs. One unified tape.",
     subtitle: "Spotlight reconstructs raw game files through four distinct analytical lenses, then distributes tailored learning loops directly to your athletes.",
     tiers: [
@@ -98,7 +98,7 @@ export const landingPageCopy = {
   },
   technology: {
     eyebrow: "The AI Edge · MASCE Engine",
-    title: "Software margins on a hardware moat.",
+    title: "Software margins on a hybrid-cloud foundation.",
     subtitle: "Most AI guesses. Ours is auditable. By running our Multi-Agent Sports Cognition Engine (MASCE) on our owned hybrid GPU fabric and hybrid cloud, we collapsed the economics of automated video analysis.",
     modules: [
       {
@@ -126,7 +126,7 @@ export const landingPageCopy = {
       {
         id: "deploy",
         title: "The Cost Unlock",
-        subtitle: "From $200 to $0.17 per game",
+        subtitle: "From $30 to $1.17 per game",
         features: [
           "Owned on-premise GPU fabric eliminates crippling cloud compute costs",
           "Processes a full 90-minute 1080p game in under 60 minutes for pennies",
