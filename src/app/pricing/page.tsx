@@ -23,8 +23,8 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<"team" | "season">("team");
-  const [familyTier, setFamilyTier] = useState<"basic" | "advantage">("advantage");
-  const [proTier, setProTier] = useState<"standard" | "advantage">("advantage");
+  const [familyTier, setFamilyTier] = useState<"basic" | "advantage">("basic");
+  const [proTier, setProTier] = useState<"standard" | "advantage">("standard");
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-cyan-500 selection:text-zinc-950">
