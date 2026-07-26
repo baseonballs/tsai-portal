@@ -37,12 +37,16 @@ export function LandingHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-zinc-950/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Logo */}
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-indigo-600 shadow-lg shadow-cyan-500/10 shrink-0">
-            <span className="font-mono text-sm font-extrabold text-zinc-950">T</span>
-          </div>
-          <Link href="/" className="font-serif text-base sm:text-lg font-semibold tracking-wider hover:opacity-90 transition-opacity truncate">
-            <span className="text-white">Transcendental Sports</span> <span className="text-cyan-400">AI</span>
+          {/* Official Brand Emblem Logo */}
+          <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+            <img
+              src="/logos/tsai-emblem-full.png"
+              alt="Transcendental Sports AI Emblem"
+              className="h-9 w-9 object-contain rounded-full bg-zinc-900/80 p-0.5 border border-white/10 shadow-lg shadow-cyan-500/10 shrink-0"
+            />
+            <span className="font-serif text-base sm:text-lg font-semibold tracking-wider truncate">
+              <span className="text-white">Transcendental Sports</span> <span className="text-cyan-400">AI</span>
+            </span>
           </Link>
         </div>
 
