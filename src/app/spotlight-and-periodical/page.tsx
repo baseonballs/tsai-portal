@@ -4,6 +4,7 @@ import React from "react";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
+import { TheLoopIllustration } from "@/components/landing/TheLoopIllustration";
 import { ArrowRight, BrainCircuit, Activity, Repeat, FileText, Target, ShieldCheck, Zap, BarChart2 } from "lucide-react";
 
 export default function SpotlightAndPeriodicalPage() {
@@ -42,8 +43,8 @@ export default function SpotlightAndPeriodicalPage() {
         </section>
 
         {/* ABSTRACTION: THE LOOP CONNECTS THE DOTS */}
-        <section className="px-6 py-20 lg:px-8 border-b border-white/5 bg-gradient-to-r from-cyan-950/30 via-indigo-950/30 to-fuchsia-950/30">
-          <div className="mx-auto max-w-5xl text-center">
+        <section className="px-6 py-20 lg:px-8 border-b border-white/5 bg-gradient-to-r from-cyan-950/30 via-indigo-950/30 to-fuchsia-950/30 backdrop-blur-md">
+          <div className="mx-auto max-w-6xl text-center">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase mb-3 block">The Core Synergy</span>
             <h2 className="text-3xl sm:text-5xl font-serif text-white mb-6">
               The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">Connects the Dots</span>
@@ -51,13 +52,8 @@ export default function SpotlightAndPeriodicalPage() {
             <p className="text-xl font-serif italic text-zinc-200 max-w-3xl mx-auto mb-10">
               "The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots."
             </p>
-            <div className="flex flex-wrap justify-center gap-4 text-xs font-mono">
-              {["01 / Spot it", "02 / Cut it", "03 / Send it", "04 / The Drop", "05 / Read-back", "06 / The Rip"].map((stage, i) => (
-                <span key={i} className="px-4 py-2 rounded-full bg-black/60 border border-white/10 text-zinc-300">
-                  {stage}
-                </span>
-              ))}
-            </div>
+
+            <TheLoopIllustration />
           </div>
         </section>
 
