@@ -243,7 +243,7 @@ export default function PricingPage() {
                     className="w-full rounded-xl border border-white/10 bg-zinc-900/50 py-3 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
                   >
                     <Lock className="w-3.5 h-3.5" />
-                    <span>{familyTier === "basic" ? "Family Basic (Inactive)" : "Family Advantage (Inactive)"}</span>
+                    <span>{familyTier === "basic" ? "Family Basic" : "Family Advantage"}</span>
                   </button>
                 </div>
               </div>
@@ -370,7 +370,7 @@ export default function PricingPage() {
                     className="w-full rounded-xl border border-white/10 bg-zinc-900/50 py-3 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
                   >
                     <Lock className="w-3.5 h-3.5" />
-                    <span>{proTier === "standard" ? "Pro Standard (Inactive)" : "Pro Advantage (Inactive)"}</span>
+                    <span>{proTier === "standard" ? "Pro Standard" : "Pro Advantage"}</span>
                   </button>
                 </div>
               </div>
@@ -447,7 +447,7 @@ export default function PricingPage() {
                     className="w-full rounded-xl border border-white/10 bg-zinc-900/60 py-3.5 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
                   >
                     <Lock className="w-3.5 h-3.5" />
-                    <span>Founding Cohort Program (Inactive)</span>
+                    <span>Founding Cohort Program</span>
                   </button>
                 </div>
               </div>
@@ -502,7 +502,7 @@ export default function PricingPage() {
                     className="w-full rounded-xl border border-white/10 bg-zinc-900/50 py-3.5 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
                   >
                     <Lock className="w-3.5 h-3.5" />
-                    <span>Enterprise Contact (Inactive)</span>
+                    <span>Enterprise Contact</span>
                   </button>
                 </div>
               </div>

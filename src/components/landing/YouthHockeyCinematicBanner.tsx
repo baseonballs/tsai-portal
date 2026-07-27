@@ -292,7 +292,7 @@ export function YouthHockeyCinematicBanner() {
             className="w-full sm:w-auto rounded-full border border-white/10 bg-zinc-900/40 px-6 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-sm font-bold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
           >
             <Lock className="w-4 h-4 text-zinc-500 shrink-0" />
-            <span>Apply for Teams Beta Access (Inactive)</span>
+            <span>Apply for Teams Beta Access</span>
           </button>
 
           <Link 

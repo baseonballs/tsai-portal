@@ -15,7 +15,7 @@ export function BetaSignupForm() {
       <div className="relative z-10">
         <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1 font-mono text-xs font-semibold text-amber-400">
           <Lock className="w-3.5 h-3.5" />
-          <span>Access Requests Currently Inactive</span>
+          <span>Private Teams Beta Cohort</span>
         </div>
 
         <h3 className="mb-2 font-serif text-2xl font-normal text-white">Apply for Beta Access</h3>
@@ -80,7 +80,7 @@ export function BetaSignupForm() {
             disabled
             className="mt-6 w-full bg-zinc-800 border border-white/10 font-medium text-zinc-500 cursor-not-allowed opacity-60 hover:bg-zinc-800 shadow-none"
           >
-            Request Workspace Access (Inactive)
+            Request Workspace Access
           </Button>
         </form>
       </div>
