@@ -6,6 +6,7 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { RinkTelemetryChart } from "@/components/landing/RinkTelemetryChart";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
+import { DualLedgersScienceSection } from "@/components/landing/DualLedgersScienceSection";
 import { 
   Camera, 
   Network, 
@@ -398,6 +399,9 @@ export default function TechnologySolutionsPage() {
             </div>
           </div>
         </section>
+
+        {/* THE SCIENCE: DUAL LEDGER ARCHITECTURE (CHRONOLOGY & POSSESSION) */}
+        <DualLedgersScienceSection />
 
 
         {/* ENTERPRISE INFRASTRUCTURE & SECURITY */}
