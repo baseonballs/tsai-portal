@@ -97,24 +97,24 @@ export function TranscendEngineSubstrate() {
   return (
     <div className="w-full relative mt-8 pt-8">
       {/* POWERING APPLICATIONS ARROW BRIDGE & CONDUITS */}
-      <div className="relative h-20 w-full flex items-center justify-between px-6 pointer-events-none mb-2">
+      <div className="relative h-32 w-full flex items-center justify-between px-6 pointer-events-none mb-3">
         {/* Left Arrow Conduit (Pointing up to Spotlight Card) */}
         <div className="hidden sm:flex flex-col items-center absolute left-[25%] -translate-x-1/2 top-0 bottom-0 justify-between py-1">
-          <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-cyan-400 bg-cyan-950/80 px-2.5 py-1 rounded-full border border-cyan-500/40 backdrop-blur-md shadow-md animate-bounce">
+          <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-cyan-400 bg-cyan-950/90 px-3 py-1 rounded-full border border-cyan-500/50 backdrop-blur-md shadow-lg animate-bounce">
             <ArrowUp className="w-3.5 h-3.5 text-cyan-400" />
             <span>Powering Spotlight</span>
           </div>
-          <div className="w-px h-full bg-gradient-to-t from-cyan-500/80 via-cyan-400/40 to-cyan-500/10" />
-          <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+          <div className="w-0.5 flex-1 bg-gradient-to-t from-cyan-500/90 via-cyan-400/50 to-cyan-500/20 my-1 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+          <div className="w-3 h-3 rounded-full bg-cyan-400 animate-ping" />
         </div>
 
-        {/* Center Convergence & Power Badge */}
-        <div className="mx-auto relative z-10 px-5 py-2.5 rounded-full bg-zinc-950/95 border border-white/20 text-xs font-mono flex items-center gap-2.5 shadow-2xl backdrop-blur-xl">
+        {/* Center Convergence Badge (Positioned at bottom near pedestal) */}
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 px-5 py-2 rounded-full bg-zinc-950/95 border border-white/20 text-xs font-mono flex items-center gap-2.5 shadow-2xl backdrop-blur-xl">
           <div className="p-1 rounded-full bg-indigo-500/20 border border-indigo-500/40">
-            <ArrowUp className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <Zap className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
           </div>
           <span className="text-zinc-200 font-semibold uppercase tracking-wider text-[11px]">
-            Transcend Substrate Powering Applications Above
+            Transcend AI Substrate
           </span>
           <span className="text-cyan-400 font-bold text-[11px] bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded">
             {pulseCount} events/sec
@@ -123,12 +123,12 @@ export function TranscendEngineSubstrate() {
 
         {/* Right Arrow Conduit (Pointing up to Periodical Card) */}
         <div className="hidden sm:flex flex-col items-center absolute right-[25%] translate-x-1/2 top-0 bottom-0 justify-between py-1">
-          <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-fuchsia-400 bg-fuchsia-950/80 px-2.5 py-1 rounded-full border border-fuchsia-500/40 backdrop-blur-md shadow-md animate-bounce">
+          <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-fuchsia-400 bg-fuchsia-950/90 px-3 py-1 rounded-full border border-fuchsia-500/50 backdrop-blur-md shadow-lg animate-bounce">
             <ArrowUp className="w-3.5 h-3.5 text-fuchsia-400" />
             <span>Powering Periodical</span>
           </div>
-          <div className="w-px h-full bg-gradient-to-t from-fuchsia-500/80 via-fuchsia-400/40 to-fuchsia-500/10" />
-          <div className="w-2.5 h-2.5 rounded-full bg-fuchsia-400 animate-ping" />
+          <div className="w-0.5 flex-1 bg-gradient-to-t from-fuchsia-500/90 via-fuchsia-400/50 to-fuchsia-500/20 my-1 shadow-[0_0_10px_rgba(217,70,239,0.5)]" />
+          <div className="w-3 h-3 rounded-full bg-fuchsia-400 animate-ping" />
         </div>
       </div>
 
