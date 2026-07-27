@@ -38,7 +38,7 @@ export function TranscendEngineSubstrate() {
       tag: "PERCEPTION",
       title: "MASCE AI Vision Pipeline",
       subtitle: "Autonomous Video Intelligence",
-      desc: "Multi-Agent Spatial & Contextual Engine running YOLO v11 object tracking, homography pixel-to-meter translation, and shift parsing in 41 seconds.",
+      desc: "Multi-Agent Sports Cognition Engine running YOLO v11 object tracking, homography pixel-to-meter translation, and shift parsing in 41 seconds.",
       accent: "cyan",
       badgeBg: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
       border: "border-cyan-500/40",
