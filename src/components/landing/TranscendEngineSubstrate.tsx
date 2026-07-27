@@ -229,7 +229,16 @@ export function TranscendEngineSubstrate() {
                   {currentPillar.subtitle}
                 </h5>
                 <p className="text-sm text-zinc-300 leading-relaxed font-light">
-                  {currentPillar.desc}
+                  {currentPillar.desc.includes("Multi-Agent Sports Cognition Engine") ? (
+                    <>
+                      <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">
+                        Multi-Agent Sports Cognition Engine
+                      </span>
+                      {currentPillar.desc.replace("Multi-Agent Sports Cognition Engine", "")}
+                    </>
+                  ) : (
+                    currentPillar.desc
+                  )}
                 </p>
 
                 {/* SIMULATED HIGH-TECH AI TERMINAL METRICS */}
