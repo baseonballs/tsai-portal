@@ -102,7 +102,13 @@ export default function TechnologySolutionsPage() {
           {/* Ambient Glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-cyan-900/15 blur-[140px] rounded-full pointer-events-none" />
 
-          
+          <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-cyan-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-widest backdrop-blur-xl shadow-xl shadow-cyan-500/15 mb-10 sm:mb-12 hover:border-cyan-400/60 transition-all font-mono">
+            <Sparkles className="h-4 w-4 text-cyan-400 shrink-0" />
+            <span className="text-cyan-400 font-bold">THE SCIENCE</span>
+            <span className="text-zinc-600 font-normal">·</span>
+            <span className="text-zinc-200 font-medium uppercase">HIGH RESOLUTION DUAL-LAYERED LEDGER</span>
+          </div>
+
           <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-6 leading-[1.1]">
             Zero-hardware capture.<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">
