@@ -13,7 +13,11 @@ import {
   GitMerge, 
   Terminal,
   ChevronRight,
-  TrendingUp
+  TrendingUp,
+  ArrowUp,
+  ArrowUpLeft,
+  ArrowUpRight,
+  ChevronUp
 } from "lucide-react";
 
 export function TranscendEngineSubstrate() {
@@ -92,23 +96,39 @@ export function TranscendEngineSubstrate() {
 
   return (
     <div className="w-full relative mt-8 pt-8">
-      {/* CONVERGING DATA PIPES / LASER BEAMS FROM CARDS TO TRANSCEND BASE */}
-      <div className="relative h-16 w-full flex items-center justify-center pointer-events-none mb-2">
-        {/* Left Beam (Spotlight) */}
-        <div className="absolute left-[25%] top-0 bottom-0 w-px bg-gradient-to-b from-cyan-500/80 via-cyan-400/40 to-indigo-500/80" />
-        <div className="absolute left-[25%] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-cyan-400 animate-ping opacity-60" />
+      {/* POWERING APPLICATIONS ARROW BRIDGE & CONDUITS */}
+      <div className="relative h-20 w-full flex items-center justify-between px-6 pointer-events-none mb-2">
+        {/* Left Arrow Conduit (Pointing up to Spotlight Card) */}
+        <div className="hidden sm:flex flex-col items-center absolute left-[25%] -translate-x-1/2 top-0 bottom-0 justify-between py-1">
+          <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-cyan-400 bg-cyan-950/80 px-2.5 py-1 rounded-full border border-cyan-500/40 backdrop-blur-md shadow-md animate-bounce">
+            <ArrowUp className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Powering Spotlight</span>
+          </div>
+          <div className="w-px h-full bg-gradient-to-t from-cyan-500/80 via-cyan-400/40 to-cyan-500/10" />
+          <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+        </div>
 
-        {/* Right Beam (Periodical) */}
-        <div className="absolute right-[25%] top-0 bottom-0 w-px bg-gradient-to-b from-indigo-500/80 via-fuchsia-400/40 to-indigo-500/80" />
-        <div className="absolute right-[25%] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-fuchsia-400 animate-ping opacity-60" />
-
-        {/* Center Convergence Node */}
-        <div className="relative z-10 px-5 py-2 rounded-full bg-zinc-950 border border-white/20 text-xs font-mono flex items-center gap-2 shadow-2xl backdrop-blur-xl">
-          <Zap className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-          <span className="text-zinc-300 font-semibold uppercase tracking-wider text-[11px]">
-            Data Streams Converging $\downarrow$
+        {/* Center Convergence & Power Badge */}
+        <div className="mx-auto relative z-10 px-5 py-2.5 rounded-full bg-zinc-950/95 border border-white/20 text-xs font-mono flex items-center gap-2.5 shadow-2xl backdrop-blur-xl">
+          <div className="p-1 rounded-full bg-indigo-500/20 border border-indigo-500/40">
+            <ArrowUp className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+          </div>
+          <span className="text-zinc-200 font-semibold uppercase tracking-wider text-[11px]">
+            Transcend Substrate Powering Applications Above
           </span>
-          <span className="text-cyan-400 font-bold">{pulseCount} events/sec</span>
+          <span className="text-cyan-400 font-bold text-[11px] bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded">
+            {pulseCount} events/sec
+          </span>
+        </div>
+
+        {/* Right Arrow Conduit (Pointing up to Periodical Card) */}
+        <div className="hidden sm:flex flex-col items-center absolute right-[25%] translate-x-1/2 top-0 bottom-0 justify-between py-1">
+          <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-fuchsia-400 bg-fuchsia-950/80 px-2.5 py-1 rounded-full border border-fuchsia-500/40 backdrop-blur-md shadow-md animate-bounce">
+            <ArrowUp className="w-3.5 h-3.5 text-fuchsia-400" />
+            <span>Powering Periodical</span>
+          </div>
+          <div className="w-px h-full bg-gradient-to-t from-fuchsia-500/80 via-fuchsia-400/40 to-fuchsia-500/10" />
+          <div className="w-2.5 h-2.5 rounded-full bg-fuchsia-400 animate-ping" />
         </div>
       </div>
 
