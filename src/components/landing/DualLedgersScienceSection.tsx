@@ -266,6 +266,35 @@ export function DualLedgersScienceSection() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Live Parallel Audit Verification Log */}
+                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-cyan-500/25 text-[10px] space-y-2">
+                        <div className="flex items-center justify-between text-cyan-400 font-bold border-b border-cyan-500/15 pb-1 text-[9.5px]">
+                          <span className="flex items-center gap-1.5">
+                            <Activity className="w-3 h-3 text-cyan-400 animate-pulse" />
+                            PARALLEL AUDIT VERIFICATION LOG
+                          </span>
+                          <span className="text-emerald-400 text-[8.5px]">PASS 14/14</span>
+                        </div>
+                        <div className="space-y-1 text-[9px] text-zinc-300">
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">14:22:08.100 · PRE_CONTACT:</span>
+                            <span className="text-zinc-400">Forecheck Contact (d = 0.42m)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">14:22:08.250 · STICK_PRESSURE:</span>
+                            <span className="text-cyan-300">Blade Angle Delta (+14.2°)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">14:22:08.412 · AUDIT_COMMIT:</span>
+                            <span className="text-emerald-400 font-bold">Immutable Ledger Hash Generated</span>
+                          </div>
+                        </div>
+                        <div className="pt-1.5 border-t border-white/5 flex items-center justify-between text-[8.5px] text-zinc-500">
+                          <span>RRM_SHA256: <code className="text-zinc-400">e3b0c442...89bf</code></span>
+                          <span className="text-cyan-400 font-semibold">100% AUDITABLE PROOF</span>
+                        </div>
+                      </div>
                     </>
                   ) : (
                     <>
@@ -313,6 +342,35 @@ export function DualLedgersScienceSection() {
                             <div className="text-emerald-400 font-bold mt-0.5">100% Tracked</div>
                             <div className="text-emerald-400 text-[8px]">Zero Dropouts</div>
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Live Parallel Audit Verification Log */}
+                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-indigo-500/25 text-[10px] space-y-2">
+                        <div className="flex items-center justify-between text-indigo-400 font-bold border-b border-indigo-500/15 pb-1 text-[9.5px]">
+                          <span className="flex items-center gap-1.5">
+                            <Activity className="w-3 h-3 text-indigo-400 animate-pulse" />
+                            PARALLEL AUDIT VERIFICATION LOG
+                          </span>
+                          <span className="text-emerald-400 text-[8.5px]">PASS 14/14</span>
+                        </div>
+                        <div className="space-y-1 text-[9px] text-zinc-300">
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">20:91:04.110 · RECOGNITION:</span>
+                            <span className="text-zinc-400">Puck-Blade Radius (r = 0.18m)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">20:91:04.300 · VECTOR_EVAL:</span>
+                            <span className="text-indigo-300">High-Danger Space (+4.2m)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">20:91:04.512 · AUDIT_COMMIT:</span>
+                            <span className="text-emerald-400 font-bold">State Verified &amp; Hashed</span>
+                          </div>
+                        </div>
+                        <div className="pt-1.5 border-t border-white/5 flex items-center justify-between text-[8.5px] text-zinc-500">
+                          <span>RRM_SHA256: <code className="text-zinc-400">7f8a91c2...04a1</code></span>
+                          <span className="text-indigo-400 font-semibold">ZERO OCCLUSION DRIFT</span>
                         </div>
                       </div>
                     </>
