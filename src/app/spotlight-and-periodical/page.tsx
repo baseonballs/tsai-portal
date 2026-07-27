@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
+import { TheLoopIllustration } from "@/components/landing/TheLoopIllustration";
 import { ArrowRight, BrainCircuit, Activity, Repeat, FileText, Target, ShieldCheck, Zap, BarChart2 } from "lucide-react";
 
 export default function SpotlightAndPeriodicalPage() {
@@ -17,14 +17,9 @@ export default function SpotlightAndPeriodicalPage() {
         <section className="relative px-6 py-24 sm:py-32 lg:px-8 border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/30 via-zinc-950/80 to-zinc-950 pointer-events-none" />
           <div className="mx-auto max-w-4xl text-center relative z-10">
-            <div className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-500/35 bg-black/90 px-4 py-1.5 text-xs font-semibold tracking-wider text-zinc-200 backdrop-blur-xl shadow-xl shadow-cyan-500/15 mb-8 hover:border-cyan-400/60 transition-all">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-              </span>
-              <span className="text-cyan-400 font-bold tracking-widest uppercase">Founding Cohort</span>
-              <span className="text-zinc-600 font-normal">·</span>
-              <span className="text-zinc-200 font-medium tracking-wide uppercase">Youth Ice Hockey Clubs Now Forming</span>
+            <div className="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-indigo-400 mb-8 backdrop-blur-md">
+              <span className="mr-2 h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
+              TSAI Spotlight × Periodical · Teams Beta Program
             </div>
             <h1 className="text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Spotlight sees the game.</span><br />
@@ -34,9 +29,9 @@ export default function SpotlightAndPeriodicalPage() {
               One engine watches every shift with AI precision. The other captures the goals, the journals, and the voices — player, coach, mentor, parent — that turn what the film <em className="text-white">found</em> into who the athlete <em className="text-white">becomes</em>.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
+              <a href="#beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
                 Join the Teams Beta Program
-              </Link>
+              </a>
               <a href="#sequel" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-indigo-300 flex items-center justify-center gap-1.5 py-4 px-6 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all">
                 See the 3-Week Journey <ArrowRight className="w-4 h-4" />
               </a>
@@ -48,8 +43,8 @@ export default function SpotlightAndPeriodicalPage() {
         </section>
 
         {/* ABSTRACTION: THE LOOP CONNECTS THE DOTS */}
-        <section className="px-6 py-20 lg:px-8 border-b border-white/5 bg-gradient-to-r from-cyan-950/30 via-indigo-950/30 to-fuchsia-950/30">
-          <div className="mx-auto max-w-5xl text-center">
+        <section className="px-6 py-20 lg:px-8 border-b border-white/5 bg-gradient-to-r from-cyan-950/30 via-indigo-950/30 to-fuchsia-950/30 backdrop-blur-md">
+          <div className="mx-auto max-w-6xl text-center">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase mb-3 block">The Core Synergy</span>
             <h2 className="text-3xl sm:text-5xl font-serif text-white mb-6">
               The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">Connects the Dots</span>
@@ -57,13 +52,8 @@ export default function SpotlightAndPeriodicalPage() {
             <p className="text-xl font-serif italic text-zinc-200 max-w-3xl mx-auto mb-10">
               "The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots."
             </p>
-            <div className="flex flex-wrap justify-center gap-4 text-xs font-mono">
-              {["01 / Spot it", "02 / Cut it", "03 / Send it", "04 / The Drop", "05 / Read-back", "06 / The Rip"].map((stage, i) => (
-                <span key={i} className="px-4 py-2 rounded-full bg-black/60 border border-white/10 text-zinc-300">
-                  {stage}
-                </span>
-              ))}
-            </div>
+
+            <TheLoopIllustration />
           </div>
         </section>
 
@@ -194,7 +184,7 @@ export default function SpotlightAndPeriodicalPage() {
           <div className="mx-auto max-w-3xl">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase font-mono">Teams Beta Program</span>
             <h2 className="mt-6 text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
-              Connect the dots on <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">player's development.</span>
+              Connect the dots on <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">development.</span>
             </h2>
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto">
               Get the complete ecosystem — Spotlight's intelligence and Periodical's bridge — live on your team's roster for the season.
