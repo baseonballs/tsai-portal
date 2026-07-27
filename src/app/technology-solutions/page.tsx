@@ -124,6 +124,11 @@ export default function TechnologySolutionsPage() {
           </div>
         </section>
 
+        {/* THE SCIENCE: DUAL LEDGER ARCHITECTURE (CHRONOLOGY & POSSESSION) */}
+        <div id="science">
+          <DualLedgersScienceSection />
+        </div>
+
 
         {/* AI-POWERED CLOUD ARCHITECTURE FOR SPORTS INTELLIGENCE */}
         <section id="architecture" className="px-6 py-24 lg:px-8 border-t border-white/10 bg-zinc-950/80 relative">
@@ -399,9 +404,6 @@ export default function TechnologySolutionsPage() {
             </div>
           </div>
         </section>
-
-        {/* THE SCIENCE: DUAL LEDGER ARCHITECTURE (CHRONOLOGY & POSSESSION) */}
-        <DualLedgersScienceSection />
 
 
         {/* ENTERPRISE INFRASTRUCTURE & SECURITY */}
