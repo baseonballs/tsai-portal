@@ -215,23 +215,23 @@ export function DualLedgersScienceSection() {
                   {activeLedger === "chronology" ? (
                     <>
                       <div className="text-zinc-500">// CHRONOLOGY_LEDGER_RECORD_ID: 1048-A</div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-1">
                         <div className="text-zinc-300">
                           <span className="text-cyan-400">TIMESTAMP:</span> 14:22:08.412
                         </div>
-                        <div className="text-zinc-300">
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
                           <span className="text-cyan-400">FPS_LOCK:</span> 60.00 Hz
                         </div>
                         <div className="text-zinc-300">
                           <span className="text-cyan-400">EVENT_TYPE:</span> Stick Lift → Pass
                         </div>
-                        <div className="text-zinc-300">
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
                           <span className="text-cyan-400">DRIFT:</span> 0.000s
                         </div>
                         <div className="text-zinc-300">
                           <span className="text-cyan-400">ACTOR:</span> #26 Corinne L.
                         </div>
-                        <div className="text-zinc-300">
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
                           <span className="text-cyan-400">RECIPROCATOR:</span> #14 Skater
                         </div>
                       </div>
@@ -299,17 +299,17 @@ export function DualLedgersScienceSection() {
                   ) : (
                     <>
                       <div className="text-zinc-500">// POSSESSION_LEDGER_RECORD_ID: 2091-P</div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-1">
                         <div className="text-zinc-300">
                           <span className="text-indigo-400">POSSESSION_STATE:</span> Controlled
                         </div>
-                        <div className="text-zinc-300">
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
                           <span className="text-indigo-400">CONTROL_RADIUS:</span> 0.18m
                         </div>
                         <div className="text-zinc-300">
                           <span className="text-indigo-400">PRIMARY_POSSESSOR:</span> #26 Corinne L.
                         </div>
-                        <div className="text-zinc-300">
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
                           <span className="text-indigo-400">PRESSURE_INDEX:</span> Heavy (2 Def)
                         </div>
                       </div>
