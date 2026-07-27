@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
+import { HockeyStickTrajectoryIllustration } from "@/components/landing/HockeyStickTrajectoryIllustration";
 import { 
   ArrowRight, 
   Target, 
@@ -269,6 +270,9 @@ export default function PlayersDevelopmentPage() {
             </div>
           </div>
         </section>
+
+        {/* HOCKEY STICK TRAJECTORY CURVE METAPHOR */}
+        <HockeyStickTrajectoryIllustration />
 
         {/* 5 VOICES ACCOUNTABILITY ROSTER */}
         <section className="px-6 py-24 lg:px-8 bg-zinc-950 border-t border-white/5">
