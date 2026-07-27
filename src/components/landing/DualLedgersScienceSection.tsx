@@ -28,9 +28,11 @@ export function DualLedgersScienceSection() {
       <div className="mx-auto max-w-7xl relative z-10">
         {/* SECTION HEADER */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>THE SCIENCE · DUAL LEDGER ARCHITECTURE</span>
+          <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-cyan-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-widest backdrop-blur-xl shadow-xl shadow-cyan-500/15 mb-6 hover:border-cyan-400/60 transition-all font-mono">
+            <Sparkles className="h-4 w-4 text-cyan-400 shrink-0" />
+            <span className="text-cyan-400 font-bold">THE SCIENCE</span>
+            <span className="text-zinc-600 font-normal">·</span>
+            <span className="text-zinc-200 font-medium uppercase">HIGH RESOLUTION DUAL-LAYERED LEDGER</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-white tracking-tight leading-tight">
             The Dual Ledgers: The Bedrock of <br />
@@ -226,7 +228,7 @@ export function DualLedgersScienceSection() {
                         <span className="text-cyan-400">RECIPROCATOR:</span> #14 Skater (Right Wing)
                       </div>
                       <div className="text-zinc-300">
-                        <span className="text-cyan-400">ZONE_VECTOR:</span> D-Zone Wall &rarr; Neutral Exit
+                        <span className="text-cyan-400">ZONE_VECTOR:</span>{" D-Zone Wall → Neutral Exit"}
                       </div>
                       <div className="p-3 rounded-xl bg-zinc-950 border border-cyan-500/20 text-zinc-400 text-[10px] space-y-1">
                         <div className="text-cyan-400 font-bold">&gt; AUDIT_PROVENANCE:</div>
@@ -239,7 +241,7 @@ export function DualLedgersScienceSection() {
                     <>
                       <div className="text-zinc-500">// POSSESSION_LEDGER_RECORD_ID: 2091-P</div>
                       <div className="text-zinc-300">
-                        <span className="text-indigo-400">POSSESSION_STATE:</span> Disputed &rarr; Controlled
+                        <span className="text-indigo-400">POSSESSION_STATE:</span>{" Disputed → Controlled"}
                       </div>
                       <div className="text-zinc-300">
                         <span className="text-indigo-400">CONTROL_RADIUS:</span> 0.18m (Puck to Blade)
