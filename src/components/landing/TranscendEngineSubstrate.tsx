@@ -124,8 +124,8 @@ export function TranscendEngineSubstrate() {
         {/* Right Arrow Conduit (Pointing up to Periodical Card) */}
         <div className="hidden sm:flex flex-col items-center absolute right-[25%] translate-x-1/2 top-0 bottom-0 justify-between py-1">
           <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-fuchsia-400 bg-fuchsia-950/90 px-3 py-1 rounded-full border border-fuchsia-500/50 backdrop-blur-md shadow-lg animate-bounce">
-            <ArrowUp className="w-3.5 h-3.5 text-fuchsia-400" />
             <span>Powering Periodical</span>
+            <ArrowUp className="w-3.5 h-3.5 text-fuchsia-400" />
           </div>
           <div className="w-0.5 flex-1 bg-gradient-to-t from-fuchsia-500/90 via-fuchsia-400/50 to-fuchsia-500/20 my-1 shadow-[0_0_10px_rgba(217,70,239,0.5)]" />
           <div className="w-3 h-3 rounded-full bg-fuchsia-400 animate-ping" />
