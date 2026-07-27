@@ -269,13 +269,13 @@ export function YouthHockeyCinematicBanner() {
 
         {/* HIGH-CONVERSION CTA BUTTONS */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-12 sm:mb-16">
-          <a 
-            href="#beta"
+          <Link 
+            href="/beta"
             className="w-full sm:w-auto rounded-full border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 backdrop-blur-xl px-8 sm:px-9 py-4 text-xs sm:text-sm font-semibold text-cyan-300 hover:text-white hover:border-cyan-400/70 shadow-lg shadow-cyan-500/10 transition-all flex items-center justify-center gap-2"
           >
             <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
             <span>Join the Teams Beta Program</span>
-          </a>
+          </Link>
 
           <a 
             href="#loop" 

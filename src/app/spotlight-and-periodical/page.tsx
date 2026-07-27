@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
@@ -33,9 +34,9 @@ export default function SpotlightAndPeriodicalPage() {
               One engine watches every shift with AI precision. The other captures the goals, the journals, and the voices — player, coach, mentor, parent — that turn what the film <em className="text-white">found</em> into who the athlete <em className="text-white">becomes</em>.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="#beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
+              <Link href="/beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
                 Join the Teams Beta Program
-              </a>
+              </Link>
               <a href="#sequel" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-indigo-300 flex items-center justify-center gap-1.5 py-4 px-6 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all">
                 See the 3-Week Journey <ArrowRight className="w-4 h-4" />
               </a>
@@ -193,7 +194,7 @@ export default function SpotlightAndPeriodicalPage() {
           <div className="mx-auto max-w-3xl">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase font-mono">Teams Beta Program</span>
             <h2 className="mt-6 text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
-              Connect the dots on <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">development.</span>
+              Connect the dots on <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">player's development.</span>
             </h2>
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto">
               Get the complete ecosystem — Spotlight's intelligence and Periodical's bridge — live on your team's roster for the season.

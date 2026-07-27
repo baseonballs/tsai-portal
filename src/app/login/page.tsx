@@ -115,10 +115,12 @@ function LoginContent() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/50 p-8 shadow-xl backdrop-blur-sm">
         <div className="mb-8 flex flex-col items-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 shadow-lg shadow-cyan-500/20">
-            <span className="font-mono text-xl font-extrabold text-zinc-950">T</span>
-          </div>
-          <h2 className="text-2xl font-semibold text-white">Welcome back</h2>
+          <img
+            src="/logos/tsai-emblem-full.png"
+            alt="Transcendental Sports AI Emblem"
+            className="mb-4 h-14 w-14 object-contain rounded-full bg-zinc-900/90 p-1 border border-cyan-500/30 shadow-[0_0_24px_rgba(0,240,255,0.3)]"
+          />
+          <h2 className="text-2xl font-serif font-medium text-white">Welcome back</h2>
           <p className="mt-2 text-center text-sm text-zinc-400">
             Sign in to access your Transcendental Sports AI account
           </p>

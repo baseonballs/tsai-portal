@@ -237,13 +237,13 @@ export function LandingHeader() {
             </Link>
           )}
 
-          <a
-            href="#beta-access"
+          <Link
+            href="/beta"
             className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-cyan-500 px-4 py-1.5 text-xs font-semibold text-zinc-950 shadow-md shadow-cyan-500/20 transition-all hover:bg-cyan-400 active:scale-95 cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span>Beta Access</span>
-          </a>
+          </Link>
 
           {/* Mobile Menu Hamburger Button */}
           <button
@@ -348,14 +348,14 @@ export function LandingHeader() {
 
           {/* Section 3: Action Button */}
           <div className="pt-2">
-            <a
-              href="#beta-access"
+            <Link
+              href="/beta"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-zinc-950 shadow-lg shadow-cyan-500/20 active:scale-95"
             >
               <Sparkles className="h-4 w-4" />
               <span>Apply for Beta Access</span>
-            </a>
+            </Link>
           </div>
         </div>
       )}

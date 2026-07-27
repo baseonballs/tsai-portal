@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { TheLoopIllustration } from "@/components/landing/TheLoopIllustration";
@@ -165,12 +166,12 @@ export default function CoachsCornerPage() {
             </p>
 
             <div className="mt-12 sm:mt-14 flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-6">
-              <a href="#beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-9 py-4 text-sm font-semibold text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
+              <Link href="/beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-9 py-4 text-sm font-semibold text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
                 Join the Teams Beta Program
-              </a>
-              <a href="/locker-room" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-cyan-300 flex items-center justify-center gap-2 py-4 px-7 rounded-full border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 backdrop-blur-sm transition-all">
+              </Link>
+              <Link href="/locker-room" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-cyan-300 flex items-center justify-center gap-2 py-4 px-7 rounded-full border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 backdrop-blur-sm transition-all">
                 Step Into The Locker Room <ArrowRight className="w-4 h-4 text-cyan-400" />
-              </a>
+              </Link>
             </div>
 
             <p className="mt-8 sm:mt-10 text-xs sm:text-sm text-zinc-500 uppercase tracking-widest font-mono">
