@@ -501,10 +501,10 @@ export default function CoachsCornerPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-cyan-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
-                  <h4 className="text-xl font-serif text-white group-hover:text-cyan-400 transition-colors">Macro</h4>
-                  <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 1 · Game state</span>
+                  <h4 className="text-xl font-serif text-white group-hover:text-cyan-400 transition-colors">Micro</h4>
+                  <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 1 · Mechanic</span>
                 </div>
-                <p className="text-sm text-zinc-400">The situation: zone, strength, possession, pressure. <em className="text-zinc-300 block mt-2">"D-zone, even strength, under forecheck."</em></p>
+                <p className="text-sm text-zinc-400">The skill: body position, puck placement, timing. <em className="text-zinc-300 block mt-2">"Hips square to the boards, puck on forehand."</em></p>
               </div>
               <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-indigo-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
@@ -515,10 +515,10 @@ export default function CoachsCornerPage() {
               </div>
               <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-emerald-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
-                  <h4 className="text-xl font-serif text-white group-hover:text-emerald-400 transition-colors">Micro</h4>
-                  <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 3 · Mechanic</span>
+                  <h4 className="text-xl font-serif text-white group-hover:text-emerald-400 transition-colors">Macro</h4>
+                  <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 3 · Game state</span>
                 </div>
-                <p className="text-sm text-zinc-400">The skill: body position, puck placement, timing. <em className="text-zinc-300 block mt-2">"Hips square to the boards, puck on forehand."</em></p>
+                <p className="text-sm text-zinc-400">The situation: zone, strength, possession, pressure. <em className="text-zinc-300 block mt-2">"D-zone, even strength, under forecheck."</em></p>
               </div>
             </div>
           </div>
