@@ -112,6 +112,14 @@ export default function SpotlightAndPeriodicalPage() {
 
             {/* TRANSCEND PLATFORM FOUNDATION (AI ENGINE SUBSTRATE) */}
             <TranscendEngineSubstrate />
+
+            {/* TOGETHER: THE FLYWHEEL */}
+            <div className="mt-12 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-fuchsia-950/40 border border-white/10 p-8 text-center max-w-3xl mx-auto shadow-xl">
+              <div className="text-xs font-semibold tracking-widest text-fuchsia-400 uppercase mb-3 font-mono">Together: The Flywheel</div>
+              <p className="text-lg text-zinc-200 leading-relaxed">
+                Spotlight's telemetry tells Periodical what the player <em className="text-white">did</em>. Periodical's journals tell Spotlight what the player <em className="text-white">thought</em>. The AI reads both — and surfaces insights neither could produce alone.
+              </p>
+            </div>
           </div>
         </section>
 
