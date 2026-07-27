@@ -6,7 +6,7 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
 import { LoopingDotsFlow } from "@/components/landing/LoopingDotsFlow";
 import { TranscendEngineSubstrate } from "@/components/landing/TranscendEngineSubstrate";
-import { ArrowRight, BrainCircuit, Activity, Repeat, FileText, Target, ShieldCheck, Zap, BarChart2 } from "lucide-react";
+import { ArrowRight, BrainCircuit, Activity, Repeat, FileText, Target, ShieldCheck, Zap, BarChart2, Layers } from "lucide-react";
 
 export default function SpotlightAndPeriodicalPage() {
   return (
@@ -17,10 +17,12 @@ export default function SpotlightAndPeriodicalPage() {
         {/* HERO */}
         <section className="relative px-6 py-24 sm:py-32 lg:px-8 border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/30 via-zinc-950/80 to-zinc-950 pointer-events-none" />
-          <div className="mx-auto max-w-4xl text-center relative z-10">
-            <div className="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-indigo-400 mb-8 backdrop-blur-md">
-              <span className="mr-2 h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
-              TSAI Spotlight × Periodical · Teams Beta Program
+          <div className="mx-auto max-w-5xl text-center relative z-10">
+            <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-cyan-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-wider backdrop-blur-xl shadow-xl shadow-cyan-500/15 mb-10 sm:mb-12 hover:border-cyan-400/60 transition-all">
+              <Layers className="h-4 w-4 text-cyan-400 shrink-0" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400 font-bold tracking-widest uppercase">Dual-Engine Ecosystem</span>
+              <span className="text-zinc-600 font-normal">·</span>
+              <span className="text-zinc-200 font-medium tracking-wide uppercase">Connecting Video Intelligence &amp; Athlete Reflection</span>
             </div>
             <h1 className="text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Spotlight sees the game.</span><br />
