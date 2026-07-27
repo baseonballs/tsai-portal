@@ -28,9 +28,11 @@ export function DualLedgersScienceSection() {
       <div className="mx-auto max-w-7xl relative z-10">
         {/* SECTION HEADER */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>THE SCIENCE · DUAL LEDGER ARCHITECTURE</span>
+          <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-cyan-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-widest backdrop-blur-xl shadow-xl shadow-cyan-500/15 mb-6 hover:border-cyan-400/60 transition-all font-mono">
+            <Sparkles className="h-4 w-4 text-cyan-400 shrink-0" />
+            <span className="text-cyan-400 font-bold">THE SCIENCE</span>
+            <span className="text-zinc-600 font-normal">·</span>
+            <span className="text-zinc-200 font-medium uppercase">HIGH RESOLUTION DUAL-LAYERED LEDGER</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-white tracking-tight leading-tight">
             The Dual Ledgers: The Bedrock of <br />
@@ -86,7 +88,7 @@ export function DualLedgersScienceSection() {
         {/* ACTIVE LEDGER DEEP DIVE & LIVE TERMINAL DEMO */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* LEDGER DETAILS CARD */}
-          <div className="lg:col-span-7 rounded-3xl border border-white/15 bg-zinc-900/50 p-8 md:p-10 backdrop-blur-xl flex flex-col justify-between shadow-2xl">
+          <div className="lg:col-span-6 rounded-3xl border border-white/15 bg-zinc-900/50 p-8 md:p-10 backdrop-blur-xl flex flex-col justify-between shadow-2xl">
             <div>
               {activeLedger === "chronology" ? (
                 <>
@@ -110,7 +112,7 @@ export function DualLedgersScienceSection() {
                       </div>
                       <div>
                         <h4 className="text-sm font-semibold text-white">Deterministic Sequence Graph</h4>
-                        <p className="text-xs text-zinc-400 font-light mt-0.5">Maps exact cause-and-effect transitions (e.g. D-zone stick lift &rarr; loose puck battle &rarr; tape pass &rarr; clean exit).</p>
+                        <p className="text-xs text-zinc-400 font-light mt-0.5">Maps exact cause-and-effect transitions (e.g. D-zone stick lift → loose puck battle → tape pass → clean exit).</p>
                       </div>
                     </div>
 
@@ -192,7 +194,7 @@ export function DualLedgersScienceSection() {
           </div>
 
           {/* SIMULATED HIGH-TECH LEDGER TELEMETRY TERMINAL */}
-          <div className="lg:col-span-5 flex flex-col justify-between">
+          <div className="lg:col-span-6 flex flex-col justify-between">
             <div className="rounded-3xl border border-white/15 bg-black/90 p-6 md:p-8 shadow-2xl font-mono relative overflow-hidden flex-1 flex flex-col justify-between">
               {/* Top Bar */}
               <div>
@@ -213,51 +215,163 @@ export function DualLedgersScienceSection() {
                   {activeLedger === "chronology" ? (
                     <>
                       <div className="text-zinc-500">// CHRONOLOGY_LEDGER_RECORD_ID: 1048-A</div>
-                      <div className="text-zinc-300">
-                        <span className="text-cyan-400">TIMESTAMP:</span> 14:22:08.412
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+                        <div className="text-zinc-300">
+                          <span className="text-cyan-400">TIMESTAMP:</span> 14:22:08.412
+                        </div>
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
+                          <span className="text-cyan-400">FPS_LOCK:</span> 60.00 Hz
+                        </div>
+                        <div className="text-zinc-300">
+                          <span className="text-cyan-400">EVENT_TYPE:</span> Stick Lift → Pass
+                        </div>
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
+                          <span className="text-cyan-400">DRIFT:</span> 0.000s
+                        </div>
+                        <div className="text-zinc-300">
+                          <span className="text-cyan-400">ACTOR:</span> #26 Corinne L.
+                        </div>
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
+                          <span className="text-cyan-400">RECIPROCATOR:</span> #14 Skater
+                        </div>
                       </div>
                       <div className="text-zinc-300">
-                        <span className="text-cyan-400">EVENT_TYPE:</span> Stick Lift &rarr; Breakout Pass
+                        <span className="text-cyan-400">ZONE_VECTOR:</span>{" D-Zone Wall → Neutral Exit"}
                       </div>
                       <div className="text-zinc-300">
-                        <span className="text-cyan-400">ACTOR:</span> #26 Corinne L. (Center)
+                        <span className="text-cyan-400">ROLLUP_HIERARCHY:</span> L1-Nano → L2-Micro → L3-Meso
                       </div>
-                      <div className="text-zinc-300">
-                        <span className="text-cyan-400">RECIPROCATOR:</span> #14 Skater (Right Wing)
+
+                      {/* 2D/3D Homography Matrix Block */}
+                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-cyan-500/25 text-zinc-400 text-[10px] space-y-2">
+                        <div className="flex items-center justify-between text-cyan-400 font-bold border-b border-cyan-500/15 pb-1">
+                          <span>&gt; MULTI-CAMERA HOMOGRAPHY MATRIX</span>
+                          <span className="text-emerald-400">PROVENANCE LOCKED</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-center text-[9.5px]">
+                          <div className="bg-black/60 p-2 rounded border border-white/5">
+                            <div className="text-zinc-500 text-[8.5px]">CAM_01 (WIDE)</div>
+                            <div className="text-cyan-400 font-bold mt-0.5">[x:412, y:280]</div>
+                            <div className="text-zinc-400 text-[8px]">98.6% Conf</div>
+                          </div>
+                          <div className="bg-black/60 p-2 rounded border border-white/5">
+                            <div className="text-zinc-500 text-[8.5px]">CAM_02 (TIGHT)</div>
+                            <div className="text-cyan-400 font-bold mt-0.5">[x:819, y:312]</div>
+                            <div className="text-zinc-400 text-[8px]">99.1% Conf</div>
+                          </div>
+                          <div className="bg-black/60 p-2 rounded border border-white/5">
+                            <div className="text-zinc-500 text-[8.5px]">3D RINK FUSION</div>
+                            <div className="text-emerald-400 font-bold mt-0.5">18.4 mph Exit</div>
+                            <div className="text-emerald-400 text-[8px]">0.00s Drift</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-zinc-300">
-                        <span className="text-cyan-400">ZONE_VECTOR:</span> D-Zone Wall &rarr; Neutral Exit
-                      </div>
-                      <div className="p-3 rounded-xl bg-zinc-950 border border-cyan-500/20 text-zinc-400 text-[10px] space-y-1">
-                        <div className="text-cyan-400 font-bold">&gt; AUDIT_PROVENANCE:</div>
-                        <div>Camera 01: [x:412, y:280] · Conf: 98.6%</div>
-                        <div>Camera 02: [x:819, y:312] · Conf: 99.1%</div>
-                        <div>Physics Audit: Exit Speed 18.4mph · 0.00s Drift</div>
+
+                      {/* Live Parallel Audit Verification Log */}
+                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-cyan-500/25 text-[10px] space-y-2">
+                        <div className="flex items-center justify-between text-cyan-400 font-bold border-b border-cyan-500/15 pb-1 text-[9.5px]">
+                          <span className="flex items-center gap-1.5">
+                            <Activity className="w-3 h-3 text-cyan-400 animate-pulse" />
+                            PARALLEL AUDIT VERIFICATION LOG
+                          </span>
+                          <span className="text-emerald-400 text-[8.5px]">PASS 14/14</span>
+                        </div>
+                        <div className="space-y-1 text-[9px] text-zinc-300">
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">14:22:08.100 · PRE_CONTACT:</span>
+                            <span className="text-zinc-400">Forecheck Contact (d = 0.42m)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">14:22:08.250 · STICK_PRESSURE:</span>
+                            <span className="text-cyan-300">Blade Angle Delta (+14.2°)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">14:22:08.412 · AUDIT_COMMIT:</span>
+                            <span className="text-emerald-400 font-bold">Immutable Ledger Hash Generated</span>
+                          </div>
+                        </div>
+                        <div className="pt-1.5 border-t border-white/5 flex items-center justify-between text-[8.5px] text-zinc-500">
+                          <span>RRM_SHA256: <code className="text-zinc-400">e3b0c442...89bf</code></span>
+                          <span className="text-cyan-400 font-semibold">100% AUDITABLE PROOF</span>
+                        </div>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="text-zinc-500">// POSSESSION_LEDGER_RECORD_ID: 2091-P</div>
-                      <div className="text-zinc-300">
-                        <span className="text-indigo-400">POSSESSION_STATE:</span> Disputed &rarr; Controlled
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+                        <div className="text-zinc-300">
+                          <span className="text-indigo-400">POSSESSION_STATE:</span> Controlled
+                        </div>
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
+                          <span className="text-indigo-400">CONTROL_RADIUS:</span> 0.18m
+                        </div>
+                        <div className="text-zinc-300">
+                          <span className="text-indigo-400">PRIMARY_POSSESSOR:</span> #26 Corinne L.
+                        </div>
+                        <div className="text-zinc-300 pl-6 sm:pl-10">
+                          <span className="text-indigo-400">PRESSURE_INDEX:</span> Heavy (2 Def)
+                        </div>
                       </div>
                       <div className="text-zinc-300">
-                        <span className="text-indigo-400">CONTROL_RADIUS:</span> 0.18m (Puck to Blade)
-                      </div>
-                      <div className="text-zinc-300">
-                        <span className="text-indigo-400">PRIMARY_POSSESSOR:</span> #26 Corinne L.
-                      </div>
-                      <div className="text-zinc-300">
-                        <span className="text-indigo-400">PRESSURE_INDEX:</span> Heavy Forecheck (2 Defenders)
+                        <span className="text-indigo-400">TRANSITION_VECTOR:</span>{" Disputed → Controlled"}
                       </div>
                       <div className="text-zinc-300">
                         <span className="text-indigo-400">SPACE_EARNED:</span> +4.2m High-Danger Corridor
                       </div>
-                      <div className="p-3 rounded-xl bg-zinc-950 border border-indigo-500/20 text-zinc-400 text-[10px] space-y-1">
-                        <div className="text-indigo-400 font-bold">&gt; SPATIAL_VECTOR_DECODE:</div>
-                        <div>Velocity Differential: +2.1 m/s</div>
-                        <div>Homography Matrix: 2D-to-3D Meter Translation OK</div>
-                        <div>Continuity State: 100% Deterministic Tracking</div>
+
+                      {/* 2D/3D Homography Matrix Block */}
+                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-indigo-500/25 text-zinc-400 text-[10px] space-y-2">
+                        <div className="flex items-center justify-between text-indigo-400 font-bold border-b border-indigo-500/15 pb-1">
+                          <span>&gt; SPATIAL VECTOR DECODE &amp; 3D PHYSICS MESH</span>
+                          <span className="text-emerald-400 font-mono">14-GATE OK</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-center text-[9.5px]">
+                          <div className="bg-black/60 p-2 rounded border border-white/5">
+                            <div className="text-zinc-500 text-[8.5px]">VELOCITY DIFF</div>
+                            <div className="text-indigo-300 font-bold mt-0.5">+2.1 m/s</div>
+                            <div className="text-zinc-400 text-[8px]">Under Forecheck</div>
+                          </div>
+                          <div className="bg-black/60 p-2 rounded border border-white/5">
+                            <div className="text-zinc-500 text-[8.5px]">HOMOGRAPHY</div>
+                            <div className="text-indigo-300 font-bold mt-0.5">2D → 3D OK</div>
+                            <div className="text-zinc-400 text-[8px]">Rink Metric Lock</div>
+                          </div>
+                          <div className="bg-black/60 p-2 rounded border border-white/5">
+                            <div className="text-zinc-500 text-[8.5px]">CONTINUITY</div>
+                            <div className="text-emerald-400 font-bold mt-0.5">100% Tracked</div>
+                            <div className="text-emerald-400 text-[8px]">Zero Dropouts</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Live Parallel Audit Verification Log */}
+                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-indigo-500/25 text-[10px] space-y-2">
+                        <div className="flex items-center justify-between text-indigo-400 font-bold border-b border-indigo-500/15 pb-1 text-[9.5px]">
+                          <span className="flex items-center gap-1.5">
+                            <Activity className="w-3 h-3 text-indigo-400 animate-pulse" />
+                            PARALLEL AUDIT VERIFICATION LOG
+                          </span>
+                          <span className="text-emerald-400 text-[8.5px]">PASS 14/14</span>
+                        </div>
+                        <div className="space-y-1 text-[9px] text-zinc-300">
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">20:91:04.110 · RECOGNITION:</span>
+                            <span className="text-zinc-400">Puck-Blade Radius (r = 0.18m)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">20:91:04.300 · VECTOR_EVAL:</span>
+                            <span className="text-indigo-300">High-Danger Space (+4.2m)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-500">20:91:04.512 · AUDIT_COMMIT:</span>
+                            <span className="text-emerald-400 font-bold">State Verified &amp; Hashed</span>
+                          </div>
+                        </div>
+                        <div className="pt-1.5 border-t border-white/5 flex items-center justify-between text-[8.5px] text-zinc-500">
+                          <span>RRM_SHA256: <code className="text-zinc-400">7f8a91c2...04a1</code></span>
+                          <span className="text-indigo-400 font-semibold">ZERO OCCLUSION DRIFT</span>
+                        </div>
                       </div>
                     </>
                   )}
