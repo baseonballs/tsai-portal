@@ -44,11 +44,11 @@ export default function Home() {
         <YouthHockeyCinematicBanner />
 
         {/* ABSTRACTION BANNER: THE LOOP CONNECTS THE DOTS */}
-        <section className="px-6 py-20 lg:px-8 border-y border-white/10 bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-fuchsia-950/40 backdrop-blur-md">
+        <section id="loop" className="px-6 py-20 lg:px-8 border-y border-white/10 bg-gradient-to-r from-cyan-950/30 via-indigo-950/30 to-zinc-950 backdrop-blur-md">
           <div className="mx-auto max-w-6xl text-center">
             <span className="text-xs font-semibold tracking-[0.25em] text-cyan-400 uppercase mb-3 block">Product Value</span>
             <h2 className="text-4xl sm:text-6xl font-serif text-white mb-6">
-              The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">Connecting the Dots</span>
+              The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">Connecting the Dots</span>
             </h2>
             <blockquote className="text-xl sm:text-2xl font-serif italic text-zinc-200 max-w-4xl mx-auto mb-10">
               "The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots."
@@ -62,7 +62,7 @@ export default function Home() {
         <section className="px-6 py-24 lg:px-8 bg-zinc-950">
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <span className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400 uppercase">The Synergy</span>
+              <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">The Synergy</span>
               <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Spotlight <span className="text-amber-400/70">Sees</span> the Game. Periodical <span className="text-cyan-400/70">Hears</span> the Player.</h2>
               <p className="text-lg text-zinc-400 max-w-3xl mx-auto leading-relaxed">
                 Spotlight's telemetry tells Periodical what the player <em className="text-white">did</em>. Periodical's journals tell Spotlight what the player <em className="text-white">thought</em>. The AI connects both—keeping coaches and mentors right at the heart of the loop.
@@ -70,9 +70,9 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-black/50 border border-cyan-500/30 rounded-2xl p-8 hover:border-cyan-500/50 transition-colors shadow-2xl">
+              <div className="bg-zinc-950/60 border border-cyan-500/30 rounded-2xl p-8 hover:border-cyan-500/50 transition-colors shadow-2xl backdrop-blur-xl">
                 <span className="text-xs font-mono font-bold text-cyan-400 uppercase block mb-2">Spotlight Engine</span>
-                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-rose-500 mb-4 inline-block">Video Intelligence</h3>
+                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 mb-4 inline-block">Video Intelligence</h3>
                 <ul className="space-y-3 text-sm text-zinc-300">
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Captive AI natural-language discovery</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> 3-tier Hockey Taxonomy (Macro, Meso, Micro)</li>
@@ -87,9 +87,9 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="bg-black/50 border border-indigo-500/30 rounded-2xl p-8 hover:border-indigo-500/50 transition-colors shadow-2xl">
+              <div className="bg-zinc-950/60 border border-indigo-500/30 rounded-2xl p-8 hover:border-indigo-500/50 transition-colors shadow-2xl backdrop-blur-xl">
                 <span className="text-xs font-mono font-bold text-indigo-400 uppercase block mb-2">Periodical Engine</span>
-                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 mb-4 inline-block">Player Reflection</h3>
+                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-amber-400 mb-4 inline-block">Player Reflection</h3>
                 <ul className="space-y-3 text-sm text-zinc-300">
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400" /> Interactive weekly planners &amp; agendas</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400" /> Daily voice/text player journaling</li>
@@ -125,11 +125,11 @@ export default function Home() {
         </section>
 
         {/* TEAMS BETA REGISTRATION FORM */}
-        <section id="beta-access" className="px-6 py-32 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-cyan-950/20 to-zinc-950 text-center relative overflow-hidden">
+        <section id="beta" className="px-6 py-32 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-cyan-950/20 to-zinc-950 text-center relative overflow-hidden">
           <div className="mx-auto max-w-3xl relative z-10">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Teams Beta Program · Now Forming</span>
             <h2 className="mt-6 text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
-              Bring <span className="text-zinc-400/80 font-semibold">Transcendental Sports </span><span className="text-cyan-400/80 font-sans">AI</span> to your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">team.</span>
+              Bring <span className="text-zinc-400/80 font-semibold">Transcendental Sports </span><span className="text-cyan-400/80 font-sans">AI</span> to your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">team.</span>
             </h2>
             <p className="mt-6 text-lg text-zinc-300 max-w-2xl mx-auto">
               Join the founding cohort of youth ice hockey coaching staffs and clubs. Request early access for your team today.

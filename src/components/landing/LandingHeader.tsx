@@ -67,7 +67,7 @@ export function LandingHeader() {
             <img
               src="/logos/tsai-emblem-full.png"
               alt="Transcendental Sports AI Emblem"
-              className="h-9 w-9 object-contain rounded-full bg-zinc-900/90 p-0.5 border border-white/15 shadow-lg shadow-cyan-500/10 shrink-0"
+              className="h-9 w-9 object-contain rounded-full bg-zinc-900/90 p-0.5 border border-cyan-500/30 shadow-[0_0_16px_rgba(0,240,255,0.25)] shrink-0"
             />
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
@@ -190,7 +190,7 @@ export function LandingHeader() {
             href="/technology-solutions"
             className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all hover:bg-white/5 hover:text-white border border-transparent text-zinc-300"
           >
-            <Cpu className="h-3.5 w-3.5 text-fuchsia-400" />
+            <Cpu className="h-3.5 w-3.5 text-cyan-400" />
             <span>The Science</span>
           </Link>
 
