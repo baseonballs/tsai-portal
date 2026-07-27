@@ -189,7 +189,7 @@ export default function SpotlightAndPeriodicalPage() {
           <div className="mx-auto max-w-3xl">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase font-mono">Teams Beta Program</span>
             <h2 className="mt-6 text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
-              Connect the dots on <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">development.</span>
+              Connect the dots on <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">player development.</span>
             </h2>
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto">
               Get the complete ecosystem — Spotlight's intelligence and Periodical's bridge — live on your team's roster for the season.
