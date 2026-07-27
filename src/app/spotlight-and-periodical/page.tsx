@@ -4,7 +4,7 @@ import React from "react";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
-import { TheLoopIllustration } from "@/components/landing/TheLoopIllustration";
+import { LoopingDotsFlow } from "@/components/landing/LoopingDotsFlow";
 import { ArrowRight, BrainCircuit, Activity, Repeat, FileText, Target, ShieldCheck, Zap, BarChart2 } from "lucide-react";
 
 export default function SpotlightAndPeriodicalPage() {
@@ -53,7 +53,7 @@ export default function SpotlightAndPeriodicalPage() {
               "The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots."
             </p>
 
-            <TheLoopIllustration />
+            <LoopingDotsFlow />
           </div>
         </section>
 
