@@ -267,21 +267,8 @@ export function YouthHockeyCinematicBanner() {
           Unlocking sports intelligence to guide, measure, and accelerate youth athlete growth on the path to their full potential.
         </p>
 
-<<<<<<< HEAD
         {/* HIGH-CONVERSION CTA BUTTONS */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-12 sm:mb-16">
-=======
-        {/* CTA BUTTONS */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 sm:mb-16">
-          <button 
-            disabled
-            className="w-full sm:w-auto rounded-full border border-white/10 bg-zinc-900/40 px-6 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-sm font-bold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
-          >
-            <Lock className="w-4 h-4 text-zinc-500 shrink-0" />
-            <span>Apply for Teams Beta Access</span>
-          </button>
-
->>>>>>> gemini/feat-locker-room
           <Link 
             href="/beta"
             className="w-full sm:w-auto rounded-full border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 backdrop-blur-xl px-8 sm:px-9 py-4 text-xs sm:text-sm font-semibold text-cyan-300 hover:text-white hover:border-cyan-400/70 shadow-lg shadow-cyan-500/10 transition-all flex items-center justify-center gap-2"
