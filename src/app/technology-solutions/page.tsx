@@ -106,7 +106,7 @@ export default function TechnologySolutionsPage() {
             <Sparkles className="h-4 w-4 text-cyan-400 shrink-0" />
             <span className="text-cyan-400 font-bold">THE SCIENCE</span>
             <span className="text-zinc-600 font-normal">·</span>
-            <span className="text-zinc-200 font-medium uppercase">HIGH RESOLUTION DUAL-LAYERED LEDGER SYSTEM</span>
+            <span className="text-zinc-200 font-medium uppercase">HIGH-FIDELITY DUAL-LEDGER ENGINE</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-6 leading-[1.1]">
