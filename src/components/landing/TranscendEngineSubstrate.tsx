@@ -65,7 +65,7 @@ export function TranscendEngineSubstrate() {
       id: 2,
       tag: "ONTOLOGY",
       title: "4-Tier Hockey Taxonomy",
-      subtitle: "Nano · Micro · Meso · Macro Domain Model",
+      subtitle: "Nano · Micro · Meso · Macro Context Domain Model",
       desc: "Proprietary 4-tier domain graph mapping physical & spatial vectors (Nano), individual skater mechanics (Micro), team tactics (Meso), and game states (Macro).",
       accent: "purple",
       badgeBg: "bg-purple-500/10 text-purple-400 border-purple-500/30",
@@ -202,7 +202,15 @@ export function TranscendEngineSubstrate() {
                     </div>
 
                     <h4 className="text-base font-serif font-bold text-white">{pillar.title}</h4>
-                    <p className="text-xs text-zinc-400 line-clamp-1 mt-0.5 font-light">{pillar.subtitle}</p>
+                    <p className="text-xs text-zinc-400 line-clamp-1 mt-0.5 font-light">
+                      {pillar.id === 2 ? (
+                        <span>
+                          <span className="text-cyan-400 font-medium">Nano</span> · <span className="text-indigo-400 font-medium">Micro</span> · <span className="text-fuchsia-400 font-medium">Meso</span> · <span className="text-emerald-400 font-medium">Macro</span> Context Domain Model
+                        </span>
+                      ) : (
+                        pillar.subtitle
+                      )}
+                    </p>
                   </div>
                 </div>
               );
@@ -226,10 +234,27 @@ export function TranscendEngineSubstrate() {
 
               <div className="space-y-4">
                 <h5 className="text-xl font-serif font-bold text-white">
-                  {currentPillar.subtitle}
+                  {currentPillar.id === 2 ? (
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-cyan-400">Nano</span>
+                      <span className="text-zinc-500 font-sans">·</span>
+                      <span className="text-indigo-400">Micro</span>
+                      <span className="text-zinc-500 font-sans">·</span>
+                      <span className="text-fuchsia-400">Meso</span>
+                      <span className="text-zinc-500 font-sans">·</span>
+                      <span className="text-emerald-400">Macro</span>
+                      <span className="text-white ml-1">Context Domain Model</span>
+                    </span>
+                  ) : (
+                    currentPillar.subtitle
+                  )}
                 </h5>
                 <p className="text-sm text-zinc-300 leading-relaxed font-light">
-                  {currentPillar.desc.includes("Multi-Agent Sports Cognition Engine") ? (
+                  {currentPillar.id === 2 ? (
+                    <>
+                      Proprietary 4-tier domain graph mapping physical &amp; spatial vectors (<span className="text-cyan-400 font-medium">Nano</span>), individual skater mechanics (<span className="text-indigo-400 font-medium">Micro</span>), team tactics (<span className="text-fuchsia-400 font-medium">Meso</span>), and game states (<span className="text-emerald-400 font-medium">Macro</span>).
+                    </>
+                  ) : currentPillar.desc.includes("Multi-Agent Sports Cognition Engine") ? (
                     <>
                       <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">
                         Multi-Agent Sports Cognition Engine
@@ -256,7 +281,17 @@ export function TranscendEngineSubstrate() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500">&gt; Domain Graph:</span>
-                      <span className="text-indigo-400">4-Tier Hockey Ontology (Nano/Micro/Meso/Macro)</span>
+                      <span>
+                        <span className="text-zinc-400">4-Tier Ontology (</span>
+                        <span className="text-cyan-400 font-medium">Nano</span>
+                        <span className="text-zinc-500">/</span>
+                        <span className="text-indigo-400 font-medium">Micro</span>
+                        <span className="text-zinc-500">/</span>
+                        <span className="text-fuchsia-400 font-medium">Meso</span>
+                        <span className="text-zinc-500">/</span>
+                        <span className="text-emerald-400 font-medium">Macro</span>
+                        <span className="text-zinc-400">)</span>
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500">&gt; Ingest Rate:</span>
