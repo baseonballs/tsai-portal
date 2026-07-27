@@ -356,7 +356,7 @@ export default function CoachsCornerPage() {
                     </div>
                     <div className="mt-4 text-xs text-zinc-400 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span><strong className="text-zinc-200">7 clips surfaced</strong> · 4 team turnovers + 3 pro reference clips · mapped via 3-tier Hockey Taxonomy · <strong className="text-zinc-200">elapsed: 00:00:41</strong></span>
+                      <span><strong className="text-zinc-200">7 clips surfaced</strong> · 4 team turnovers + 3 pro reference clips · mapped via 4-tier Hockey Taxonomy · <strong className="text-zinc-200">elapsed: 00:00:41</strong></span>
                     </div>
                   </div>
 
@@ -497,21 +497,28 @@ export default function CoachsCornerPage() {
               <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">Under the hood · Hockey Taxonomy</span>
               <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">It speaks hockey.<br />Not just "video."</h2>
               <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
-                Generic AI sees pixels. Spotlight's discovery engine maps every clip against a proprietary three-tier Hockey Taxonomy — so when you ask for a strong-side puck protection mechanic, it knows exactly what you mean, and exactly where it lives.
+                Generic AI sees pixels. Spotlight's discovery engine maps every clip against a proprietary four-tier Hockey Taxonomy — from physical and spatial vectors (Nano) up to Macro game states.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-cyan-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
-                  <h4 className="text-xl font-serif text-white group-hover:text-cyan-400 transition-colors">Micro</h4>
+                  <h4 className="text-xl font-serif text-white group-hover:text-cyan-400 transition-colors">Nano</h4>
+                  <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 0 · Physical</span>
+                </div>
+                <p className="text-sm text-zinc-400">The physics: proximity, vectors, velocity &amp; blade orientation. <em className="text-zinc-300 block mt-2">"Puck proximity 0.18m, 18.4mph velocity vector."</em></p>
+              </div>
+              <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-indigo-500/30 transition-colors group">
+                <div className="flex items-baseline justify-between mb-4">
+                  <h4 className="text-xl font-serif text-white group-hover:text-indigo-400 transition-colors">Micro</h4>
                   <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 1 · Mechanic</span>
                 </div>
                 <p className="text-sm text-zinc-400">The skill: body position, puck placement, timing. <em className="text-zinc-300 block mt-2">"Hips square to the boards, puck on forehand."</em></p>
               </div>
-              <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-indigo-500/30 transition-colors group">
+              <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-purple-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
-                  <h4 className="text-xl font-serif text-white group-hover:text-indigo-400 transition-colors">Meso</h4>
+                  <h4 className="text-xl font-serif text-white group-hover:text-purple-400 transition-colors">Meso</h4>
                   <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 2 · Tactical</span>
                 </div>
                 <p className="text-sm text-zinc-400">The system: breakouts, entries, cycles, coverage schemes. <em className="text-zinc-300 block mt-2">"Strong-side breakout on a zone exit."</em></p>

@@ -64,9 +64,9 @@ export function TranscendEngineSubstrate() {
     {
       id: 2,
       tag: "ONTOLOGY",
-      title: "3-Tier Hockey Taxonomy",
-      subtitle: "Micro · Meso · Macro Domain Model",
-      desc: "Proprietary domain graph mapping every on-ice moment from Micro mechanics (body position, puck placement) up to Macro game states (zone, pressure).",
+      title: "4-Tier Hockey Taxonomy",
+      subtitle: "Nano · Micro · Meso · Macro Domain Model",
+      desc: "Proprietary 4-tier domain graph mapping physical & spatial vectors (Nano), individual skater mechanics (Micro), team tactics (Meso), and game states (Macro).",
       accent: "purple",
       badgeBg: "bg-purple-500/10 text-purple-400 border-purple-500/30",
       border: "border-purple-500/40",
@@ -256,7 +256,7 @@ export function TranscendEngineSubstrate() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500">&gt; Domain Graph:</span>
-                      <span className="text-indigo-400">3-Tier Hockey Ontology (Micro/Meso/Macro)</span>
+                      <span className="text-indigo-400">4-Tier Hockey Ontology (Nano/Micro/Meso/Macro)</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500">&gt; Ingest Rate:</span>

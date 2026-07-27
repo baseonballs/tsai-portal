@@ -75,7 +75,7 @@ export default function Home() {
                 <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 mb-4 inline-block">Video Intelligence</h3>
                 <ul className="space-y-3 text-sm text-zinc-300">
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Captive AI natural-language discovery</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> 3-tier Hockey Taxonomy (Micro, Meso, Macro)</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> 4-tier Hockey Taxonomy (Nano, Micro, Meso, Macro)</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Cut Room Workbench &amp; Superpower Rail</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Dual-playback split-screen &amp; locked micro-loops</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Telemetry Board (dwell time, loop counts)</li>
