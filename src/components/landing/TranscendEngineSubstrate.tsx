@@ -1,0 +1,256 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { 
+  Cpu, 
+  Brain, 
+  Layers, 
+  Activity, 
+  Sparkles, 
+  ShieldCheck, 
+  Zap, 
+  Database, 
+  GitMerge, 
+  Terminal,
+  ChevronRight,
+  TrendingUp
+} from "lucide-react";
+
+export function TranscendEngineSubstrate() {
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [pulseCount, setPulseCount] = useState<number>(1422);
+
+  // Simulating live engine telemetry counter increments
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPulseCount((prev) => prev + Math.floor(Math.random() * 3) + 1);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const pillars = [
+    {
+      id: 0,
+      tag: "PERCEPTION",
+      title: "MASCE AI Vision Pipeline",
+      subtitle: "Autonomous Video Intelligence",
+      desc: "Multi-Agent Spatial & Contextual Engine running YOLO v11 object tracking, homography pixel-to-meter translation, and shift parsing in 41 seconds.",
+      accent: "cyan",
+      badgeBg: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
+      border: "border-cyan-500/40",
+      glow: "shadow-[0_0_30px_rgba(6,182,212,0.25)]",
+      gradient: "from-cyan-950/60 via-zinc-900/60 to-black/80",
+      metrics: "60 FPS Processing · 41s Shift Ingest",
+      icon: Cpu,
+    },
+    {
+      id: 1,
+      tag: "SYNTHESIS",
+      title: "Semantic Synthesis Ledger",
+      subtitle: "Film Proof × Player Intent",
+      desc: "Cross-references hard visual telemetry from Spotlight with subjective reflection notes from Periodical. Resolves what happened against why it happened.",
+      accent: "indigo",
+      badgeBg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+      border: "border-indigo-500/40",
+      glow: "shadow-[0_0_30px_rgba(99,102,241,0.25)]",
+      gradient: "from-indigo-950/60 via-zinc-900/60 to-black/80",
+      metrics: ">95% Decision-Grade Alignment",
+      icon: GitMerge,
+    },
+    {
+      id: 2,
+      tag: "ONTOLOGY",
+      title: "3-Tier Hockey Taxonomy",
+      subtitle: "Micro · Meso · Macro Domain Model",
+      desc: "Proprietary domain graph mapping every on-ice moment from Micro mechanics (body position, puck placement) up to Macro game states (zone, pressure).",
+      accent: "purple",
+      badgeBg: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+      border: "border-purple-500/40",
+      glow: "shadow-[0_0_30px_rgba(168,85,247,0.25)]",
+      gradient: "from-purple-950/60 via-zinc-900/60 to-black/80",
+      metrics: "100% Hockey Native Ontology",
+      icon: Layers,
+    },
+    {
+      id: 3,
+      tag: "FLYWHEEL",
+      title: "Closed-Loop Intelligence Engine",
+      subtitle: "Self-Reinforcing Mastery",
+      desc: "Every cut dispatched and journal read-back updates player trend lines, training the model to surface higher-leverage clips for coaches on the next shift.",
+      accent: "fuchsia",
+      badgeBg: "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30",
+      border: "border-fuchsia-500/40",
+      glow: "shadow-[0_0_30px_rgba(217,70,239,0.25)]",
+      gradient: "from-fuchsia-950/60 via-zinc-900/60 to-black/80",
+      metrics: "Continuous Athlete Feedback",
+      icon: Brain,
+    },
+  ];
+
+  const currentPillar = pillars[activeTab];
+  const CurrentIcon = currentPillar.icon;
+
+  return (
+    <div className="w-full relative mt-8 pt-8">
+      {/* CONVERGING DATA PIPES / LASER BEAMS FROM CARDS TO TRANSCEND BASE */}
+      <div className="relative h-16 w-full flex items-center justify-center pointer-events-none mb-2">
+        {/* Left Beam (Spotlight) */}
+        <div className="absolute left-[25%] top-0 bottom-0 w-px bg-gradient-to-b from-cyan-500/80 via-cyan-400/40 to-indigo-500/80" />
+        <div className="absolute left-[25%] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-cyan-400 animate-ping opacity-60" />
+
+        {/* Right Beam (Periodical) */}
+        <div className="absolute right-[25%] top-0 bottom-0 w-px bg-gradient-to-b from-indigo-500/80 via-fuchsia-400/40 to-indigo-500/80" />
+        <div className="absolute right-[25%] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-fuchsia-400 animate-ping opacity-60" />
+
+        {/* Center Convergence Node */}
+        <div className="relative z-10 px-5 py-2 rounded-full bg-zinc-950 border border-white/20 text-xs font-mono flex items-center gap-2 shadow-2xl backdrop-blur-xl">
+          <Zap className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+          <span className="text-zinc-300 font-semibold uppercase tracking-wider text-[11px]">
+            Data Streams Converging $\downarrow$
+          </span>
+          <span className="text-cyan-400 font-bold">{pulseCount} events/sec</span>
+        </div>
+      </div>
+
+      {/* TRANSCEND PLATFORM FOUNDATION PEDESTAL */}
+      <div className="rounded-3xl border border-white/15 bg-gradient-to-b from-zinc-950 via-zinc-900/90 to-black p-8 md:p-12 shadow-2xl backdrop-blur-2xl relative overflow-hidden text-left">
+        {/* Ambient Neon Platform Glow */}
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/20 via-indigo-500/25 to-fuchsia-500/20 rounded-full blur-3xl pointer-events-none" />
+
+        {/* PEDESTAL HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-8 relative z-10">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-xs font-mono font-bold text-cyan-400">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>THE UNDERLYING PLATFORM FOUNDATION</span>
+            </div>
+            <h3 className="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight">
+              Transcend <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">AI Core Engine</span>
+            </h3>
+            <p className="text-sm md:text-base text-zinc-300 max-w-2xl font-light leading-relaxed">
+              Spotlight sees the film. Periodical captures the athlete's voice. <strong className="text-white font-medium">Transcend is the decision-grade AI engine underneath</strong> — fusing computer vision, semantic synthesis, and hockey domain graphs into one unified intelligence substrate.
+            </p>
+          </div>
+
+          {/* ENGINE STATUS TELEMETRY BADGE */}
+          <div className="bg-black/80 border border-white/15 p-4 rounded-2xl font-mono text-xs space-y-2 shrink-0 shadow-inner">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-zinc-400 text-[11px]">PLATFORM STATUS</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> ONLINE
+              </span>
+            </div>
+            <div className="text-zinc-200 font-semibold text-[11px] flex items-center gap-1.5">
+              <Database className="w-3.5 h-3.5 text-cyan-400" /> MASCE Neural Core v2.4
+            </div>
+            <div className="text-[10px] text-zinc-500">
+              Latency: 41s ingest · Sync: Realtime
+            </div>
+          </div>
+        </div>
+
+        {/* 4 ENGINE PILLARS TABS & SHOWCASE */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 items-center">
+          {/* PILLAR SELECTOR CARDS */}
+          <div className="lg:col-span-6 space-y-3">
+            {pillars.map((pillar) => {
+              const Icon = pillar.icon;
+              const isSelected = activeTab === pillar.id;
+
+              return (
+                <div
+                  key={pillar.id}
+                  onClick={() => setActiveTab(pillar.id)}
+                  className={`p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex items-start gap-4 ${
+                    isSelected
+                      ? `bg-gradient-to-r ${pillar.gradient} ${pillar.border} ${pillar.glow} ring-1 ring-white/20`
+                      : "bg-black/50 border-white/5 hover:border-white/20 hover:bg-zinc-900/60"
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-xl border border-white/10 ${isSelected ? pillar.badgeBg : "bg-zinc-900 text-zinc-400"}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${pillar.badgeBg} px-2 py-0.5 rounded`}>
+                        {pillar.tag}
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-500">
+                        {pillar.metrics}
+                      </span>
+                    </div>
+
+                    <h4 className="text-base font-serif font-bold text-white">{pillar.title}</h4>
+                    <p className="text-xs text-zinc-400 line-clamp-1 mt-0.5 font-light">{pillar.subtitle}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ACTIVE PILLAR HIGH-TECH INSPECTOR CONSOLE */}
+          <div className="lg:col-span-6">
+            <div className={`rounded-2xl border ${currentPillar.border} bg-black/90 p-6 md:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl ${currentPillar.glow}`}>
+              <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <CurrentIcon className={`w-5 h-5 ${currentPillar.badgeBg.split(" ")[1]}`} />
+                  <span className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+                    {currentPillar.title}
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-500 uppercase">
+                  TRANSCEND PLATFORM SUBSTRATE
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                <h5 className="text-xl font-serif font-bold text-white">
+                  {currentPillar.subtitle}
+                </h5>
+                <p className="text-sm text-zinc-300 leading-relaxed font-light">
+                  {currentPillar.desc}
+                </p>
+
+                {/* SIMULATED HIGH-TECH AI TERMINAL METRICS */}
+                <div className="mt-6 p-4 rounded-xl bg-zinc-950 border border-white/10 font-mono text-xs space-y-2">
+                  <div className="flex items-center justify-between text-zinc-400 border-b border-white/5 pb-2 text-[11px]">
+                    <span className="flex items-center gap-1.5 text-cyan-400">
+                      <Terminal className="w-3.5 h-3.5" /> Engine Telemetry Stream
+                    </span>
+                    <span className="text-emerald-400">SYNC OK</span>
+                  </div>
+                  <div className="text-[11px] text-zinc-300 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">&gt; Substrate:</span>
+                      <span className="text-white font-semibold">Transcend Core (DGX / MinIO / PostgreSQL)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">&gt; Domain Graph:</span>
+                      <span className="text-indigo-400">3-Tier Hockey Ontology (Micro/Meso/Macro)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">&gt; Ingest Rate:</span>
+                      <span className="text-cyan-400">41 seconds / shift</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM PLATFORM FOOTNOTE */}
+        <div className="mt-10 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-400 relative z-10">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+            <span>Decision-Grade Sports Intelligence · Enterprise Security</span>
+          </div>
+          <div className="text-zinc-500">
+            Powered by Transcendental Sports AI LLC
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
