@@ -144,7 +144,7 @@ export const landingPageCopy = {
       {
         id: "tempest",
         name: "Tempest",
-        tagline: "The Possession Narrator",
+        tagline: "The Possession Analogue",
         description: "Translates team structure into plain bench language. Flow lines, zone grids, tactics lab, possession console, and storm decks.",
         keyFeatures: [
           "Narrates how your team earns space, zone residence, and pressure cycles",

@@ -48,7 +48,7 @@ export default function TechnologySolutionsPage() {
     {
       id: "tempest" as const,
       name: "Tempest",
-      tagline: "THE POSSESSION NARRATOR",
+      tagline: "THE POSSESSION ANALOGUE",
       badgeColor: "text-indigo-400 border-indigo-500/30 bg-indigo-500/10",
       description: "Translates team structure into plain bench language. Flow lines, zone grids, tactics lab, possession console, and storm decks.",
       keyFeatures: [
