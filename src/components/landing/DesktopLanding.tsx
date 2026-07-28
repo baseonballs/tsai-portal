@@ -22,7 +22,7 @@ export function DesktopLanding() {
 
       <LandingHeader />
 
-      <main className="flex flex-col pt-16 relative z-10">
+      <main className="flex flex-col pt-16 relative z-10" suppressHydrationWarning>
         
         {/* HERO BANNER WITH CINEMATIC YOUTH HOCKEY GRAPHICS */}
         <YouthHockeyCinematicBanner />
