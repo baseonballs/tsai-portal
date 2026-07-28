@@ -216,7 +216,7 @@ export function YouthHockeyCinematicBanner() {
           <span className="text-zinc-500">·</span>
           <span className="text-indigo-400 font-bold tracking-wider">Periodical</span>
           <span className="text-zinc-500">·</span>
-          <span className="text-white font-bold tracking-wider">Teams</span> <span className="text-zinc-400 font-semibold">Beta Program</span>
+          <span className="text-white font-bold tracking-wider">Team</span> <span className="text-zinc-400 font-semibold">Beta Program</span>
         </div>
       </div>
 
@@ -292,7 +292,7 @@ export function YouthHockeyCinematicBanner() {
             className="w-full sm:w-auto rounded-full border border-white/10 bg-zinc-900/40 px-6 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-sm font-bold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
           >
             <Lock className="w-4 h-4 text-zinc-500 shrink-0" />
-            <span>Apply for Teams Beta Access</span>
+            <span>Apply for Team Beta Access</span>
           </button>
 
           <Link 

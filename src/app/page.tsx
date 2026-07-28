@@ -130,7 +130,7 @@ export default function Home() {
         {/* TEAMS BETA REGISTRATION FORM */}
         <section id="beta-access" className="px-6 py-32 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-cyan-950/20 to-zinc-950 text-center relative overflow-hidden">
           <div className="mx-auto max-w-3xl relative z-10">
-            <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Teams Beta Program · Now Forming</span>
+            <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Team Beta Program · Now Forming</span>
             <h2 className="mt-6 text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
               Bring <span className="text-zinc-400/80 font-semibold">Transcendental Sports </span><span className="text-cyan-400/80 font-sans">AI</span> to your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">team.</span>
             </h2>
