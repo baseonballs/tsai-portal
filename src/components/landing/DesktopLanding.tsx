@@ -82,7 +82,7 @@ export function DesktopLanding() {
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400" /> Daily voice/text player journaling</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400" /> The Drop (hued cinematic cuts in journal)</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400" /> Read-back self-rating &amp; Superpower trend lines</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400" /> Multi-Voice accountability (Player, Coach, Trainer, Parent, Scout)</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400" /> Multi-Voice accountability (Player, Coach, Trainer, Mentor, Nutritionist, Parent, Scout)</li>
                 </ul>
                 <div className="mt-8 pt-6 border-t border-white/10">
                   <Link href="/players-development" className="text-indigo-400 hover:text-indigo-300 font-semibold text-xs flex items-center gap-1">

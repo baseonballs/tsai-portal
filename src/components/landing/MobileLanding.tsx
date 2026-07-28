@@ -87,8 +87,8 @@ export function MobileLanding() {
             </div>
 
             <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
-              <div className="text-xl font-serif font-bold text-amber-400">5 Voices</div>
-              <div className="text-[10px] text-zinc-400 mt-0.5 leading-tight">Player, Coach, Trainer, Parent</div>
+              <div className="text-xl font-serif font-bold text-amber-400">7 Voices</div>
+              <div className="text-[10px] text-zinc-400 mt-0.5 leading-tight">Player, Coach, Trainer, Mentor, Nutritionist, Parent &amp; Scout</div>
             </div>
           </div>
         </section>
