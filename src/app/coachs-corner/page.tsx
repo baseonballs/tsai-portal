@@ -228,7 +228,7 @@ export default function CoachsCornerPage() {
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
               <span className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400 uppercase">The Cut Room Console</span>
-              <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">Four Superpowers. One Rising Line.</h2>
+              <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">8 Superpowers. One Rising Line.</h2>
               <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
                 Select a superpower on the Cut Room rail. The console washes in its hue, filters your moments, and binds the cut directly to the athlete's personal goal.
               </p>

@@ -211,7 +211,7 @@ export default function PlayersDevelopmentPage() {
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
               <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">The Pillars of Hockey Skill</span>
-              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Eight Superpowers. One Rising Line.</h2>
+              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">8 Superpowers. One Rising Line.</h2>
               <p className="text-lg text-zinc-400 max-w-3xl mx-auto">
                 Development stops being a vague word and becomes eight tangible superpowers an athlete can actually chase.
               </p>
