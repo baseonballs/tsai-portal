@@ -384,7 +384,7 @@ export default function PlayersDevelopmentPage() {
                     Mindset
                   </span>
                 </div>
-                <div className="text-xs uppercase font-mono font-bold text-violet-400 tracking-wider mb-1">The Mentor</div>
+                <div className="text-xs uppercase font-mono font-bold text-violet-400 tracking-wider mb-1">The Mentor / Academic Advisor</div>
                 <h4 className="text-xl font-serif font-medium text-white mb-2 group-hover:text-violet-200 transition-colors">Shapes It</h4>
                 <p className="text-xs text-zinc-400 leading-relaxed">
                   Character development, psychological resilience, emotional poise, and mental game preparation.
