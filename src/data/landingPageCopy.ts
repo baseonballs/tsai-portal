@@ -272,7 +272,7 @@ export const landingPageCopy = {
       },
       {
         name: "Team",
-        price: "$2,600",
+        price: "$3,600",
         billing: "per season",
         tagline: "Unified intelligence for the entire bench.",
         features: [

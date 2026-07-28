@@ -187,7 +187,7 @@ export default function PricingPage() {
 
                   <div className="mt-6 mb-8 flex items-baseline gap-2">
                     <span className="text-4xl font-serif font-bold text-white">
-                      {billingCycle === "team" ? "$0" : familyTier === "basic" ? "$9.99" : "$29"}
+                      {billingCycle === "team" ? "$0" : familyTier === "basic" ? "$14.99" : "$29"}
                     </span>
                     <span className="text-xs text-zinc-400 font-mono">
                       {billingCycle === "team"
@@ -406,7 +406,7 @@ export default function PricingPage() {
 
                   <div className="mt-6 mb-8 flex items-baseline gap-2">
                     <span className="text-5xl font-serif font-bold text-white">
-                      {billingCycle === "team" ? "$0" : "$2,400"}
+                      {billingCycle === "team" ? "$0" : "$3,600"}
                     </span>
                     <span className="text-xs text-zinc-400 font-mono">
                       {billingCycle === "team" ? "/ month (during beta period)" : "/ full team season (24 seats)"}
