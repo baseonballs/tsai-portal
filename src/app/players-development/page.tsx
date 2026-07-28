@@ -381,7 +381,7 @@ export default function PlayersDevelopmentPage() {
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-violet-400 bg-violet-500/10 border border-violet-500/30 px-2.5 py-1 rounded-full">
                     <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
-                    Mindset
+                    Character
                   </span>
                 </div>
                 <div className="text-xs uppercase font-mono font-bold text-violet-400 tracking-wider mb-1">The Mentor / Academic Advisor</div>
@@ -399,7 +399,7 @@ export default function PlayersDevelopmentPage() {
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2.5 py-1 rounded-full">
                     <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
-                    Fuel
+                    Health &amp; Fuel
                   </span>
                 </div>
                 <div className="text-xs uppercase font-mono font-bold text-rose-400 tracking-wider mb-1">The Nutritionist</div>
