@@ -18,7 +18,7 @@ export function LandingFooter() {
             Terms of Service
           </a>
           <span className="text-zinc-700">|</span>
-          <span className="font-mono">v0.1.72.beta</span>
+          <span className="font-mono">v2.0.7.beta</span>
         </div>
       </div>
     </footer>
