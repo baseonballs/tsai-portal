@@ -307,8 +307,8 @@ export function YouthHockeyCinematicBanner() {
             <div className="text-xs text-zinc-400 mt-1">Cut Rooms × Journal Loops, Continuous Feedback</div>
           </div>
           <div>
-            <div className="text-xl sm:text-3xl font-serif font-bold text-amber-400">7 Voices</div>
-            <div className="text-xs text-zinc-400 mt-1">Player, Coach, Trainer, Mentor, Nutritionist, Parent &amp; Scout</div>
+            <div className="text-xl sm:text-3xl font-serif font-bold text-amber-400">8 Voices</div>
+            <div className="text-xs text-zinc-400 mt-1">Player, Teammate, Coach, Trainer, Mentor, Nutritionist, Parent &amp; Scout</div>
           </div>
         </div>
 
