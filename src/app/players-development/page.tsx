@@ -23,6 +23,10 @@ import {
   TrendingUp,
   Award,
   Users,
+  User,
+  ShieldCheck,
+  Activity,
+  Heart,
   Mic,
   Smile,
   Shield
@@ -276,47 +280,171 @@ export default function PlayersDevelopmentPage() {
         {/* HOCKEY STICK TRAJECTORY CURVE METAPHOR */}
         <HockeyStickTrajectoryIllustration />
 
-        {/* 5 VOICES ACCOUNTABILITY ROSTER */}
-        <section className="px-6 py-24 lg:px-8 bg-zinc-950 border-t border-white/5">
-          <div className="mx-auto max-w-7xl">
-            <div className="text-center mb-16">
-              <span className="text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase">One Plan · Five Voices</span>
-              <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Development is a Team Sport</h2>
-              <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
-                Youth development fails in the gaps between the people who care. Periodical puts everyone on the same page.
+        {/* 8 VOICES ACCOUNTABILITY ROSTER */}
+        <section className="px-6 py-28 lg:px-8 bg-zinc-950 border-t border-white/10 relative overflow-hidden">
+          {/* Ambient Background Glows */}
+          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="mx-auto max-w-7xl relative z-10">
+            <div className="text-center mb-16 sm:mb-20">
+              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-black/80 px-4 py-1.5 text-xs font-mono font-semibold uppercase tracking-widest text-indigo-300 backdrop-blur-xl shadow-lg shadow-indigo-500/10 mb-4">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
+                <span>One Plan · Eight Voices</span>
+              </div>
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif tracking-tight text-white mb-6">
+                Development is a <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-400 font-medium">Team Sport</span>.
+              </h2>
+              <p className="text-base sm:text-lg text-zinc-300 max-w-2xl mx-auto font-light leading-relaxed">
+                Youth development fails in the gaps between the people who care. Periodical unifies all 8 key stakeholders into a single continuous feedback loop.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-              <div className="bg-black/40 border border-amber-500/30 rounded-xl p-6 hover:border-amber-500/50 transition-all">
-                <div className="text-xs uppercase font-mono font-bold text-amber-400 mb-2">The Player</div>
-                <h4 className="text-lg font-serif text-white mb-2">Drives It</h4>
-                <p className="text-xs text-zinc-400 leading-relaxed">Sets goals, journals daily, owns the plan. Reflection turns a kid into a student of the game.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* 1. THE PLAYER */}
+              <div className="group relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-950/20 via-zinc-900/40 to-black p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-500/60 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 shadow-inner group-hover:scale-110 transition-transform">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    The Core
+                  </span>
+                </div>
+                <div className="text-xs uppercase font-mono font-bold text-amber-400 tracking-wider mb-1">The Player</div>
+                <h4 className="text-xl font-serif font-medium text-white mb-2 group-hover:text-amber-200 transition-colors">Drives It</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Sets goals, journals daily, owns the plan. Reflection turns a kid into an intentional student of the game.
+                </p>
               </div>
 
-              <div className="bg-black/40 border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition-all">
-                <div className="text-xs uppercase font-mono font-bold text-blue-400 mb-2">The Coach</div>
-                <div className="text-lg font-serif text-white mb-2">Guides It</div>
-                <p className="text-xs text-zinc-400 leading-relaxed">Cuts moments in the Cut Room, answers in feedback loops, aligns personal goals with team macro-cycles.</p>
+              {/* 2. THE TEAMMATE */}
+              <div className="group relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-b from-cyan-950/20 via-zinc-900/40 to-black p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-cyan-500/60 hover:shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 shadow-inner group-hover:scale-110 transition-transform">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-2.5 py-1 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    Culture
+                  </span>
+                </div>
+                <div className="text-xs uppercase font-mono font-bold text-cyan-400 tracking-wider mb-1">The Teammate</div>
+                <h4 className="text-xl font-serif font-medium text-white mb-2 group-hover:text-cyan-200 transition-colors">Amplifies It</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Locker Room camaraderie, shared video cut feedback, and peer accountability on and off the ice.
+                </p>
               </div>
 
-              <div className="bg-black/40 border border-emerald-500/30 rounded-xl p-6 hover:border-emerald-500/50 transition-all">
-                <div className="text-xs uppercase font-mono font-bold text-emerald-400 mb-2">The Trainer</div>
-                <div className="text-lg font-serif text-white mb-2">Supports &amp; Develops It</div>
-                <p className="text-xs text-zinc-400 leading-relaxed">Skills &amp; private trainers attach drill progressions, off-ice work, and log observations that feed the AI insight engine.</p>
+              {/* 3. THE COACH */}
+              <div className="group relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-b from-indigo-950/20 via-zinc-900/40 to-black p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-500/60 hover:shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 shadow-inner group-hover:scale-110 transition-transform">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-1 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                    Strategy
+                  </span>
+                </div>
+                <div className="text-xs uppercase font-mono font-bold text-indigo-400 tracking-wider mb-1">The Coach</div>
+                <h4 className="text-xl font-serif font-medium text-white mb-2 group-hover:text-indigo-200 transition-colors">Guides It</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Cuts moments in the Cut Room, answers feedback loops, and aligns personal goals with team macro-cycles.
+                </p>
               </div>
 
-              <div className="bg-black/40 border border-fuchsia-500/30 rounded-xl p-6 hover:border-fuchsia-500/50 transition-all">
-                <div className="text-xs uppercase font-mono font-bold text-fuchsia-400 mb-2">The Parent</div>
-                <div className="text-lg font-serif text-white mb-2">Cultivates It</div>
-                <p className="text-xs text-zinc-400 leading-relaxed">Embraces the sacrifice. Visibility without interference: milestones, streaks, and progress — the car ride home gets a lot better.</p>
+              {/* 4. THE TRAINER */}
+              <div className="group relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/20 via-zinc-900/40 to-black p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/60 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shadow-inner group-hover:scale-110 transition-transform">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Skills
+                  </span>
+                </div>
+                <div className="text-xs uppercase font-mono font-bold text-emerald-400 tracking-wider mb-1">The Trainer</div>
+                <h4 className="text-xl font-serif font-medium text-white mb-2 group-hover:text-emerald-200 transition-colors">Builds It</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Skills & private trainers attach drill progressions, off-ice work, and log physical mechanics observations.
+                </p>
               </div>
 
-              <div className="bg-black/40 border border-cyan-500/30 rounded-xl p-6 hover:border-cyan-500/50 transition-all">
-                <div className="text-xs uppercase font-mono font-bold text-cyan-400 mb-2">The Scout</div>
-                <div className="text-lg font-serif text-white mb-2">Evaluates It</div>
-                <p className="text-xs text-zinc-400 leading-relaxed">The ultimate voice for the last mile: verified shift dossiers, objective scouting reports, and high-performance evaluation for advancement.</p>
+              {/* 5. THE MENTOR */}
+              <div className="group relative overflow-hidden rounded-2xl border border-violet-500/30 bg-gradient-to-b from-violet-950/20 via-zinc-900/40 to-black p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-violet-500/60 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-violet-500/15 border border-violet-500/30 text-violet-400 shadow-inner group-hover:scale-110 transition-transform">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-violet-400 bg-violet-500/10 border border-violet-500/30 px-2.5 py-1 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+                    Mindset
+                  </span>
+                </div>
+                <div className="text-xs uppercase font-mono font-bold text-violet-400 tracking-wider mb-1">The Mentor</div>
+                <h4 className="text-xl font-serif font-medium text-white mb-2 group-hover:text-violet-200 transition-colors">Shapes It</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Character development, psychological resilience, emotional poise, and mental game preparation.
+                </p>
               </div>
+
+              {/* 6. THE NUTRITIONIST */}
+              <div className="group relative overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-b from-rose-950/20 via-zinc-900/40 to-black p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-rose-500/60 hover:shadow-[0_0_30px_rgba(244,63,94,0.2)]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 shadow-inner group-hover:scale-110 transition-transform">
+                    <Flame className="w-5 h-5" />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2.5 py-1 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+                    Fuel
+                  </span>
+                </div>
+                <div className="text-xs uppercase font-mono font-bold text-rose-400 tracking-wider mb-1">The Nutritionist</div>
+                <h4 className="text-xl font-serif font-medium text-white mb-2 group-hover:text-rose-200 transition-colors">Fuels It</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Energy intake protocols, hydration tracking, post-game recovery regimens, and optimal fueling plans.
+                </p>
+              </div>
+
+              {/* 7. THE PARENT */}
+              <div className="group relative overflow-hidden rounded-2xl border border-fuchsia-500/30 bg-gradient-to-b from-fuchsia-950/20 via-zinc-900/40 to-black p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-fuchsia-500/60 hover:shadow-[0_0_30px_rgba(217,70,239,0.2)]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-fuchsia-500/15 border border-fuchsia-500/30 text-fuchsia-400 shadow-inner group-hover:scale-110 transition-transform">
+                    <Heart className="w-5 h-5" />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-fuchsia-400 bg-fuchsia-500/10 border border-fuchsia-500/30 px-2.5 py-1 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-400 animate-pulse" />
+                    Support
+                  </span>
+                </div>
+                <div className="text-xs uppercase font-mono font-bold text-fuchsia-400 tracking-wider mb-1">The Parent</div>
+                <h4 className="text-xl font-serif font-medium text-white mb-2 group-hover:text-fuchsia-200 transition-colors">Cultivates It</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Visibility without interference: milestones, streaks, and progress — the car ride home gets a lot better.
+                </p>
+              </div>
+
+              {/* 8. THE SCOUT */}
+              <div className="group relative overflow-hidden rounded-2xl border border-sky-500/30 bg-gradient-to-b from-sky-950/20 via-zinc-900/40 to-black p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-sky-500/60 hover:shadow-[0_0_30px_rgba(14,165,233,0.2)]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 shadow-inner group-hover:scale-110 transition-transform">
+                    <Target className="w-5 h-5" />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-sky-400 bg-sky-500/10 border border-sky-500/30 px-2.5 py-1 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+                    Advancement
+                  </span>
+                </div>
+                <div className="text-xs uppercase font-mono font-bold text-sky-400 tracking-wider mb-1">The Scout</div>
+                <h4 className="text-xl font-serif font-medium text-white mb-2 group-hover:text-sky-200 transition-colors">Evaluates It</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  The ultimate voice for the last mile: verified shift dossiers, objective scouting reports, and high-performance evaluation.
+                </p>
+              </div>
+
             </div>
           </div>
         </section>
