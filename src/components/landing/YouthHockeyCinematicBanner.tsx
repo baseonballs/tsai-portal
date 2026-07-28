@@ -205,13 +205,13 @@ export function YouthHockeyCinematicBanner() {
       {/* Film Grain Texture Overlay */}
       <div className="gallery-slideshow-grain pointer-events-none absolute inset-0 opacity-25" />
 
-      {/* 4. CEREBRAL VISION BADGE (OPTION A: TRANSCENDENTAL SPORTS AI) */}
+      {/* 4. CEREBRAL VISION BADGE */}
       <div className="absolute top-3 sm:top-6 left-1/2 -translate-x-1/2 z-30 pointer-events-auto max-w-[95%] sm:max-w-none">
-        <div className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-500/30 bg-black/85 px-3.5 sm:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold tracking-wider text-zinc-200 backdrop-blur-xl shadow-xl shadow-cyan-500/10 hover:border-cyan-400/50 transition-all">
+        <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full border border-cyan-500/30 bg-black/85 px-3.5 sm:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold tracking-wider text-zinc-200 backdrop-blur-xl shadow-xl shadow-cyan-500/10 hover:border-cyan-400/50 transition-all whitespace-nowrap">
           <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0 animate-pulse" />
           <span className="text-cyan-400 font-bold tracking-widest uppercase">Transcendental Sports AI</span>
-          <span className="text-zinc-600 font-normal">·</span>
-          <span className="text-zinc-300 font-medium tracking-wide uppercase">Spatial Telemetry × Athlete Intent</span>
+          <span className="hidden sm:inline text-zinc-600 font-normal">·</span>
+          <span className="hidden sm:inline text-zinc-300 font-medium tracking-wide uppercase">Spatial Telemetry × Athlete Intent</span>
         </div>
       </div>
 
@@ -270,15 +270,15 @@ export function YouthHockeyCinematicBanner() {
         {/* HIGH-CONVERSION CTA BUTTONS */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-12 sm:mb-16">
           <Link 
-            href="/beta"
+            href="#beta-access"
             className="w-full sm:w-auto rounded-full border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 backdrop-blur-xl px-8 sm:px-9 py-4 text-xs sm:text-sm font-semibold text-cyan-300 hover:text-white hover:border-cyan-400/70 shadow-lg shadow-cyan-500/10 transition-all flex items-center justify-center gap-2"
           >
             <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span>Join the Teams Beta Program</span>
+            <span>Join the Team Beta Program</span>
           </Link>
 
           <a 
-            href="#loop" 
+            href="#beta-access" 
             className="w-full sm:w-auto rounded-full border border-white/15 bg-white/5 hover:bg-white/10 backdrop-blur-xl px-7 sm:px-8 py-4 text-xs sm:text-sm font-semibold text-zinc-300 hover:text-white hover:border-white/30 transition-all flex items-center justify-center gap-2"
           >
             <span>See The Loop In Action</span>

@@ -6,7 +6,7 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
 import { LoopingDotsFlow } from "@/components/landing/LoopingDotsFlow";
 import { TranscendEngineSubstrate } from "@/components/landing/TranscendEngineSubstrate";
-import { ArrowRight, BrainCircuit, Activity, Repeat, FileText, Target, ShieldCheck, Zap, BarChart2, Layers } from "lucide-react";
+import { ArrowRight, BrainCircuit, Activity, Repeat, FileText, Target, ShieldCheck, Zap, BarChart2, Layers, Check } from "lucide-react";
 
 export default function SpotlightAndPeriodicalPage() {
   return (
@@ -72,28 +72,24 @@ export default function SpotlightAndPeriodicalPage() {
               {/* Spotlight Engine */}
               <div className="rounded-2xl border border-cyan-500/30 bg-black/50 p-8 hover:border-cyan-500/50 transition-colors shadow-2xl">
                 <div className="text-[10px] font-semibold tracking-widest text-cyan-400 uppercase mb-4 font-mono">Engine 01 · The Intelligence</div>
-                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-rose-500 mb-4">Spotlight</h3>
+                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-400 mb-4">Spotlight</h3>
                 <p className="text-zinc-300 text-lg mb-6 border-b border-white/10 pb-6 font-light">Sees the game with AI precision and proves what happened.</p>
-                <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <Activity className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-400 text-sm"><strong className="text-white">Captive AI Discovery</strong> — 41s semantic search across your full game library and pro master references.</p>
+                <ul className="space-y-3 text-sm text-zinc-300">
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Captive AI natural-language discovery</li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-cyan-400" /> 
+                    <span>4-tier Hockey Taxonomy (<span className="text-cyan-400 font-medium">Nano</span>, <span className="text-indigo-400 font-medium">Micro</span>, <span className="text-amber-400 font-medium">Meso</span>, <span className="text-emerald-400 font-medium">Macro</span>)</span>
                   </li>
-                  <li className="flex items-start gap-3">
-                    <ShieldCheck className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-400 text-sm"><strong className="text-white">Cut Room &amp; Superpower Rail</strong> — directed cuts, dual-playback split screen, locked micro-loops.</p>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <BarChart2 className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-400 text-sm"><strong className="text-white">Watch Telemetry</strong> — loop counts, dwell time, 100% unit completion proof.</p>
-                  </li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Cut Room Workbench &amp; Superpower Rail</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Dual-playback split-screen &amp; locked micro-loops</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Telemetry Board (dwell time, loop counts)</li>
                 </ul>
               </div>
 
               {/* Periodical Engine */}
-              <div className="rounded-2xl border border-indigo-500/30 bg-black/50 p-8 hover:border-indigo-500/50 transition-colors shadow-2xl">
-                <div className="text-[10px] font-semibold tracking-widest text-indigo-400 uppercase mb-4 font-mono">Engine 02 · The Bridge</div>
-                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 mb-4">Periodical</h3>
+              <div className="bg-black/50 border border-indigo-500/30 rounded-2xl p-8 hover:border-indigo-500/50 transition-colors shadow-2xl">
+                <span className="text-xs font-mono font-bold text-indigo-400 uppercase block mb-2">Periodical Engine</span>
+                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-300 mb-4">Periodical</h3>
                 <p className="text-zinc-300 text-lg mb-6 border-b border-white/10 pb-6 font-light">Hears the player and turns reflection into a shared plan.</p>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3">

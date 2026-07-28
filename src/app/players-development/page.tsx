@@ -45,29 +45,27 @@ export default function PlayersDevelopmentPage() {
         
         {/* HERO */}
         <section className="px-6 py-24 sm:py-32 lg:px-8 text-center max-w-5xl mx-auto">
-          <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-indigo-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-wider text-indigo-300 backdrop-blur-xl shadow-xl shadow-indigo-500/15 mb-10 sm:mb-12 hover:border-indigo-400/60 transition-all">
-            <TrendingUp className="h-4 w-4 text-indigo-400 shrink-0" />
-            <span className="text-indigo-400 font-bold tracking-widest uppercase">Player's Development</span>
-            <span className="text-zinc-600 font-normal">·</span>
-            <span className="text-zinc-200 font-medium tracking-wide uppercase">The Athlete's Growth Continuum</span>
+          <div className="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-indigo-400 mb-8 backdrop-blur-md">
+            <span className="mr-2 h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
+            The Athlete's Growth Continuum · Teams Beta Program
           </div>
 
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-serif tracking-tight text-white mb-8 sm:mb-10 leading-[1.15] sm:leading-[1.12] drop-shadow-2xl max-w-5xl mx-auto">
+          <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-6 leading-[1.1]">
             From passive film to<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-amber-400">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">
               active growth.
             </span>
           </h1>
 
-          <p className="mt-8 sm:mt-10 text-lg sm:text-xl lg:text-2xl leading-relaxed sm:leading-9 text-zinc-300 max-w-3xl mx-auto font-light">
-            Spotlight &amp; Periodical unlock sports intelligence to guide, measure, and accelerate athlete growth on the path to their full potential.
+          <p className="text-xl md:text-2xl font-light text-zinc-300 italic mb-12 max-w-3xl mx-auto leading-relaxed">
+            Spotlight & Periodical unlock sports intelligence to guide, measure, and accelerate athlete growth on the path to their full potential.
           </p>
 
-          <div className="mt-12 sm:mt-14 flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-6">
-            <a href="#filmroom" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-9 py-4 text-sm font-semibold text-white shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all transform hover:scale-105">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="#filmroom" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
               Enter The Film Room
             </a>
-            <a href="#superpowers" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-indigo-300 flex items-center justify-center gap-2 py-4 px-7 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all">
+            <a href="#superpowers" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-indigo-300 flex items-center justify-center gap-1.5 py-4 px-6 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all">
               Explore All Superpowers <ArrowRight className="w-4 h-4" />
             </a>
           </div>
@@ -326,7 +324,7 @@ export default function PlayersDevelopmentPage() {
           <div className="mx-auto max-w-3xl relative z-10">
             <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">Teams Beta Program</span>
             <h2 className="mt-6 text-5xl md:text-7xl font-serif tracking-tight text-white mb-8">
-              Start your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-amber-400">growth continuum.</span>
+              Start your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">growth continuum.</span>
             </h2>
             <p className="text-xl text-zinc-300 mb-12 max-w-2xl mx-auto leading-relaxed">
               Empower your athletes with the tools of tomorrow. Join the Teams Beta Program today.

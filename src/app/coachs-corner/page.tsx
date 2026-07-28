@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { TheLoopIllustration } from "@/components/landing/TheLoopIllustration";
@@ -148,33 +147,31 @@ export default function CoachsCornerPage() {
         <section className="relative px-6 py-24 sm:py-32 lg:px-8 border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-cyan-950/30 via-zinc-950/80 to-zinc-950 pointer-events-none" />
           
-          <div className="mx-auto max-w-5xl text-center relative z-10">
-            <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-amber-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-wider text-amber-300 backdrop-blur-xl shadow-xl shadow-amber-500/15 mb-10 sm:mb-12 hover:border-amber-400/60 transition-all">
-              <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0" />
-              <span className="text-amber-400 font-bold tracking-widest uppercase">Coach's Corner</span>
-              <span className="text-zinc-600 font-normal">·</span>
-              <span className="text-zinc-200 font-medium tracking-wide uppercase">The Digital Clipboard That Reasoned The Game</span>
+          <div className="mx-auto max-w-4xl text-center relative z-10">
+            <div className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-cyan-400 mb-8 backdrop-blur-md">
+              <span className="mr-2 h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+              Spotlight · Periodical · Teams Beta Program · Founding Cohort
             </div>
             
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-serif tracking-tight text-white mb-8 sm:mb-10 leading-[1.15] sm:leading-[1.12] drop-shadow-2xl">
+            <h1 className="text-5xl font-serif tracking-tight text-white sm:text-7xl leading-[1.1]">
               Your clipboard<br />
-              just learned <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">hockey.</span>
+              just learned <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">hockey.</span>
             </h1>
 
-            <p className="mt-8 sm:mt-10 text-lg sm:text-xl lg:text-2xl leading-relaxed sm:leading-9 text-zinc-300 max-w-3xl mx-auto font-light">
+            <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto font-light">
               The <strong className="text-white font-medium">Cut Room Workbench</strong> turns four hours of Sunday-night scrubbing into ninety seconds of asking — then binds your cuts directly to the athlete's goals via <strong className="text-cyan-400 font-medium">The Loop</strong>.
             </p>
 
-            <div className="mt-12 sm:mt-14 flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-6">
-              <Link href="/beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-9 py-4 text-sm font-semibold text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a href="#beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
                 Join the Teams Beta Program
-              </Link>
-              <Link href="/locker-room" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-cyan-300 flex items-center justify-center gap-2 py-4 px-7 rounded-full border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 backdrop-blur-sm transition-all">
+              </a>
+              <a href="/locker-room" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-cyan-300 flex items-center justify-center gap-1.5 py-4 px-6 rounded-full border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 backdrop-blur-sm transition-all">
                 Step Into The Locker Room <ArrowRight className="w-4 h-4 text-cyan-400" />
-              </Link>
+              </a>
             </div>
 
-            <p className="mt-8 sm:mt-10 text-xs sm:text-sm text-zinc-500 uppercase tracking-widest font-mono">
+            <p className="mt-6 text-xs text-zinc-500 uppercase tracking-widest font-mono">
               Limited Founding Cohort · Amateur Youth Ice Hockey Staffs
             </p>
           </div>
@@ -210,11 +207,11 @@ export default function CoachsCornerPage() {
         </section>
 
         {/* ABSTRACTION BANNER: THE LOOP CONNECTS THE DOTS */}
-        <section id="loop" className="px-6 py-20 lg:px-8 border-y border-white/10 bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-fuchsia-950/40 relative backdrop-blur-md">
+        <section id="loop" className="px-6 py-20 lg:px-8 border-y border-white/10 bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-amber-950/30 relative backdrop-blur-md">
           <div className="mx-auto max-w-6xl text-center">
             <span className="text-xs font-semibold tracking-[0.25em] text-cyan-400 uppercase mb-4 block">The Central Abstraction</span>
             <h2 className="text-4xl sm:text-6xl font-serif text-white mb-6">
-              The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">Connects the Dots</span>
+              The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">Connects the Dots</span>
             </h2>
             <blockquote className="text-xl sm:text-2xl font-serif italic text-zinc-200 max-w-4xl mx-auto mb-12">
               "The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots."

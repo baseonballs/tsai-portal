@@ -111,7 +111,7 @@ export default function TechnologySolutionsPage() {
 
           <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-6 leading-[1.1]">
             Zero-hardware capture.<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">
               Decision-grade analytics.
             </span>
           </h1>

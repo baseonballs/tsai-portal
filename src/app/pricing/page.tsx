@@ -43,7 +43,7 @@ export default function PricingPage() {
 
             <h1 className="text-4xl font-serif font-normal tracking-tight text-white sm:text-6xl mb-6">
               Decision-Grade AI Intelligence. <br />
-              <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400 bg-clip-text text-transparent font-medium">
+              <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400 bg-clip-text text-transparent font-medium">
                 Built for Every Bench.
               </span>
             </h1>
@@ -187,7 +187,7 @@ export default function PricingPage() {
 
                   <div className="mt-6 mb-8 flex items-baseline gap-2">
                     <span className="text-4xl font-serif font-bold text-white">
-                      {billingCycle === "team" ? "$0" : familyTier === "basic" ? "$14.99" : "$29"}
+                      {billingCycle === "team" ? "$0" : familyTier === "basic" ? "$9.99" : "$29"}
                     </span>
                     <span className="text-xs text-zinc-400 font-mono">
                       {billingCycle === "team"
@@ -399,14 +399,14 @@ export default function PricingPage() {
                     <Zap className="w-6 h-6 text-cyan-400" />
                   </div>
 
-                  <h3 className="font-serif text-3xl text-white font-medium">Spotlight &amp; Periodical</h3>
+                  <h3 className="font-serif text-3xl text-white font-medium">Team</h3>
                   <p className="mt-2 text-sm text-zinc-300 font-light leading-relaxed">
                     Full AI video intelligence, Cut Room Workbench, and athlete feedback loops for your entire roster.
                   </p>
 
                   <div className="mt-6 mb-8 flex items-baseline gap-2">
                     <span className="text-5xl font-serif font-bold text-white">
-                      {billingCycle === "team" ? "$0" : "$3,600"}
+                      {billingCycle === "team" ? "$0" : "$2,400"}
                     </span>
                     <span className="text-xs text-zinc-400 font-mono">
                       {billingCycle === "team" ? "/ month (during beta period)" : "/ full team season (24 seats)"}

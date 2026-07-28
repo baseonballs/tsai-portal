@@ -1,45 +1,22 @@
 import type { NextConfig } from "next";
 
-const SUPABASE_AUTH_ORIGIN = process.env.TSAI_SUPABASE_AUTH_ORIGIN ?? 'http://auth.dev.tsai.local';
-const SUPABASE_REST_ORIGIN = process.env.TSAI_SUPABASE_REST_ORIGIN ?? 'http://localhost:5550';
-
-const nextConfig: any = {
-  /* config options here */
-  output: "standalone",
-  reactCompiler: true,
-  allowedDevOrigins: [
-    '127.0.0.1',
-    '192.168.86.20',
-    '100.74.23.2',
-    'spark-62db.tail18f71b.ts.net',
-    'landing.dev.tsai.local'
-  ],
-  async rewrites() {
-    const dgx = (process.env.TSAI_DGX_ORIGIN ?? "").trim().replace(/\/$/, "");
-
-    if (process.env.TSAI_DEPLOY_TARGET === "cloudrun" && dgx) {
-      return [
-        {
-          source: "/supabase/auth/v1/:path*",
-          destination: `${dgx}/supabase/auth/v1/:path*`,
-        },
-        {
-          source: "/supabase/rest/v1/:path*",
-          destination: `${dgx}/supabase/rest/v1/:path*`,
-        },
-      ];
-    }
-
+const nextConfig: NextConfig = {
+  async headers() {
     return [
       {
-        source: "/supabase/auth/v1/:path*",
-        destination: `${SUPABASE_AUTH_ORIGIN}/:path*`,
+        source: "/:path*",
+        headers: [
+          {
+            key: "Vary",
+            value: "User-Agent, Accept-Encoding, RSC, Next-Router-State-Tree, Next-Router-Prefetch",
+          },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+          },
+        ],
       },
-      {
-        source: "/supabase/rest/v1/:path*",
-        destination: `${SUPABASE_REST_ORIGIN}/rest/v1/:path*`,
-      },
-    ]
+    ];
   },
 };
 
