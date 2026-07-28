@@ -308,7 +308,7 @@ export default function PlayersDevelopmentPage() {
                     <User className="w-5 h-5" />
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(245,158,11,0.9)]" />
                     The Core
                   </span>
                 </div>
@@ -326,7 +326,7 @@ export default function PlayersDevelopmentPage() {
                     <Users className="w-5 h-5" />
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-2.5 py-1 rounded-full">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
                     Culture
                   </span>
                 </div>
@@ -344,7 +344,7 @@ export default function PlayersDevelopmentPage() {
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-1 rounded-full">
-                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.9)]" />
                     Strategy
                   </span>
                 </div>
@@ -362,7 +362,7 @@ export default function PlayersDevelopmentPage() {
                     <Activity className="w-5 h-5" />
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
                     Skills
                   </span>
                 </div>
@@ -380,7 +380,7 @@ export default function PlayersDevelopmentPage() {
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-violet-400 bg-violet-500/10 border border-violet-500/30 px-2.5 py-1 rounded-full">
-                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-violet-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(139,92,246,0.9)]" />
                     Character
                   </span>
                 </div>
@@ -398,7 +398,7 @@ export default function PlayersDevelopmentPage() {
                     <Flame className="w-5 h-5" />
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2.5 py-1 rounded-full">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-rose-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(244,63,94,0.9)]" />
                     Health &amp; Fuel
                   </span>
                 </div>
@@ -416,7 +416,7 @@ export default function PlayersDevelopmentPage() {
                     <Heart className="w-5 h-5" />
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-fuchsia-400 bg-fuchsia-500/10 border border-fuchsia-500/30 px-2.5 py-1 rounded-full">
-                    <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-400 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-fuchsia-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(217,70,239,0.9)]" />
                     Support
                   </span>
                 </div>
@@ -434,7 +434,7 @@ export default function PlayersDevelopmentPage() {
                     <Target className="w-5 h-5" />
                   </div>
                   <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-sky-400 bg-sky-500/10 border border-sky-500/30 px-2.5 py-1 rounded-full">
-                    <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-sky-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(14,165,233,0.9)]" />
                     Advancement
                   </span>
                 </div>
