@@ -56,7 +56,7 @@ export function DesktopLanding() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="bg-black/50 border border-cyan-500/30 rounded-2xl p-8 hover:border-cyan-500/50 transition-colors shadow-2xl">
                 <span className="text-xs font-mono font-bold text-cyan-400 uppercase block mb-2">Spotlight Engine</span>
-                <h3 className="text-3xl font-serif font-medium text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-400 mb-4 block">Video Intelligence</h3>
+                <h3 className="text-3xl font-serif font-medium text-white mb-4 block">Video Intelligence</h3>
                 <ul className="space-y-3 text-sm text-zinc-300">
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Captive AI natural-language discovery</li>
                   <li className="flex items-center gap-2">
@@ -76,7 +76,7 @@ export function DesktopLanding() {
 
               <div className="bg-black/50 border border-indigo-500/30 rounded-2xl p-8 hover:border-indigo-500/50 transition-colors shadow-2xl">
                 <span className="text-xs font-mono font-bold text-indigo-400 uppercase block mb-2">Periodical Engine</span>
-                <h3 className="text-3xl font-serif font-medium text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-400 mb-4 block">Player Reflection</h3>
+                <h3 className="text-3xl font-serif font-medium text-white mb-4 block">Player Reflection</h3>
                 <ul className="space-y-3 text-sm text-zinc-300">
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400" /> Interactive weekly planners &amp; agendas</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400" /> Daily voice/text player journaling</li>
