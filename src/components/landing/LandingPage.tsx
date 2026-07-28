@@ -1,21 +1,24 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { DesktopLanding } from "@/components/landing/DesktopLanding";
 import { MobileLanding } from "@/components/landing/MobileLanding";
 
 export function LandingPage() {
-  return (
-    <div suppressHydrationWarning>
-      {/* Desktop viewports (md and up) */}
-      <div className="hidden md:block" suppressHydrationWarning>
-        <DesktopLanding />
-      </div>
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
-      {/* Mobile viewports (below md) */}
-      <div className="block md:hidden" suppressHydrationWarning>
-        <MobileLanding />
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  if (isMobile) {
+    return <MobileLanding />;
+  }
+
+  return <DesktopLanding />;
 }
