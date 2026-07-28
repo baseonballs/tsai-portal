@@ -28,7 +28,7 @@ export function DesktopLanding() {
         <YouthHockeyCinematicBanner />
 
         {/* ABSTRACTION BANNER: THE LOOP CONNECTS THE DOTS */}
-        <section className="px-6 py-20 lg:px-8 border-y border-white/10 bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-fuchsia-950/40 backdrop-blur-md">
+        <section className="px-6 py-20 lg:px-8 border-y border-white/10 bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-amber-950/30 backdrop-blur-md">
           <div className="mx-auto max-w-6xl text-center">
             <span className="text-xs font-semibold tracking-[0.25em] text-cyan-400 uppercase mb-3 block">Product Value</span>
             <h2 className="text-4xl sm:text-6xl font-serif text-white mb-6">
