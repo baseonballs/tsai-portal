@@ -148,9 +148,11 @@ export default function CoachsCornerPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-cyan-950/30 via-zinc-950/80 to-zinc-950 pointer-events-none" />
           
           <div className="mx-auto max-w-4xl text-center relative z-10">
-            <div className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-cyan-400 mb-8 backdrop-blur-md">
-              <span className="mr-2 h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
-              Spotlight · Periodical · Teams Beta Program · Founding Cohort
+            <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-amber-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-wider text-amber-300 backdrop-blur-xl shadow-xl shadow-amber-500/15 mb-10 sm:mb-12 hover:border-amber-400/60 transition-all">
+              <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0" />
+              <span className="text-amber-400 font-bold tracking-widest uppercase">Coach's Corner</span>
+              <span className="text-zinc-600 font-normal">·</span>
+              <span className="text-zinc-200 font-medium tracking-wide uppercase">The Digital Clipboard That Reasoned The Game</span>
             </div>
             
             <h1 className="text-5xl font-serif tracking-tight text-white sm:text-7xl leading-[1.1]">

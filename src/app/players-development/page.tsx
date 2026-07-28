@@ -45,9 +45,11 @@ export default function PlayersDevelopmentPage() {
         
         {/* HERO */}
         <section className="px-6 py-24 sm:py-32 lg:px-8 text-center max-w-5xl mx-auto">
-          <div className="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-indigo-400 mb-8 backdrop-blur-md">
-            <span className="mr-2 h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
-            The Athlete's Growth Continuum · Teams Beta Program
+          <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-indigo-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-wider text-indigo-300 backdrop-blur-xl shadow-xl shadow-indigo-500/15 mb-10 sm:mb-12 hover:border-indigo-400/60 transition-all">
+            <TrendingUp className="h-4 w-4 text-indigo-400 shrink-0" />
+            <span className="text-indigo-400 font-bold tracking-widest uppercase">Player's Development</span>
+            <span className="text-zinc-600 font-normal">·</span>
+            <span className="text-zinc-200 font-medium tracking-wide uppercase">The Athlete's Growth Continuum</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-6 leading-[1.1]">
