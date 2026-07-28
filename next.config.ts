@@ -39,7 +39,28 @@ const nextConfig: any = {
         source: "/supabase/rest/v1/:path*",
         destination: `${SUPABASE_REST_ORIGIN}/rest/v1/:path*`,
       },
-    ]
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
+          },
+        ],
+      },
+    ];
   },
 };
 
