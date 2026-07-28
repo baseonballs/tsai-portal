@@ -49,7 +49,7 @@ export default function PricingPage() {
             </h1>
 
             <p className="text-lg text-zinc-300 font-light leading-relaxed max-w-2xl mx-auto mb-10">
-              By owning our hybrid GPU fabric, we collapsed video AI processing costs from <span className="text-white font-medium">$200</span> down to <span className="text-cyan-400 font-semibold">$1.17 per game</span>. Simple, predictable pricing for youth hockey programs.
+              By optimizing our Multi-Agent Sports Cognition Engine (MASCE) for cloud compute, we collapsed video AI processing costs from <span className="text-white font-medium">$200</span> down to <span className="text-cyan-400 font-semibold">$2.87 per game</span>. Simple, predictable pricing for youth hockey programs.
             </p>
 
             {/* BILLING TOGGLE */}
@@ -399,7 +399,7 @@ export default function PricingPage() {
                     <Zap className="w-6 h-6 text-cyan-400" />
                   </div>
 
-                  <h3 className="font-serif text-3xl text-white font-medium">Spotlight &amp; Periodical</h3>
+                  <h3 className="font-serif text-3xl text-white font-medium">Team</h3>
                   <p className="mt-2 text-sm text-zinc-300 font-light leading-relaxed">
                     Full AI video intelligence, Cut Room Workbench, and athlete feedback loops for your entire roster.
                   </p>
@@ -516,9 +516,9 @@ export default function PricingPage() {
           <div className="mx-auto max-w-5xl rounded-3xl border border-white/10 bg-gradient-to-r from-cyan-950/40 via-zinc-900/80 to-fuchsia-950/40 p-8 sm:p-12 backdrop-blur-xl shadow-2xl">
             <div className="text-center max-w-3xl mx-auto mb-10">
               <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest block mb-2">The Economic Collapse</span>
-              <h2 className="text-3xl font-serif text-white sm:text-4xl">How We Achieved $1.17 Per Game</h2>
+              <h2 className="text-3xl font-serif text-white sm:text-4xl">How We Achieved $2.87 Per Game</h2>
               <p className="mt-3 text-sm text-zinc-300 font-light">
-                Traditional video tagging relies on manual human labor or third-party cloud GPUs charging up to $30 per game. Our captive infrastructure eliminates the cloud tax.
+                Traditional video tagging relies on manual human labor or legacy cloud video providers charging up to $30 per game. Our optimized architecture minimizes compute consumption overhead.
               </p>
             </div>
 
@@ -535,7 +535,7 @@ export default function PricingPage() {
               </div>
               <div className="p-6 rounded-2xl bg-cyan-950/50 border border-cyan-500/40 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
                 <span className="text-xs text-cyan-400 font-mono font-semibold block mb-1">TSAI MASCE Engine</span>
-                <span className="text-3xl font-serif font-bold text-white">$1.17</span>
+                <span className="text-3xl font-serif font-bold text-white">$2.87</span>
                 <span className="text-[11px] text-cyan-300 block mt-2">Sub-minute deterministic inference</span>
               </div>
             </div>
@@ -557,8 +557,8 @@ export default function PricingPage() {
                   a: "No. Spotlight works with zero dedicated hardware. Upload standard 1080p game recordings from handheld cameras, smartphones, or standard rink streaming cameras."
                 },
                 {
-                  q: "How does the $1.17 per game cost structure work?",
-                  a: "Because TSAI operates its own captive GPU fabric (on-premise DGX cluster), we compute video inferencing locally rather than paying cloud provider fees. We pass those direct electricity & compute savings directly to youth teams."
+                  q: "How does the $2.87 per game cost structure work?",
+                  a: "By optimizing our Multi-Agent Sports Cognition Engine (MASCE) for native cloud compute workloads, we eliminated idle infrastructure overhead. We pass those direct efficiency savings directly to youth teams."
                 },
                 {
                   q: "How are minor athlete privacy and COPPA compliance handled?",

@@ -91,7 +91,7 @@ export function HockeyStickTrajectoryIllustration() {
 
               {/* INFLECTION CALLOUT BOX: "The magic happens here" */}
               <g 
-                transform="translate(320, 160)" 
+                transform="translate(310, 140)" 
                 className="cursor-pointer group"
                 onClick={() => setSelectedPhase("magic")}
               >
@@ -106,12 +106,12 @@ export function HockeyStickTrajectoryIllustration() {
                   The magic happens here
                 </text>
                 <text x="100" y="44" textAnchor="middle" fill="#818cf8" fontSize="10" fontFamily="monospace">
-                  Spotlight × Periodical × Transcend
+                  Transcend AI Engine
                 </text>
 
-                {/* Arrow Pointer Down to Inflection Node */}
-                <path d="M 100 60 L 100 85" stroke="#818cf8" strokeWidth="2" strokeDasharray="3 3" />
-                <polygon points="96,83 100,90 104,83" fill="#818cf8" />
+                {/* Arrow Pointer Down to Inflection Node (Centered at X=100 -> Absolute X=410) */}
+                <path d="M 100 60 L 100 120" stroke="#818cf8" strokeWidth="2" strokeDasharray="3 3" />
+                <polygon points="95,118 100,128 105,118" fill="#818cf8" />
               </g>
 
               {/* PHASE 1 NODE: HISTORY */}
@@ -145,8 +145,8 @@ export function HockeyStickTrajectoryIllustration() {
               >
                 <circle r="14" fill="#090d16" stroke="#34d399" strokeWidth="3" />
                 <circle r="6" fill="#34d399" />
-                <text x="0" y="-22" textAnchor="middle" fill="#34d399" fontSize="12" fontWeight="bold" fontFamily="monospace">
-                  FUTURE (Transcendence)
+                <text x="0" y="-38" textAnchor="middle" fill="#34d399" fontSize="12" fontWeight="bold" fontFamily="monospace">
+                  FUTURE (Compounding Mastery)
                 </text>
               </g>
 
@@ -191,7 +191,7 @@ export function HockeyStickTrajectoryIllustration() {
                 <Sparkles className="w-4 h-4 text-indigo-400" />
               </div>
               <h3 className="text-lg font-serif font-bold text-white mb-1">The Magic Happens Here</h3>
-              <p className="text-xs text-zinc-300 font-light">Spotlight (Film) + Periodical (Voice) fused by Transcend (<span className="text-cyan-400">Nano</span>/<span className="text-indigo-400">Micro</span>/<span className="text-fuchsia-400">Meso</span>/<span className="text-emerald-400">Macro</span>) unlock the vertical bend.</p>
+              <p className="text-xs text-zinc-300 font-light">Transcend AI Engine (<span className="text-cyan-400">Nano</span>/<span className="text-indigo-400">Micro</span>/<span className="text-fuchsia-400">Meso</span>/<span className="text-emerald-400">Macro</span>) unlocks the vertical bend.</p>
             </button>
 
             <button
@@ -206,7 +206,7 @@ export function HockeyStickTrajectoryIllustration() {
                 <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest">PHASE III · FUTURE</span>
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
               </div>
-              <h3 className="text-lg font-serif font-bold text-white mb-1">Exponential Transcendence</h3>
+              <h3 className="text-lg font-serif font-bold text-white mb-1">Compounding Mastery</h3>
               <p className="text-xs text-zinc-400 font-light">Superpower micro-loop stacking and decision-grade spatial reading. The ceiling is broken—the sky is the limit.</p>
             </button>
           </div>

@@ -344,12 +344,12 @@ export default function TechnologySolutionsPage() {
                   The Cost Unlock
                 </h3>
                 <span className="mt-1 font-mono text-[10px] tracking-widest text-emerald-400 uppercase block mb-6">
-                  From $30 to $1.17 per game
+                  From $30 to $2.87 per game
                 </span>
                 <ul className="space-y-3 text-sm text-zinc-400">
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
-                    <span>Owned on-premise GPU fabric eliminates crippling cloud compute costs.</span>
+                    <span>Optimized cloud GPU architecture eliminates traditional compute overhead.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />

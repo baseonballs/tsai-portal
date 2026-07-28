@@ -212,9 +212,9 @@ export const landingPageCopy = {
       {
         id: "deploy",
         title: "The Cost Unlock",
-        subtitle: "From $30 to $1.17 per game",
+        subtitle: "From $30 to $2.87 per game",
         features: [
-          "Owned on-premise GPU fabric eliminates crippling cloud compute costs",
+          "Optimized cloud GPU architecture eliminates traditional compute overhead",
           "Processes a full 90-minute 1080p game in under 60 minutes for pennies",
           "Scale-to-zero cloud keeps fixed overhead near zero, producing 94% margins"
         ],
