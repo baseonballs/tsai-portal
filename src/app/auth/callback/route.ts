@@ -18,6 +18,56 @@ function getPublicOrigin(request: Request): string {
   return url.origin
 }
 
+/**
+ * Qualifies whether an authenticated user holds a valid product license / entitlement.
+ * - Superadmins / Devops de facto possess all product licenses.
+ * - Licensed users must have an active entry in user_product_licenses or app_metadata.licenses.
+ * - Shadow profiles and unlicensed users are rejected.
+ */
+async function isUserEntitledToPortal(
+  adminClient: any,
+  userId: string,
+  userEmail: string,
+  appMetaData: Record<string, any> = {}
+): Promise<{ isEntitled: boolean; profileId?: string }> {
+  // 1. Query profile for user_type, approval_status, and superadmin flag
+  const { data: profile } = await adminClient
+    .from('profiles')
+    .select('id, approval_status, user_type, is_superadmin, email')
+    .or(`id.eq.${userId},email.eq.${userEmail}`)
+    .maybeSingle()
+
+  const profileId = profile?.id
+
+  // Superadmins / Devops de facto possess all product licenses
+  const role = ((profile?.user_type || appMetaData.role || appMetaData.user_type || "") as string).toLowerCase()
+  const isSuperadmin = profile?.is_superadmin === true || role === "superadmin" || role === "superuser" || role === "devops"
+
+  if (isSuperadmin) {
+    return { isEntitled: true, profileId }
+  }
+
+  // 2. Check public.user_product_licenses for active product licenses
+  const queryUserId = profileId || userId
+  const { data: userLicenses } = await adminClient
+    .from('user_product_licenses')
+    .select('id, product_id, status')
+    .eq('user_id', queryUserId)
+
+  const activeLicenses = userLicenses?.filter((l: any) => l.status === 'active') || []
+  if (activeLicenses.length > 0) {
+    return { isEntitled: true, profileId }
+  }
+
+  // 3. Fallback: Check synced licenses array in raw_app_meta_data
+  const syncedLicenses = (appMetaData.licenses || []) as string[]
+  if (Array.isArray(syncedLicenses) && syncedLicenses.length > 0) {
+    return { isEntitled: true, profileId }
+  }
+
+  return { isEntitled: false, profileId }
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
@@ -32,49 +82,32 @@ export async function GET(request: Request) {
       const user = authData.session.user
       const userEmail = (user.email || "").toLowerCase().trim()
 
-      // Service Role Client to query profiles table without RLS restrictions
+      // Service Role Client to query user_product_licenses & profiles without RLS restrictions
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://spark-62db.tail18f71b.ts.net:8443/supabase"
       const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MTkwMDAwMDAwMH0.gbbZ4WDzX4hWzPYD4bhsNcPCTwo1Iv6hTex_Xsi4nqI"
       const adminClient = createAdminClient(supabaseUrl, serviceKey, {
         auth: { persistSession: false, autoRefreshToken: false }
       })
 
-      // Authorization Gate: Query profiles table matching database schema
-      const { data: profile } = await adminClient
-        .from('profiles')
-        .select('id, approval_status, user_type, is_superadmin, email')
-        .or(`id.eq.${user.id},email.eq.${userEmail}`)
-        .maybeSingle()
+      // Qualify license entitlement
+      const { isEntitled, profileId } = await isUserEntitledToPortal(
+        adminClient,
+        user.id,
+        userEmail,
+        user.app_metadata || {}
+      )
 
-      let isAuthorized = false
-      if (profile) {
-        const role = (profile.user_type || "").toLowerCase()
-        const isSuper = profile.is_superadmin || role === "superadmin" || role === "superuser" || role === "devops" || role === "admin"
-        const status = (profile.approval_status || "").toLowerCase()
-
-        if (isSuper || status === 'provisioned' || status === 'approved' || status === 'active' || !status) {
-          isAuthorized = true
-        }
-
-        // Auto-bind user.id to profile if found by email
-        if (isAuthorized && profile.id !== user.id) {
+      if (isEntitled) {
+        // Auto-bind user.id to profile if found by pre-authorized email
+        if (profileId && profileId !== user.id) {
           await adminClient.from('profiles').update({ id: user.id }).eq('email', userEmail)
         }
-      } else {
-        // Fallback: Check user metadata / app_metadata in auth.users for superadmin or superuser role
-        const appRole = ((user.app_metadata?.role || user.app_metadata?.user_type || user.user_metadata?.user_type || "") as string).toLowerCase()
-        if (appRole === "superadmin" || appRole === "superuser" || appRole === "devops" || appRole === "admin") {
-          isAuthorized = true
-        }
+        return NextResponse.redirect(new URL(next, publicOrigin))
       }
 
-      // If unauthorized, terminate session and redirect to error page
-      if (!isAuthorized) {
-        await supabase.auth.signOut()
-        return NextResponse.redirect(new URL('/login?error=unauthorized', publicOrigin))
-      }
-
-      return NextResponse.redirect(new URL(next, publicOrigin))
+      // Unlicensed user / shadow profile / unauthorized account: terminate session
+      await supabase.auth.signOut()
+      return NextResponse.redirect(new URL('/login?error=unauthorized', publicOrigin))
     }
   }
 
