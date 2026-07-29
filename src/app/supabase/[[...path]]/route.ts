@@ -53,6 +53,7 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
       headers,
       body,
       cache: "no-store",
+      redirect: "manual", // CRITICAL: Do not follow redirects server-side; pass 302/303 back to browser!
     });
 
     const resHeaders = new Headers();
@@ -61,6 +62,19 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
         resHeaders.set(key, val);
       }
     });
+
+    // If GoTrue returned a redirect Location, rewrite it to target the browser's origin
+    const location = res.headers.get("location");
+    if (location) {
+      try {
+        const locUrl = new URL(location, targetUrl);
+        const browserOrigin = request.nextUrl.origin;
+        const rewrittenLoc = `${browserOrigin}${locUrl.pathname}${locUrl.search}${locUrl.hash}`;
+        resHeaders.set("location", rewrittenLoc);
+      } catch {
+        /* keep original location if unparseable */
+      }
+    }
 
     const resBody = await res.arrayBuffer();
     return new NextResponse(resBody, {
