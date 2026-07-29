@@ -75,5 +75,8 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
     }
   }
 
-  return NextResponse.json({ error: lastError?.message || "Proxy error" }, { status: 502 });
+  return NextResponse.json(
+    { error: lastError?.message || "Proxy error", cause: lastError?.cause ? String(lastError.cause) : undefined },
+    { status: 502 }
+  );
 }
