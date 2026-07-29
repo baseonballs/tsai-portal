@@ -15,6 +15,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const urlError = searchParams?.get("error");
   const oauthCallbackFailed = urlError === "auth-callback-failed";
+  const isUnauthorized = urlError === "unauthorized";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,9 +127,13 @@ function LoginContent() {
           </p>
         </div>
 
-        {(errorMsg || oauthCallbackFailed) && (
+        {(errorMsg || oauthCallbackFailed || isUnauthorized) && (
           <div className="mb-6 rounded-lg bg-red-500/10 p-4 text-sm text-red-400">
-            {oauthCallbackFailed ? "Google sign-in could not complete. Please try again." : errorMsg}
+            {isUnauthorized
+              ? "Your Google account is authenticated, but you are not an authorized user in the TSAI system. Access is restricted to pre-approved accounts."
+              : oauthCallbackFailed
+              ? "Google sign-in could not complete. Please try again."
+              : errorMsg}
           </div>
         )}
 

@@ -19,16 +19,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async rewrites() {
-    const supabaseBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://spark-62db.tail18f71b.ts.net:8443/supabase")
-      .replace(/\/supabase\/?$/, "");
-    return [
-      {
-        source: "/supabase/:path*",
-        destination: `${supabaseBase}/supabase/:path*`,
-      },
-    ];
-  },
 };
 
 export default nextConfig;
