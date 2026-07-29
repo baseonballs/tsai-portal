@@ -3,10 +3,10 @@ substitutions:
   _IMAGE_NAME: tsai-portal
   _SERVICE_NAME: tsai-portal
   _RUN_REGION: us-west1
-  _TSAI_DGX_ORIGIN: "https://spark-62db.tail18f71b.ts.net:8443"
-  _NEXT_PUBLIC_SUPABASE_URL: "https://spark-62db.tail18f71b.ts.net:8443/supabase"
+  _TSAI_DGX_ORIGIN: "https://spark-62db.tail18f71b.ts.net"
+  _NEXT_PUBLIC_SUPABASE_URL: "https://spark-62db.tail18f71b.ts.net/supabase"
   _NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
-  _API_GATEWAY_URL: "https://spark-62db.tail18f71b.ts.net:8443"
+  _API_GATEWAY_URL: "https://spark-62db.tail18f71b.ts.net"
   _APP_VERSION: ""
 
 steps:

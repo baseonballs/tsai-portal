@@ -26,13 +26,14 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
   const search = request.nextUrl.search;
 
   const rawBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://spark-62db.tail18f71b.ts.net/supabase").replace(/\/$/, "");
+  const cleanBase = rawBase.replace(":8443", "");
   
-  const urlsToTry: string[] = [];
-  urlsToTry.push(`${rawBase}/${pathString}${search}`);
+  const urlsToTry: string[] = [
+    `${cleanBase}/${pathString}${search}`,
+  ];
 
-  if (rawBase.includes(":8443")) {
-    const cleanBase = rawBase.replace(":8443", "");
-    urlsToTry.push(`${cleanBase}/${pathString}${search}`);
+  if (rawBase !== cleanBase) {
+    urlsToTry.push(`${rawBase}/${pathString}${search}`);
   }
 
   const reqHeaders = request.headers;
