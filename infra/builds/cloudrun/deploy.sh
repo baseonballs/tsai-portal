@@ -32,7 +32,7 @@ SERVICE="${SERVICE:-tsai-portal}"
 IMAGE_NAME="${IMAGE_NAME:-tsai-portal}"
 DEPLOY_VIA="${DEPLOY_VIA:-cloudbuild}"
 
-TSAI_DGX_ORIGIN="${TSAI_DGX_ORIGIN:-https://spark-62db.tail18f71b.ts.net}"
+TSAI_DGX_ORIGIN="${TSAI_DGX_ORIGIN:-https://spark-62db.tail18f71b.ts.net:8443}"
 NEXT_PUBLIC_SUPABASE_URL="${TSAI_DGX_ORIGIN}/supabase"
 API_GATEWAY_URL="${TSAI_DGX_ORIGIN}"
 

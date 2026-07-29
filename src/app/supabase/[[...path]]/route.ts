@@ -25,16 +25,8 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
   const pathString = path ? path.join("/") : "";
   const search = request.nextUrl.search;
 
-  const rawBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://spark-62db.tail18f71b.ts.net/supabase").replace(/\/$/, "");
-  const cleanBase = rawBase.replace(":8443", "");
-  
-  const urlsToTry: string[] = [
-    `${cleanBase}/${pathString}${search}`,
-  ];
-
-  if (rawBase !== cleanBase) {
-    urlsToTry.push(`${rawBase}/${pathString}${search}`);
-  }
+  const targetBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://spark-62db.tail18f71b.ts.net:8443/supabase").replace(/\/$/, "");
+  const targetUrl = `${targetBase}/${pathString}${search}`;
 
   const reqHeaders = request.headers;
   const headers = new Headers();
@@ -45,38 +37,41 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
     }
   }
 
-  const body = ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer();
-
-  let lastError: any = null;
-  for (const targetUrl of urlsToTry) {
-    try {
-      const res = await fetch(targetUrl, {
-        method: request.method,
-        headers,
-        body,
-        cache: "no-store",
-      });
-
-      const resHeaders = new Headers();
-      res.headers.forEach((val, key) => {
-        if (!["content-encoding", "content-length", "transfer-encoding"].includes(key.toLowerCase())) {
-          resHeaders.set(key, val);
-        }
-      });
-
-      const resBody = await res.arrayBuffer();
-      return new NextResponse(resBody, {
-        status: res.status,
-        statusText: res.statusText,
-        headers: resHeaders,
-      });
-    } catch (err: any) {
-      lastError = err;
-    }
+  // Set explicit Host header to match target URL host for Tailscale Funnel TLS SNI
+  try {
+    const targetParsed = new URL(targetUrl);
+    headers.set("host", targetParsed.host);
+  } catch {
+    /* ignore */
   }
 
-  return NextResponse.json(
-    { error: lastError?.message || "Proxy error", cause: lastError?.cause ? String(lastError.cause) : undefined },
-    { status: 502 }
-  );
+  try {
+    const body = ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer();
+
+    const res = await fetch(targetUrl, {
+      method: request.method,
+      headers,
+      body,
+      cache: "no-store",
+    });
+
+    const resHeaders = new Headers();
+    res.headers.forEach((val, key) => {
+      if (!["content-encoding", "content-length", "transfer-encoding"].includes(key.toLowerCase())) {
+        resHeaders.set(key, val);
+      }
+    });
+
+    const resBody = await res.arrayBuffer();
+    return new NextResponse(resBody, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: resHeaders,
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message || "Proxy error", cause: err.cause ? String(err.cause) : undefined },
+      { status: 502 }
+    );
+  }
 }
