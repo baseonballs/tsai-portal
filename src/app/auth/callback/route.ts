@@ -39,19 +39,20 @@ export async function GET(request: Request) {
         auth: { persistSession: false, autoRefreshToken: false }
       })
 
-      // Authorization Gate: Query profiles table via admin client
+      // Authorization Gate: Query profiles table matching database schema
       const { data: profile } = await adminClient
         .from('profiles')
-        .select('id, status, user_type, email')
+        .select('id, approval_status, user_type, is_superadmin, email')
         .or(`id.eq.${user.id},email.eq.${userEmail}`)
         .maybeSingle()
 
-      // If user profile exists, check if active or superadmin
       let isAuthorized = false
       if (profile) {
         const role = (profile.user_type || "").toLowerCase()
-        const isSuper = role === "superadmin" || role === "superuser" || role === "devops" || role === "admin"
-        if (isSuper || !profile.status || profile.status !== 'revoked') {
+        const isSuper = profile.is_superadmin || role === "superadmin" || role === "superuser" || role === "devops" || role === "admin"
+        const status = (profile.approval_status || "").toLowerCase()
+
+        if (isSuper || status === 'provisioned' || status === 'approved' || status === 'active' || !status) {
           isAuthorized = true
         }
 
@@ -60,9 +61,9 @@ export async function GET(request: Request) {
           await adminClient.from('profiles').update({ id: user.id }).eq('email', userEmail)
         }
       } else {
-        // Fallback: Check user metadata / app_metadata in auth.users for superadmin role
-        const role = ((user.app_metadata?.user_type || user.user_metadata?.user_type || "") as string).toLowerCase()
-        if (role === "superadmin" || role === "superuser" || role === "devops" || role === "admin") {
+        // Fallback: Check user metadata / app_metadata in auth.users for superadmin or superuser role
+        const appRole = ((user.app_metadata?.role || user.app_metadata?.user_type || user.user_metadata?.user_type || "") as string).toLowerCase()
+        if (appRole === "superadmin" || appRole === "superuser" || appRole === "devops" || appRole === "admin") {
           isAuthorized = true
         }
       }
