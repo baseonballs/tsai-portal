@@ -63,16 +63,28 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
       }
     });
 
-    // If GoTrue returned a redirect Location, rewrite it to target the browser's origin
+    // If GoTrue returned a redirect Location:
+    // Only rewrite internal backend hosts to the browser's origin.
+    // External OAuth provider URLs (e.g. accounts.google.com) MUST remain untouched!
     const location = res.headers.get("location");
     if (location) {
       try {
         const locUrl = new URL(location, targetUrl);
-        const browserOrigin = request.nextUrl.origin;
-        const rewrittenLoc = `${browserOrigin}${locUrl.pathname}${locUrl.search}${locUrl.hash}`;
-        resHeaders.set("location", rewrittenLoc);
+        const isInternalHost =
+          locUrl.hostname === "spark-62db.tail18f71b.ts.net" ||
+          locUrl.hostname === "127.0.0.1" ||
+          locUrl.hostname === "0.0.0.0" ||
+          locUrl.hostname === "localhost";
+
+        if (isInternalHost) {
+          const browserOrigin = request.nextUrl.origin;
+          const rewrittenLoc = `${browserOrigin}${locUrl.pathname}${locUrl.search}${locUrl.hash}`;
+          resHeaders.set("location", rewrittenLoc);
+        } else {
+          resHeaders.set("location", location);
+        }
       } catch {
-        /* keep original location if unparseable */
+        resHeaders.set("location", location);
       }
     }
 
