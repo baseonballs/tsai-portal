@@ -202,7 +202,7 @@ export default function CoachsCornerPage() {
                 That's not coaching. That's clerical work with a whistle.
               </p>
               <p className="text-cyan-300 font-medium pt-4">
-                Now run the same week back — with The Loop and the Cut Room Workbench on your bench.
+                Now run the same week back — with The Loop and the Cut Room Workbench on your terms.
               </p>
             </div>
           </div>
