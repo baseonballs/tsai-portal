@@ -50,7 +50,7 @@ export const landingPageCopy = {
     title: "Pro teams have a film room. Everyone else has a phone full of footage.",
     subtitle: "Spotlight is the mordern, high-fidelity player development platform bringing decision-grade video intelligence and captive AI to grassroots youth hockey—transforming raw recordings into an interactive playground.",
     primaryCta: "Apply for Beta Access",
-    secondaryCta: "Explore the Platform"
+    secondaryCta: "Explore the Engine"
   },
   lockerRoom: {
     eyebrow: "The Sanctuary of Intentional Development",

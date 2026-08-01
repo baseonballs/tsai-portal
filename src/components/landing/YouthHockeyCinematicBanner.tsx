@@ -13,7 +13,6 @@ import {
   BookOpen, 
   Zap, 
   ShieldCheck,
-  Crosshair,
   Lock
 } from "lucide-react";
 
@@ -36,7 +35,6 @@ export function YouthHockeyCinematicBanner() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const mountTimer = setTimeout(() => setMounted(true), 0);
@@ -159,17 +157,8 @@ export function YouthHockeyCinematicBanner() {
     };
   }, [mounted]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-  };
-
   return (
     <section 
-      onMouseMove={handleMouseMove}
       className="gallery-slideshow relative min-h-[85vh] flex items-center justify-center overflow-hidden border-b border-white/10 bg-zinc-950 px-6 py-20 lg:px-8"
       data-framing="immersive"
     >
@@ -215,32 +204,7 @@ export function YouthHockeyCinematicBanner() {
         </div>
       </div>
 
-      {/* 5. TACTICAL HUD RETICLES & CORNER BRACKETS */}
-      <div className="pointer-events-none absolute left-3 right-3 sm:left-12 sm:right-12 top-14 sm:top-18 bottom-3 sm:bottom-10 border border-white/10 rounded-2xl sm:rounded-3xl z-10 flex flex-col justify-between p-2.5 sm:p-4">
-        {/* Top Corners */}
-        <div className="flex justify-between items-center text-[9px] sm:text-[10px] font-mono text-cyan-400/70 tracking-wider">
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-black/60 backdrop-blur-md px-2 sm:px-3 py-1 rounded border border-white/10">
-            <Crosshair className="w-3 h-3 text-cyan-400 animate-spin" style={{ animationDuration: "10s" }} />
-            <span>AI RINK TRACKING • 60 FPS</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded border border-white/10">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>LIVE TELEMETRY: YOUTH ICE HOCKEY LOOP</span>
-          </div>
-        </div>
 
-        {/* Bottom Corners */}
-        <div className="flex justify-between items-center text-[9px] sm:text-[10px] font-mono text-zinc-400">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-cyan-400">POS: [{Math.round(mousePos.x)}, {Math.round(mousePos.y)}]</span>
-            <span className="hidden md:inline text-zinc-600">|</span>
-            <span className="hidden md:inline">SUPERPOWER MATRIX v2.4</span>
-          </div>
-          <div className="text-right text-indigo-400 font-semibold truncate max-w-[120px] sm:max-w-none">
-            {BACKGROUNDS[activeIndex].tag}
-          </div>
-        </div>
-      </div>
 
       {/* 6. MAIN HERO CONTENT CONTAINER */}
       <div className="relative z-20 max-w-5xl mx-auto text-center pt-10 sm:pt-12 px-4">

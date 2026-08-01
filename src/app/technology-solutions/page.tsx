@@ -125,7 +125,7 @@ export default function TechnologySolutionsPage() {
               Apply for Teams Beta Access
             </a>
             <a href="#architecture" className="w-full sm:w-auto rounded-full border border-white/10 bg-white/5 px-8 py-4 text-sm font-semibold text-zinc-300 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2">
-              Explore the Platform <ArrowRight className="w-4 h-4" />
+              Explore the Engine <ArrowRight className="w-4 h-4" />
             </a>
           </div>
         </section>
