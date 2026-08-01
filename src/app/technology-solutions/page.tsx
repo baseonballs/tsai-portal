@@ -104,7 +104,7 @@ export default function TechnologySolutionsPage() {
 
           <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-cyan-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-widest backdrop-blur-xl shadow-xl shadow-cyan-500/15 mb-10 sm:mb-12 hover:border-cyan-400/60 transition-all font-mono">
             <Sparkles className="h-4 w-4 text-cyan-400 shrink-0" />
-            <span className="text-cyan-400 font-bold">THE SCIENCE</span>
+            <span className="text-cyan-400 font-bold">TRANSCEND PLATFORM</span>
             <span className="text-zinc-600 font-normal">·</span>
             <span className="text-zinc-200 font-medium uppercase">HIGH-FIDELITY DUAL-LEDGER ENGINE</span>
           </div>

@@ -185,13 +185,13 @@ export function LandingHeader() {
             <span>Spotlight & Periodical</span>
           </Link>
 
-          {/* GROUP 3: The Science */}
+          {/* GROUP 3: The Platform */}
           <Link
             href="/technology-solutions"
             className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all hover:bg-white/5 hover:text-white border border-transparent text-zinc-300"
           >
             <Cpu className="h-3.5 w-3.5 text-cyan-400" />
-            <span>The Science</span>
+            <span>The Platform</span>
           </Link>
 
           <span className="text-zinc-800 select-none px-1">|</span>
@@ -323,7 +323,7 @@ export function LandingHeader() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="hover:text-white transition-colors py-2 border-b border-white/5 flex items-center justify-between"
               >
-                <span>The Science</span>
+                <span>The Platform</span>
                 <ChevronDown className="-rotate-90 h-4 w-4 text-zinc-500" />
               </Link>
               <Link 
