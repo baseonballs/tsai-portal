@@ -1,3 +1,0 @@
-# Canonical Cloud Build config: infra/builds/cloudrun/cloudbuild.yaml
-#
-#   ./infra/builds/cloudrun/deploy.sh
