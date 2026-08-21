@@ -20,7 +20,7 @@ export function BetaSignupForm() {
 
         <h3 className="mb-2 font-serif text-2xl font-normal text-white">Apply for Beta Access</h3>
         <p className="mb-6 text-sm text-zinc-400">
-          TSAI Portal is currently in private preview. Applications for workspace licensing seats are temporarily closed.
+          Transcend Platform is currently in private preview. Applications for workspace licensing seats are temporarily closed.
         </p>
 
         <form onSubmit={(e) => e.preventDefault()} className="space-y-4" suppressHydrationWarning>

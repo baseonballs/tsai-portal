@@ -534,7 +534,7 @@ export default function PricingPage() {
                 <span className="text-[11px] text-zinc-400 block mt-2">per game</span>
               </div>
               <div className="p-6 rounded-2xl bg-cyan-950/50 border border-cyan-500/40 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
-                <span className="text-xs text-cyan-400 font-mono font-semibold block mb-1">TSAI MASCE Engine</span>
+                <span className="text-xs text-cyan-400 font-mono font-semibold block mb-1">Transcend MASCE Engine</span>
                 <span className="text-3xl font-serif font-bold text-white">$2.87</span>
                 <span className="text-[11px] text-cyan-300 block mt-2">Sub-minute deterministic inference</span>
               </div>
