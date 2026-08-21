@@ -33,12 +33,12 @@ export default function BetaPage() {
 
             {/* PRIMARY HEADLINE */}
             <h1 className="text-5xl sm:text-7xl lg:text-8xl font-serif tracking-tight text-white mb-8 sm:mb-10 leading-[1.15] sm:leading-[1.12] drop-shadow-2xl">
-              Coming Early <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400 font-medium">August 2026.</span>
+              Coming Early <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400 font-medium">September 2026.</span>
             </h1>
 
             {/* SUBTITLE */}
             <p className="mt-8 sm:mt-10 text-lg sm:text-xl lg:text-2xl leading-relaxed sm:leading-9 text-zinc-300 max-w-3xl mx-auto font-light">
-              We are onboarding our founding cohort of youth ice hockey clubs, coaching staffs, and development programs. Early access invitations will be dispatched in <strong className="text-white font-medium">Early August 2026</strong>.
+              We are onboarding our founding cohort of youth ice hockey clubs, coaching staffs, and development programs. Early access invitations will be dispatched in <strong className="text-white font-medium">Early September 2026</strong>.
             </p>
 
             {/* EMBEDDED BETA APPLICATION FORM CARD */}
@@ -48,8 +48,8 @@ export default function BetaPage() {
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
                 <ShieldCheck className="w-5 h-5 text-cyan-400 shrink-0" />
                 <div>
-                  <h3 className="text-lg font-serif font-bold text-white">Reserve Your Club's Early August Invitation</h3>
-                  <p className="text-xs text-zinc-400">Directly queued for the August 2026 founding cohort deployment batch.</p>
+                  <h3 className="text-lg font-serif font-bold text-white">Reserve Your Club's Early September Invitation</h3>
+                  <p className="text-xs text-zinc-400">Directly queued for the September 2026 founding cohort deployment batch.</p>
                 </div>
               </div>
 
