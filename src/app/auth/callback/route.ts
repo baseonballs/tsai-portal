@@ -1,3 +1,4 @@
+import { resolveAuthRedirectPath } from "@/lib/auth/safe-internal-next-path";
 import { required } from "@/utils/require-env";
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/utils/supabase/server'
@@ -72,7 +73,7 @@ async function isUserEntitledToPortal(
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
-  const next = url.searchParams.get('next') ?? '/'
+  const next = resolveAuthRedirectPath(url.searchParams.get('next'), '/')
   const publicOrigin = getPublicOrigin(request)
 
   if (code) {
