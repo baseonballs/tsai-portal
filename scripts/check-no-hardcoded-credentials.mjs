@@ -45,6 +45,7 @@ if (SCAN_DIRS.length === 0) {
   console.error("❌ no source directories found to scan — refusing to report success");
   process.exit(2);
 }
+
 const EXTS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 const SKIP_DIRS = new Set(["node_modules", ".next", "build", "dist", ".git", "coverage"]);
 
@@ -76,10 +77,32 @@ function walk(dir, out = []) {
   return out;
 }
 
+// ALSO scan loose source files at the repo ROOT, non-recursively.
+//
+// The directory walk misses them entirely, and that is not hypothetical: tsai-watson carried
+// add_license.js, check_lucas.js and test_profiles.js at the root, each holding a literal
+// service_role JWT, while this guard printed "no hardcoded credentials in source". One-off
+// debugging scripts are exactly where a key gets pasted, and exactly where a subdirectory-only
+// scanner cannot see.
+//
+// NOTE the absence of a try/catch swallowing errors here. The first version of this block wrapped
+// the readdir in `try { … } catch { return []; }` AND referenced EXTS before its declaration — so
+// the TDZ ReferenceError was caught, an empty list was returned, and the guard reported success
+// while three credential files sat unscanned. A catch that turns a programming error into a green
+// tick is worse than a crash.
+function rootSourceFiles() {
+  return readdirSync(ROOT)
+    .filter((e) => EXTS.some((x) => e.endsWith(x)))
+    .map((e) => join(ROOT, e))
+    .filter((p) => statSync(p).isFile());
+}
+
 const findings = [];
 
-for (const d of SCAN_DIRS) {
-  for (const file of walk(join(ROOT, d))) {
+const ALL_FILES = [...SCAN_DIRS.flatMap((d) => walk(join(ROOT, d))), ...rootSourceFiles()];
+
+{
+  for (const file of ALL_FILES) {
     const rel = relative(ROOT, file);
     if (ALLOW.includes(rel)) continue;
     const lines = readFileSync(file, "utf8").split("\n");
