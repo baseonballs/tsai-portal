@@ -33,7 +33,18 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const ROOT = process.cwd();
-const SCAN_DIRS = ["src", "scripts"];
+// Auto-detected, NOT hardcoded. The first version listed ["src", "scripts"] and was dropped into a
+// repo laid out as app/ + lib/ — where it scanned nothing, found nothing, and printed a green tick.
+// A guard that passes because it looked in the wrong place is worse than no guard, so it now
+// derives the roots from what exists and REFUSES to run if it finds none.
+const CANDIDATE_DIRS = ["src", "app", "lib", "pages", "components", "server", "scripts", "utils"];
+const SCAN_DIRS = CANDIDATE_DIRS.filter((d) => {
+  try { return statSync(join(ROOT, d)).isDirectory(); } catch { return false; }
+});
+if (SCAN_DIRS.length === 0) {
+  console.error("❌ no source directories found to scan — refusing to report success");
+  process.exit(2);
+}
 const EXTS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 const SKIP_DIRS = new Set(["node_modules", ".next", "build", "dist", ".git", "coverage"]);
 
