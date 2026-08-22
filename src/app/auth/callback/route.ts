@@ -1,3 +1,4 @@
+import { required } from "@/utils/require-env";
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/utils/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
@@ -84,7 +85,7 @@ export async function GET(request: Request) {
 
       // Service Role Client to query user_product_licenses & profiles without RLS restrictions
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://spark-62db.tail18f71b.ts.net:8443/supabase"
-      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MTkwMDAwMDAwMH0.gbbZ4WDzX4hWzPYD4bhsNcPCTwo1Iv6hTex_Xsi4nqI"
+      const serviceKey = required(process.env.SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY")
       const adminClient = createAdminClient(supabaseUrl, serviceKey, {
         auth: { persistSession: false, autoRefreshToken: false }
       })
