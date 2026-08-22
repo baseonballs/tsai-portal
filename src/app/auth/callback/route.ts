@@ -1,3 +1,4 @@
+import { pgrstEq } from '@/lib/supabase/postgrest-filter'
 import { resolveAuthRedirectPath } from "@/lib/auth/safe-internal-next-path";
 import { required } from "@/utils/require-env";
 import { NextResponse } from 'next/server'
@@ -36,7 +37,7 @@ async function isUserEntitledToPortal(
   const { data: profile } = await adminClient
     .from('profiles')
     .select('id, approval_status, user_type, is_superadmin, email')
-    .or(`id.eq.${userId},email.eq.${userEmail}`)
+    .or([pgrstEq("id", userId), pgrstEq("email", userEmail)].join(","))
     .maybeSingle()
 
   const profileId = profile?.id
