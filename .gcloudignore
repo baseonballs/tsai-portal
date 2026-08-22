@@ -1,3 +1,8 @@
+# Patterns here use .gitignore matching rules, where a pattern WITHOUT a leading slash matches at
+# ANY depth. `docs/` therefore did not just exclude the root docs directory — it also excluded
+# src/app/docs (the /docs route handler) and src/content/docs (86 markdown files). Every /docs URL
+# 404'd in production as a result: the page was never uploaded to Cloud Build at all.
+# Anchor anything meant to be root-only with a leading slash.
 .gcloudignore
 .git
 .gitignore
@@ -6,6 +11,6 @@
 .vscode
 node_modules/
 .next/
-conductor/
-docs/
-scripts/
+/conductor/
+/docs/
+/scripts/
