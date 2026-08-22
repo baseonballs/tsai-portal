@@ -48,6 +48,11 @@ RUN apt-get update \
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
+# src/utils/docs.tsx reads doc markdown from the filesystem at REQUEST time:
+#   const CONTENT_ROOT = path.join(process.cwd(), "src/content/docs")
+# The standalone output does not include it, so without this line every /docs URL 404s in
+# production while working locally — and /docs is linked from the site header (LandingHeader).
+COPY --from=builder /app/src/content/docs ./src/content/docs
 COPY --from=builder /app/.next/static ./.next/static
 
 USER node
