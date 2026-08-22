@@ -1,3 +1,4 @@
+import { required } from "../require-env";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { resolveServerAuthUrl } from "./resolve-server-auth-url";
@@ -9,7 +10,7 @@ export async function createClient(origin?: string) {
 
   return createServerClient(
     supabaseUrl,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzY2OTUzNDIxLCJleHAiOjQ5MjA1NTM0MjF9.rCiQlHJSsO5GsUXIN8vqS7wWLU3DVitL6gSpkxHBc08",
+    required(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, "NEXT_PUBLIC_SUPABASE_ANON_KEY"),
     {
       cookieOptions: {
         name: 'tsai-portal-auth',

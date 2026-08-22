@@ -6,11 +6,12 @@
     "dev": "next dev -p 3040",
     "build": "[ -f ./scripts/copy-docs.sh ] && bash ./scripts/copy-docs.sh || true && next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint && pnpm run check:secrets",
     "daemon:start": "./scripts/portal-daemon.sh start",
     "daemon:stop": "./scripts/portal-daemon.sh stop",
     "daemon:restart": "./scripts/portal-daemon.sh restart",
-    "daemon:status": "./scripts/portal-daemon.sh status"
+    "daemon:status": "./scripts/portal-daemon.sh status",
+    "check:secrets": "node scripts/check-no-hardcoded-credentials.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
