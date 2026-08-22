@@ -1,3 +1,4 @@
+import { required } from "@/utils/require-env";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
@@ -45,7 +46,14 @@ export async function POST(req: NextRequest) {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (serviceKey) {
       const { createClient: createSupabaseJsClient } = await import("@supabase/supabase-js");
-      supabase = createSupabaseJsClient("http://127.0.0.1:5550", serviceKey, {
+      // The URL was hardcoded to http://127.0.0.1:5550, which resolves to nothing inside Cloud Run.
+      //
+      // This was LATENT, not merely wrong: the branch is only taken when SUPABASE_SERVICE_ROLE_KEY
+      // is set, and the service had no environment variables at all, so every request fell through
+      // to the `else` and worked. Binding the service-role secret during the 2026-08-22 credential
+      // rotation flipped the branch and broke beta signup with `TypeError: fetch failed` — a
+      // security fix taking out the lead-capture path as a side effect.
+      supabase = createSupabaseJsClient(required(process.env.NEXT_PUBLIC_SUPABASE_URL, "NEXT_PUBLIC_SUPABASE_URL"), serviceKey, {
         auth: { autoRefreshToken: false, persistSession: false },
       });
     } else {
