@@ -44,3 +44,6 @@ next-env.d.ts
 /.run/
 /src/content/docs/
 
+# graphify knowledge-graph index — generated, regenerable via `graphify update .`
+graphify-out/
+.graphifyignore
