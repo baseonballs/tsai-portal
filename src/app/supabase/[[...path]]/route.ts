@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { errorMessage } from "@/lib/errors"
 
 export async function GET(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
   return handleProxy(request, context);
@@ -94,9 +95,14 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
       statusText: res.statusText,
       headers: resHeaders,
     });
-  } catch (err: any) {
+  } catch (err) {
     return NextResponse.json(
-      { error: err.message || "Proxy error", cause: err.cause ? String(err.cause) : undefined },
+      {
+        error: errorMessage(err) || "Proxy error",
+        // `cause` is read behind an instanceof guard: the caught value is `unknown`, and
+        // reading .cause off it unguarded is exactly what the old `: any` was hiding.
+        cause: err instanceof Error && err.cause ? String(err.cause) : undefined,
+      },
       { status: 502 }
     );
   }

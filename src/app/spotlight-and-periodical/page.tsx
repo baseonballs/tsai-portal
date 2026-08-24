@@ -53,7 +53,7 @@ export default function SpotlightAndPeriodicalPage() {
               The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">Connects the Dots</span>
             </h2>
             <p className="text-xl font-serif italic text-zinc-200 max-w-3xl mx-auto mb-10">
-              "The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots."
+              &quot;The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots.&quot;
             </p>
 
             <LoopingDotsFlow />
@@ -115,7 +115,7 @@ export default function SpotlightAndPeriodicalPage() {
             <div className="mt-12 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-fuchsia-950/40 border border-white/10 p-8 text-center max-w-3xl mx-auto shadow-xl">
               <div className="text-xs font-semibold tracking-widest text-fuchsia-400 uppercase mb-3 font-mono">Together: The Flywheel</div>
               <p className="text-lg text-zinc-200 leading-relaxed">
-                Spotlight's telemetry tells Periodical what the player <em className="text-white">did</em>. Periodical's journals tell Spotlight what the player <em className="text-white">thought</em>. The AI reads both — and surfaces insights neither could produce alone.
+                Spotlight&apos;s telemetry tells Periodical what the player <em className="text-white">did</em>. Periodical&apos;s journals tell Spotlight what the player <em className="text-white">thought</em>. The AI reads both — and surfaces insights neither could produce alone.
               </p>
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function SpotlightAndPeriodicalPage() {
                   <h4 className="text-lg font-serif text-white">Fourteen loops later, the journal opens.</h4>
                   <p className="text-zinc-400">Corinne finishes her Clipboard assignment and enters Periodical. One question about one read:</p>
                   <p className="italic text-zinc-200 bg-zinc-900/80 p-4 rounded border border-white/5 font-serif">
-                    "I keep rimming it because I hear the forecheck coming before I even look. The pro waits an extra beat and checks her shoulder first. I panic early."
+                    &quot;I keep rimming it because I hear the forecheck coming before I even look. The pro waits an extra beat and checks her shoulder first. I panic early.&quot;
                   </p>
                 </div>
               </div>
@@ -156,7 +156,7 @@ export default function SpotlightAndPeriodicalPage() {
                 </div>
                 <div className="md:w-3/4 text-sm text-zinc-300 leading-relaxed space-y-3">
                   <h4 className="text-lg font-serif text-white">The AI reads between the lines.</h4>
-                  <p className="text-zinc-400">Spotlight cross-references her journal entry against watch telemetry, game film, and a trainer's note from three weeks ago:</p>
+                  <p className="text-zinc-400">Spotlight cross-references her journal entry against watch telemetry, game film, and a trainer&apos;s note from three weeks ago:</p>
                   <div className="bg-zinc-900/80 p-4 rounded border border-cyan-500/20 text-xs text-zinc-300 space-y-2">
                     <div><strong className="text-cyan-400">Pattern:</strong> D-zone turnovers cluster on right-wall retrievals under F1 pressure.</div>
                     <div><strong className="text-cyan-400">Insight:</strong> Early panic stems from limited shoulder-checking habit.</div>
@@ -174,7 +174,7 @@ export default function SpotlightAndPeriodicalPage() {
                   <h4 className="text-lg font-serif text-white">Game night: 8-for-9 clean exits.</h4>
                   <p className="text-zinc-400">Three weeks later, rival game under heavy forecheck. Corinne shoots first and leads 8-for-9 clean exits.</p>
                   <p className="italic text-white bg-emerald-950/20 border border-emerald-500/30 p-4 rounded font-serif">
-                    "Looked first every time. Heard him coming and didn't panic. It felt slow, like I had an extra second nobody else had."
+                    &quot;Looked first every time. Heard him coming and didn&apos;t panic. It felt slow, like I had an extra second nobody else had.&quot;
                   </p>
                 </div>
               </div>
@@ -190,7 +190,7 @@ export default function SpotlightAndPeriodicalPage() {
               Connect the dots on <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">player development.</span>
             </h2>
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto">
-              Get the complete ecosystem — Spotlight's intelligence and Periodical's bridge — live on your team's roster for the season.
+              Get the complete ecosystem — Spotlight&apos;s intelligence and Periodical&apos;s bridge — live on your team&apos;s roster for the season.
             </p>
             
             <div className="mt-12 text-left max-w-2xl mx-auto">

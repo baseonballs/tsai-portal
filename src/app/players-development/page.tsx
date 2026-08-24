@@ -51,9 +51,9 @@ export default function PlayersDevelopmentPage() {
         <section className="px-6 py-24 sm:py-32 lg:px-8 text-center max-w-5xl mx-auto">
           <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-indigo-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-wider text-indigo-300 backdrop-blur-xl shadow-xl shadow-indigo-500/15 mb-10 sm:mb-12 hover:border-indigo-400/60 transition-all">
             <TrendingUp className="h-4 w-4 text-indigo-400 shrink-0" />
-            <span className="text-indigo-400 font-bold tracking-widest uppercase">Player's Development</span>
+            <span className="text-indigo-400 font-bold tracking-widest uppercase">Player&apos;s Development</span>
             <span className="text-zinc-600 font-normal">·</span>
-            <span className="text-zinc-200 font-medium tracking-wide uppercase">The Athlete's Growth Continuum</span>
+            <span className="text-zinc-200 font-medium tracking-wide uppercase">The Athlete&apos;s Growth Continuum</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-6 leading-[1.1]">
@@ -86,13 +86,13 @@ export default function PlayersDevelopmentPage() {
             </h2>
             <div className="space-y-6 text-lg text-zinc-400 leading-relaxed max-w-3xl mx-auto text-left">
               <p>
-                Spotlight can find every D-zone giveaway in forty-one seconds. It can prove an athlete looped a 3-second teaching window fourteen times. But there's a layer of the game no camera reaches: <strong className="text-white">what the player was thinking when the puck left her stick.</strong>
+                Spotlight can find every D-zone giveaway in forty-one seconds. It can prove an athlete looped a 3-second teaching window fourteen times. But there&apos;s a layer of the game no camera reaches: <strong className="text-white">what the player was thinking when the puck left her stick.</strong>
               </p>
               <p className="text-2xl text-white font-serif text-center py-4 border-y border-white/10 my-8">
                 Was it fear of the forecheck? A read she made too late?
               </p>
               <p>
-                The answer isn't in the pixels. It's in the player — and until now, it stayed there. Periodical is where the player tells you. Spotlight is what makes the telling actionable.
+                The answer isn&apos;t in the pixels. It&apos;s in the player — and until now, it stayed there. Periodical is where the player tells you. Spotlight is what makes the telling actionable.
               </p>
             </div>
           </div>
@@ -105,7 +105,7 @@ export default function PlayersDevelopmentPage() {
               <span className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400 uppercase">Inside Periodical</span>
               <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">The Film Room Experience</h2>
               <p className="text-lg text-zinc-400 max-w-3xl mx-auto">
-                Where the coach's cut lands inside the athlete's day and turns into a coach-reviewed rep on the record.
+                Where the coach&apos;s cut lands inside the athlete&apos;s day and turns into a coach-reviewed rep on the record.
               </p>
             </div>
 
@@ -141,9 +141,9 @@ export default function PlayersDevelopmentPage() {
                   </div>
                   <div className="bg-fuchsia-950/20 border border-fuchsia-500/30 rounded-xl p-6 relative overflow-hidden">
                     <div className="text-xs font-mono uppercase tracking-widest text-fuchsia-400 mb-2">Be a Threat</div>
-                    <h3 className="text-xl font-serif text-white font-bold mb-3 font-serif">"Watch for this — you're a shooter. Trust it."</h3>
+                    <h3 className="text-xl font-serif text-white font-bold mb-3 font-serif">&quot;Watch for this — you&apos;re a shooter. Trust it.&quot;</h3>
                     <p className="text-sm text-zinc-300 italic mb-4">
-                      "3 moments bound to your goal: 'Shoot first, look second.'"
+                      &quot;3 moments bound to your goal: &apos;Shoot first, look second.&apos;&quot;
                     </p>
                     <div className="text-xs text-zinc-400 flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
@@ -153,7 +153,7 @@ export default function PlayersDevelopmentPage() {
                     </div>
                   </div>
                   <p className="text-sm text-zinc-400 text-center italic">
-                    The tile is the daily-open magnet: a kid opens the app and there's a cut waiting, in her superpower's color, about the exact thing she's working on.
+                    The tile is the daily-open magnet: a kid opens the app and there&apos;s a cut waiting, in her superpower&apos;s color, about the exact thing she&apos;s working on.
                   </p>
                 </div>
               )}
@@ -167,7 +167,7 @@ export default function PlayersDevelopmentPage() {
                   <div className="bg-zinc-900/80 p-6 rounded-xl border border-white/10">
                     <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">Prompt: Did you see the shot before the pass?</span>
                     <p className="text-base font-serif italic text-zinc-200 mb-4 bg-black/40 p-4 rounded border border-white/5">
-                      "Yeah — I had it and I looked away. I do that when I'm not sure I'll score. Next game I'm shooting the first one that opens."
+                      &quot;Yeah — I had it and I looked away. I do that when I&apos;m not sure I&apos;ll score. Next game I&apos;m shooting the first one that opens.&quot;
                     </p>
                     <div className="flex items-center justify-between pt-2">
                       <span className="text-xs text-zinc-400 flex items-center gap-1.5">
@@ -179,7 +179,7 @@ export default function PlayersDevelopmentPage() {
                     </div>
                   </div>
                   <p className="text-sm text-zinc-400 text-center italic">
-                    Talking is lower friction than writing for a fourteen-year-old. The rating starts a second series: what the coach's cuts are moving.
+                    Talking is lower friction than writing for a fourteen-year-old. The rating starts a second series: what the coach&apos;s cuts are moving.
                   </p>
                 </div>
               )}
@@ -198,7 +198,7 @@ export default function PlayersDevelopmentPage() {
                     </p>
                   </div>
                   <p className="text-sm text-zinc-400 text-center italic">
-                    That's a superpower being built in real time — and every lap of the loop is on the record.
+                    That&apos;s a superpower being built in real time — and every lap of the loop is on the record.
                   </p>
                 </div>
               )}
@@ -221,56 +221,56 @@ export default function PlayersDevelopmentPage() {
               <div className="bg-zinc-900/60 border border-amber-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(245,158,11,0.05)]">
                 <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded">rExplode</span>
                 <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Explode</h3>
-                <p className="text-xs text-amber-300 italic mb-4 font-serif">"First three steps. Explode and go."</p>
+                <p className="text-xs text-amber-300 italic mb-4 font-serif">&quot;First three steps. Explode and go.&quot;</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">First-step acceleration, gap closing, and explosive breakout drive.</p>
               </div>
 
               <div className="bg-zinc-900/60 border border-cyan-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(6,182,212,0.05)]">
                 <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded">rOwnPuck</span>
                 <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Own the Puck</h3>
-                <p className="text-xs text-cyan-300 italic mb-4 font-serif">"Hold it a beat. Make them come."</p>
+                <p className="text-xs text-cyan-300 italic mb-4 font-serif">&quot;Hold it a beat. Make them come.&quot;</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">Puck protection on forehand hip, scanning before retrievals, composure.</p>
               </div>
 
               <div className="bg-zinc-900/60 border border-fuchsia-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(217,70,239,0.05)]">
                 <span className="text-xs font-mono font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2.5 py-1 rounded">rThreat</span>
                 <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Be a Threat</h3>
-                <p className="text-xs text-fuchsia-300 italic mb-4 font-serif">"Shoot first, look second."</p>
+                <p className="text-xs text-fuchsia-300 italic mb-4 font-serif">&quot;Shoot first, look second.&quot;</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">Shot-first mentality, net-front presence, aggressive slot reads.</p>
               </div>
 
               <div className="bg-zinc-900/60 border border-emerald-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(16,185,129,0.05)]">
                 <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded">rQuickFeet</span>
                 <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Quick Feet</h3>
-                <p className="text-xs text-emerald-300 italic mb-4 font-serif">"Light feet. Strong edges."</p>
+                <p className="text-xs text-emerald-300 italic mb-4 font-serif">&quot;Light feet. Strong edges.&quot;</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">Agility, edge control, dynamic speed changes in tight spaces.</p>
               </div>
 
               <div className="bg-zinc-900/60 border border-indigo-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(99,102,241,0.05)]">
                 <span className="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded">rReadPlay</span>
                 <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Read the Play</h3>
-                <p className="text-xs text-indigo-300 italic mb-4 font-serif">"See two passes ahead."</p>
+                <p className="text-xs text-indigo-300 italic mb-4 font-serif">&quot;See two passes ahead.&quot;</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">Spatial vision, ice scanning, dynamic lane mapping, high-IQ positioning.</p>
               </div>
 
               <div className="bg-zinc-900/60 border border-rose-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(244,63,94,0.05)]">
                 <span className="text-xs font-mono font-bold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded">rWinBattle</span>
                 <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Win the Battle</h3>
-                <p className="text-xs text-rose-300 italic mb-4 font-serif">"Low leverage. Heavy stick."</p>
+                <p className="text-xs text-rose-300 italic mb-4 font-serif">&quot;Low leverage. Heavy stick.&quot;</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">Corner grinding, 1v1 battle win rates, net-front leverage, puck recovery.</p>
               </div>
 
               <div className="bg-zinc-900/60 border border-violet-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(139,92,246,0.05)]">
                 <span className="text-xs font-mono font-bold text-violet-400 bg-violet-500/10 px-2.5 py-1 rounded">rWallMaster</span>
                 <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Hard Along Walls</h3>
-                <p className="text-xs text-violet-300 italic mb-4 font-serif">"Clean wall chips. Seal boards."</p>
+                <p className="text-xs text-violet-300 italic mb-4 font-serif">&quot;Clean wall chips. Seal boards.&quot;</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">Board battles, wall pins, rim retrievals, chips past pressing defenders.</p>
               </div>
 
               <div className="bg-zinc-900/60 border border-sky-500/30 rounded-2xl p-6 hover:bg-zinc-900/80 transition-all shadow-[0_0_20px_rgba(14,165,233,0.05)]">
                 <span className="text-xs font-mono font-bold text-sky-400 bg-sky-500/10 px-2.5 py-1 rounded">rDotDominance</span>
                 <h3 className="text-2xl font-serif text-white font-bold mt-4 mb-2">Dot Dominance</h3>
-                <p className="text-xs text-sky-300 italic mb-4 font-serif">"Own the dot. Set the tempo."</p>
+                <p className="text-xs text-sky-300 italic mb-4 font-serif">&quot;Own the dot. Set the tempo.&quot;</p>
                 <p className="text-xs text-zinc-400 leading-relaxed">Face-off win technique, quick-stick reaction, tie-up leverage, situational wins.</p>
               </div>
             </div>

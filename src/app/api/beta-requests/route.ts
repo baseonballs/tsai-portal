@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (err: any) {
+  } catch (err) {
     console.error("[BetaRequestsAPI] Unexpected error:", err);
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again." },

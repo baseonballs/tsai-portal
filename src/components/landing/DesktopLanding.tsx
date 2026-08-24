@@ -35,7 +35,7 @@ export function DesktopLanding() {
               The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">Connecting the Dots</span>
             </h2>
             <blockquote className="text-xl sm:text-2xl font-serif italic text-zinc-200 max-w-4xl mx-auto mb-10">
-              "The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots."
+              &quot;The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots.&quot;
             </blockquote>
 
             <TheLoopIllustration />
@@ -49,7 +49,7 @@ export function DesktopLanding() {
               <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">The Synergy</span>
               <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Spotlight <span className="text-cyan-400 font-medium">Sees</span> the Game. Periodical <span className="text-amber-400 font-medium">Hears</span> the Player.</h2>
               <p className="text-lg text-zinc-400 max-w-3xl mx-auto leading-relaxed">
-                Spotlight's telemetry tells Periodical what the player <em className="text-white">did</em>. Periodical's journals tell Spotlight what the player <em className="text-white">thought</em>. The AI connects both—keeping coaches and mentors right at the heart of the loop.
+                Spotlight&apos;s telemetry tells Periodical what the player <em className="text-white">did</em>. Periodical&apos;s journals tell Spotlight what the player <em className="text-white">thought</em>. The AI connects both—keeping coaches and mentors right at the heart of the loop.
               </p>
             </div>
 
@@ -86,7 +86,7 @@ export function DesktopLanding() {
                 </ul>
                 <div className="mt-8 pt-6 border-t border-white/10">
                   <Link href="/players-development" className="text-indigo-400 hover:text-indigo-300 font-semibold text-xs flex items-center gap-1">
-                    Explore Player's Development <ArrowRight className="w-3.5 h-3.5" />
+                    Explore Player&apos;s Development <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>

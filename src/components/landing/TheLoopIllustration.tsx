@@ -413,7 +413,7 @@ export function TheLoopIllustration() {
                   </div>
                   <div className="bg-indigo-950/40 p-3 rounded-lg border border-indigo-500/30 flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" />
-                    <span className="text-zinc-200 text-xs font-sans font-medium">Bound Superpower: 'Explode' (First 3 Steps)</span>
+                    <span className="text-zinc-200 text-xs font-sans font-medium">Bound Superpower: &apos;Explode&apos; (First 3 Steps)</span>
                   </div>
                 </div>
               )}
@@ -446,7 +446,7 @@ export function TheLoopIllustration() {
                     <div className="font-semibold text-white flex items-center gap-1.5">
                       <Zap className="w-3.5 h-3.5 text-fuchsia-400" /> New Film Room Card
                     </div>
-                    <div className="text-zinc-400 text-[11px]">"Watch how you turn your hips before taking the pass."</div>
+                    <div className="text-zinc-400 text-[11px]">&quot;Watch how you turn your hips before taking the pass.&quot;</div>
                   </div>
                 </div>
               )}
@@ -458,7 +458,7 @@ export function TheLoopIllustration() {
                     <span className="text-zinc-400">Rated 4 / 5</span>
                   </div>
                   <div className="bg-black/60 p-3 rounded-lg border border-white/10 text-xs font-sans text-zinc-300 italic">
-                    "I saw the defender bite on my fake. Next time I'll cut inside earlier."
+                    &quot;I saw the defender bite on my fake. Next time I&apos;ll cut inside earlier.&quot;
                   </div>
                 </div>
               )}

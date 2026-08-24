@@ -36,7 +36,7 @@ function LoginContent() {
       } else {
         window.location.href = "/";
       }
-    } catch (err: any) {
+    } catch (err) {
       setErrorMsg("An unexpected error occurred");
       setIsLoading(false);
     }
@@ -106,7 +106,7 @@ function LoginContent() {
 
       setErrorMsg("OAuth did not return a redirect URL.");
       setIsLoading(false);
-    } catch (err: any) {
+    } catch (err) {
       setErrorMsg("An unexpected error occurred during Google sign-in");
       setIsLoading(false);
     }

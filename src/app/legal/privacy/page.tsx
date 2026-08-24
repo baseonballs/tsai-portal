@@ -93,7 +93,7 @@ export default function PrivacyPolicyPage() {
                       <tr>
                         <td className="py-3 px-3 font-semibold text-amber-400">Under 13</td>
                         <td className="py-3 px-3 font-mono">COPPA</td>
-                        <td className="py-3 px-3">Verifiable Parental Consent (VPC) required prior to collecting personal information. Children's Privacy Addendum applies.</td>
+                        <td className="py-3 px-3">Verifiable Parental Consent (VPC) required prior to collecting personal information. Children&apos;s Privacy Addendum applies.</td>
                       </tr>
                       <tr>
                         <td className="py-3 px-3 font-semibold text-cyan-400">13–17</td>
@@ -169,10 +169,10 @@ export default function PrivacyPolicyPage() {
               {/* 6. CHILDREN'S PRIVACY ADDENDUM (COPPA) */}
               <section className="space-y-4 rounded-2xl border border-amber-500/30 bg-amber-950/10 p-6 backdrop-blur-md">
                 <h2 className="text-lg font-serif font-semibold text-amber-400 flex items-center gap-2">
-                  <Lock className="w-4 h-4" /> Children's Privacy Addendum (COPPA — Under 13)
+                  <Lock className="w-4 h-4" /> Children&apos;s Privacy Addendum (COPPA — Under 13)
                 </h2>
                 <p className="text-xs text-zinc-300">
-                  This Addendum applies when TSAI collects personal information online from a child under 13 under the U.S. Children's Online Privacy Protection Act (COPPA).
+                  This Addendum applies when TSAI collects personal information online from a child under 13 under the U.S. Children&apos;s Online Privacy Protection Act (COPPA).
                 </p>
                 <ul className="space-y-2 text-xs text-zinc-300">
                   <li className="flex items-start gap-2">

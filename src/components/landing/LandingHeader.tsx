@@ -123,7 +123,7 @@ export function LandingHeader() {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-white group-hover:text-amber-300 flex items-center gap-1">
-                        Coach's Corner
+                        Coach&apos;s Corner
                         <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-mono">Workbench</span>
                       </div>
                       <p className="text-[11px] text-zinc-400 leading-snug">
@@ -163,7 +163,7 @@ export function LandingHeader() {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-white group-hover:text-indigo-300 flex items-center gap-1">
-                        Player's Development
+                        Player&apos;s Development
                         <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.2 rounded font-mono">Growth</span>
                       </div>
                       <p className="text-[11px] text-zinc-400 leading-snug">
@@ -273,7 +273,7 @@ export function LandingHeader() {
               >
                 <ShieldCheck className="h-4 w-4 shrink-0" />
                 <div className="flex flex-col">
-                  <span>Coach's Corner</span>
+                  <span>Coach&apos;s Corner</span>
                   <span className="text-[11px] text-zinc-400 font-normal">The Coach Workbench & Studio</span>
                 </div>
               </Link>
@@ -297,7 +297,7 @@ export function LandingHeader() {
               >
                 <TrendingUp className="h-4 w-4 shrink-0" />
                 <div className="flex flex-col">
-                  <span>Player's Development</span>
+                  <span>Player&apos;s Development</span>
                   <span className="text-[11px] text-zinc-400 font-normal">Personalized Micro-Loops & Growth</span>
                 </div>
               </Link>

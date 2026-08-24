@@ -48,7 +48,7 @@ export default function BetaPage() {
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
                 <ShieldCheck className="w-5 h-5 text-cyan-400 shrink-0" />
                 <div>
-                  <h3 className="text-lg font-serif font-bold text-white">Reserve Your Club's Early September Invitation</h3>
+                  <h3 className="text-lg font-serif font-bold text-white">Reserve Your Club&apos;s Early September Invitation</h3>
                   <p className="text-xs text-zinc-400">Directly queued for the September 2026 founding cohort deployment batch.</p>
                 </div>
               </div>
