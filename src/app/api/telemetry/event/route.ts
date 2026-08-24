@@ -2,6 +2,7 @@ import { required } from "@/utils/require-env";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { errorMessage } from "@/lib/errors"
 
 export async function POST(req: NextRequest) {
   try {
@@ -92,8 +93,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err) {
     console.error("[TelemetryAPI] Unexpected error:", err);
-    return NextResponse.json({ error: err.message || "An unexpected error occurred." }, { status: 500 });
+    return NextResponse.json({ error: errorMessage(err) || "An unexpected error occurred." }, { status: 500 });
   }
 }

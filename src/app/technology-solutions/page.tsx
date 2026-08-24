@@ -237,7 +237,7 @@ export default function TechnologySolutionsPage() {
 
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
                   <Link href="/players-development" className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
-                    Explore Player's Development <ArrowRight className="w-4 h-4" />
+                    Explore Player&apos;s Development <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>

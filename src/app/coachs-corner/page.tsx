@@ -150,7 +150,7 @@ export default function CoachsCornerPage() {
           <div className="mx-auto max-w-4xl text-center relative z-10">
             <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-amber-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-wider text-amber-300 backdrop-blur-xl shadow-xl shadow-amber-500/15 mb-10 sm:mb-12 hover:border-amber-400/60 transition-all">
               <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0" />
-              <span className="text-amber-400 font-bold tracking-widest uppercase">Coach's Corner</span>
+              <span className="text-amber-400 font-bold tracking-widest uppercase">Coach&apos;s Corner</span>
               <span className="text-zinc-600 font-normal">·</span>
               <span className="text-zinc-200 font-medium tracking-wide uppercase">The Digital Clipboard That Reasoned The Game</span>
             </div>
@@ -161,7 +161,7 @@ export default function CoachsCornerPage() {
             </h1>
 
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto font-light">
-              The <strong className="text-white font-medium">Cut Room Workbench</strong> turns four hours of Sunday-night scrubbing into ninety seconds of asking — then binds your cuts directly to the athlete's goals via <strong className="text-cyan-400 font-medium">The Loop</strong>.
+              The <strong className="text-white font-medium">Cut Room Workbench</strong> turns four hours of Sunday-night scrubbing into ninety seconds of asking — then binds your cuts directly to the athlete&apos;s goals via <strong className="text-cyan-400 font-medium">The Loop</strong>.
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -193,13 +193,13 @@ export default function CoachsCornerPage() {
             
             <div className="space-y-6 text-lg text-zinc-400 leading-relaxed">
               <p>
-                Two games of weekend film. A laptop, a cold coffee, and a scrub bar. You're hunting for the four D-zone turnovers you <em className="text-zinc-200">know</em> are in there somewhere — because Thursday's practice depends on your defensemen seeing them before they step on the ice.
+                Two games of weekend film. A laptop, a cold coffee, and a scrub bar. You&apos;re hunting for the four D-zone turnovers you <em className="text-zinc-200">know</em> are in there somewhere — because Thursday&apos;s practice depends on your defensemen seeing them before they step on the ice.
               </p>
               <p>
-                Two hours later you find three of them, text a raw video link to the team group chat, and hope. No one confirms they watched. Nothing tells you whether the lesson landed. On Thursday, you'll re-teach it from scratch at center ice, eating fifteen minutes of the only practice you get this week.
+                Two hours later you find three of them, text a raw video link to the team group chat, and hope. No one confirms they watched. Nothing tells you whether the lesson landed. On Thursday, you&apos;ll re-teach it from scratch at center ice, eating fifteen minutes of the only practice you get this week.
               </p>
               <p className="text-xl text-white font-serif border-l-2 border-cyan-500 pl-6 my-8 py-2">
-                That's not coaching. That's clerical work with a whistle.
+                That&apos;s not coaching. That&apos;s clerical work with a whistle.
               </p>
               <p className="text-cyan-300 font-medium pt-4">
                 Now run the same week back — with The Loop and the Cut Room Workbench on your terms.
@@ -216,7 +216,7 @@ export default function CoachsCornerPage() {
               The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">Connects the Dots</span>
             </h2>
             <blockquote className="text-xl sm:text-2xl font-serif italic text-zinc-200 max-w-4xl mx-auto mb-12">
-              "The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots."
+              &quot;The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots.&quot;
             </blockquote>
 
             <TheLoopIllustration />
@@ -230,7 +230,7 @@ export default function CoachsCornerPage() {
               <span className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400 uppercase">The Cut Room Console</span>
               <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">8 Superpowers. One Rising Line.</h2>
               <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
-                Select a superpower on the Cut Room rail. The console washes in its hue, filters your moments, and binds the cut directly to the athlete's personal goal.
+                Select a superpower on the Cut Room rail. The console washes in its hue, filters your moments, and binds the cut directly to the athlete&apos;s personal goal.
               </p>
             </div>
 
@@ -276,7 +276,7 @@ export default function CoachsCornerPage() {
                 <div className="space-y-6">
                   <div className="bg-zinc-900/70 p-5 rounded-xl border border-white/5">
                     <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">Bound Player Goal (from Periodical Plan)</span>
-                    <p className="text-lg font-serif text-white italic">"Shoot first, look second. Drive the slot."</p>
+                    <p className="text-lg font-serif text-white italic">&quot;Shoot first, look second. Drive the slot.&quot;</p>
                     <span className="mt-3 inline-flex items-center gap-1.5 text-[10px] uppercase font-bold text-fuchsia-400 bg-fuchsia-500/10 border border-fuchsia-500/20 px-2.5 py-0.5 rounded-full">
                       <Check className="w-3 h-3" /> She-Asked-For-This Badge
                     </span>
@@ -286,7 +286,7 @@ export default function CoachsCornerPage() {
                     <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">Coach Voice Prompt (8s Voice Note Attached)</span>
                     <div className="flex items-center gap-3 bg-black/50 p-3 rounded-lg border border-white/10">
                       <Mic className="w-4 h-4 text-cyan-400 shrink-0" />
-                      <p className="text-xs text-zinc-300 italic flex-1">"You're a shooter, Corinne. Trust it. The shot's there a full beat before the pass is."</p>
+                      <p className="text-xs text-zinc-300 italic flex-1">&quot;You&apos;re a shooter, Corinne. Trust it. The shot&apos;s there a full beat before the pass is.&quot;</p>
                       <Volume2 className="w-4 h-4 text-zinc-500" />
                     </div>
                   </div>
@@ -342,16 +342,16 @@ export default function CoachsCornerPage() {
                   <div className="mt-4 text-sm text-zinc-500 uppercase tracking-widest font-semibold">Act I<br />The ask</div>
                 </div>
                 <div className="md:w-3/4">
-                  <h3 className="text-2xl font-serif text-white mb-6"><span className="text-cyan-500/50 mr-2">01 /</span> You don't scrub. You ask.</h3>
+                  <h3 className="text-2xl font-serif text-white mb-6"><span className="text-cyan-500/50 mr-2">01 /</span> You don&apos;t scrub. You ask.</h3>
                   <p className="text-zinc-400 mb-8 leading-relaxed">
-                    You open the Workbench and type into the <strong className="text-zinc-200 font-medium">Captive AI Search Bar</strong> — the same way you'd ask an assistant coach who watched every shift of every game you've ever played:
+                    You open the Workbench and type into the <strong className="text-zinc-200 font-medium">Captive AI Search Bar</strong> — the same way you&apos;d ask an assistant coach who watched every shift of every game you&apos;ve ever played:
                   </p>
                   
                   {/* UI Mock */}
                   <div className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-md p-6 shadow-2xl mb-8 transform transition-transform hover:-translate-y-1">
                     <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2"><Search className="w-3 h-3 text-cyan-400" /> Captive AI · Spotlight Discovery Engine</div>
                     <div className="font-mono text-white/90 text-sm md:text-base leading-relaxed bg-zinc-900/50 p-4 rounded-lg border border-white/5">
-                      "Show me our D-zone turnovers under pressure from the last 3 games, and find a master reference clip of strong-side puck protection on a zone entry."<span className="inline-block w-2 h-4 bg-cyan-400 ml-1 animate-pulse align-middle"></span>
+                      &quot;Show me our D-zone turnovers under pressure from the last 3 games, and find a master reference clip of strong-side puck protection on a zone entry.&quot;<span className="inline-block w-2 h-4 bg-cyan-400 ml-1 animate-pulse align-middle"></span>
                     </div>
                     <div className="mt-4 text-xs text-zinc-400 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-emerald-400" />
@@ -360,7 +360,7 @@ export default function CoachsCornerPage() {
                   </div>
 
                   <p className="text-zinc-400 leading-relaxed">
-                    The AI scans your team's full game library <em className="text-zinc-200">and</em> a curated set of pro-level master references, mapping your words against a taxonomy built for hockey — not generic sports video. Every turnover. The exact mechanic. Forty-one seconds. <strong className="text-white">The two hours you just got back? That's yours.</strong>
+                    The AI scans your team&apos;s full game library <em className="text-zinc-200">and</em> a curated set of pro-level master references, mapping your words against a taxonomy built for hockey — not generic sports video. Every turnover. The exact mechanic. Forty-one seconds. <strong className="text-white">The two hours you just got back? That&apos;s yours.</strong>
                   </p>
                 </div>
               </div>
@@ -375,7 +375,7 @@ export default function CoachsCornerPage() {
                 <div className="md:w-3/4">
                   <h3 className="text-2xl font-serif text-white mb-6"><span className="text-indigo-500/50 mr-2">02 /</span> Send it. The Drop lands inside her day.</h3>
                   <p className="text-zinc-400 mb-8 leading-relaxed">
-                    One tap. The cut arrives in Corinne's Periodical Film Room as a <strong className="text-fuchsia-400 font-medium">fuchsia cinematic tile</strong> — not a text link to ignore, but a piece of film addressed to her by name and tied to her goal.
+                    One tap. The cut arrives in Corinne&apos;s Periodical Film Room as a <strong className="text-fuchsia-400 font-medium">fuchsia cinematic tile</strong> — not a text link to ignore, but a piece of film addressed to her by name and tied to her goal.
                   </p>
                   
                   {/* UI Mock */}
@@ -385,16 +385,16 @@ export default function CoachsCornerPage() {
                       <span className="rounded-full bg-fuchsia-500/20 text-fuchsia-300 text-xs px-3 py-1 font-mono font-bold">Be a Threat</span>
                     </div>
                     <div className="bg-zinc-900/60 p-4 rounded-lg border border-white/5 text-zinc-300 font-serif italic mb-4">
-                      "New Drop from Coach Dave: 'Watch for this — you're a shooter. The shot's there a full beat before the pass is. Trust it.'"
+                      &quot;New Drop from Coach Dave: &apos;Watch for this — you&apos;re a shooter. The shot&apos;s there a full beat before the pass is. Trust it.&apos;&quot;
                     </div>
                     <div className="text-xs text-zinc-400 flex items-center justify-between">
                       <span>Receipt: <strong className="text-emerald-400">Pushed 7:14 PM → Seen 7:31 PM</strong></span>
-                      <span className="text-zinc-500 font-mono">Tied to goal: "Shoot first, look second"</span>
+                      <span className="text-zinc-500 font-mono">Tied to goal: &quot;Shoot first, look second&quot;</span>
                     </div>
                   </div>
 
                   <p className="text-zinc-400 leading-relaxed">
-                    She opens it because it's hers. On your bench, the receipt chip flips from <strong className="text-zinc-400">Pushed</strong> to <strong className="text-emerald-400">Seen</strong> before you're off the ice.
+                    She opens it because it&apos;s hers. On your bench, the receipt chip flips from <strong className="text-zinc-400">Pushed</strong> to <strong className="text-emerald-400">Seen</strong> before you&apos;re off the ice.
                   </p>
                 </div>
               </div>
@@ -409,7 +409,7 @@ export default function CoachsCornerPage() {
                 <div className="md:w-3/4">
                   <h3 className="text-2xl font-serif text-white mb-6"><span className="text-emerald-500/50 mr-2">03 /</span> Watch. Reflect. Rate.</h3>
                   <p className="text-zinc-400 mb-8 leading-relaxed">
-                    The cut plays inside that night's journal entry — not a separate app — with your voice note playing over the read. Then comes <strong className="text-zinc-200 font-medium">The Read-back</strong>: one question, one self-rating (3/5).
+                    The cut plays inside that night&apos;s journal entry — not a separate app — with your voice note playing over the read. Then comes <strong className="text-zinc-200 font-medium">The Read-back</strong>: one question, one self-rating (3/5).
                   </p>
                   
                   {/* UI Mock */}
@@ -419,7 +419,7 @@ export default function CoachsCornerPage() {
                       <span className="text-xs text-zinc-400 font-mono">Self-Rating: 3 / 5 (Be a Threat)</span>
                     </div>
                     <p className="text-sm font-serif italic text-zinc-200 bg-zinc-900/60 p-4 rounded border border-white/5 mb-3">
-                      "Yeah — I had the shot and I looked away. Next game I'm shooting the first one that opens."
+                      &quot;Yeah — I had the shot and I looked away. Next game I&apos;m shooting the first one that opens.&quot;
                     </p>
                     <div className="text-xs text-zinc-500">
                       Writes a <strong className="text-zinc-300">coach-reviewed rep</strong> to her ledger without touching her game-day baseline.
@@ -427,7 +427,7 @@ export default function CoachsCornerPage() {
                   </div>
 
                   <p className="text-zinc-400 leading-relaxed">
-                    She talks her response into her phone before going to sleep. <strong className="text-white">That's not passive screen time. That's a rep on the record.</strong>
+                    She talks her response into her phone before going to sleep. <strong className="text-white">That&apos;s not passive screen time. That&apos;s a rep on the record.</strong>
                   </p>
                 </div>
               </div>
@@ -440,7 +440,7 @@ export default function CoachsCornerPage() {
                   <div className="mt-4 text-sm text-zinc-500 uppercase tracking-widest font-semibold">Act IV<br />The proof</div>
                 </div>
                 <div className="md:w-3/4">
-                  <h3 className="text-2xl font-serif text-white mb-6"><span className="text-amber-500/50 mr-2">04 /</span> You never ask "did you watch it?" again.</h3>
+                  <h3 className="text-2xl font-serif text-white mb-6"><span className="text-amber-500/50 mr-2">04 /</span> You never ask &quot;did you watch it?&quot; again.</h3>
                   <p className="text-zinc-400 mb-6 leading-relaxed">
                     Coffee in hand, you open the <strong className="text-zinc-200 font-medium">Telemetry Board</strong>. Every interaction with your cut is on it — not just who logged in, but loop counts, dwell time, and read-back completions.
                   </p>
@@ -464,7 +464,7 @@ export default function CoachsCornerPage() {
               <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">The Math of a Better Bench</span>
               <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">Accountability you can point at.</h2>
               <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
-                Coaches don't need more video. They need proof the video worked. The Telemetry Board tracks loop counts, dwell time, and completion state behind every cut.
+                Coaches don&apos;t need more video. They need proof the video worked. The Telemetry Board tracks loop counts, dwell time, and completion state behind every cut.
               </p>
             </div>
 
@@ -483,7 +483,7 @@ export default function CoachsCornerPage() {
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500"></div>
                 <div className="text-6xl font-serif text-white mb-2">100<span className="text-3xl text-emerald-500">%</span></div>
                 <div className="text-sm font-semibold tracking-wider uppercase text-zinc-300 mb-4">Unit completion</div>
-                <p className="text-sm text-zinc-500 leading-relaxed">Deadlines, push notifications, and a board that turns <strong className="text-zinc-300">"did you watch it?"</strong> into a question you never ask again.</p>
+                <p className="text-sm text-zinc-500 leading-relaxed">Deadlines, push notifications, and a board that turns <strong className="text-zinc-300">&quot;did you watch it?&quot;</strong> into a question you never ask again.</p>
               </div>
             </div>
           </div>
@@ -494,9 +494,9 @@ export default function CoachsCornerPage() {
           <div className="mx-auto max-w-5xl">
             <div className="text-center mb-16">
               <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">Under the hood · Hockey Taxonomy</span>
-              <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">It speaks hockey.<br />Not just "video."</h2>
+              <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">It speaks hockey.<br />Not just &quot;video.&quot;</h2>
               <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
-                Generic AI sees pixels. Spotlight's discovery engine maps every clip against a proprietary four-tier Hockey Taxonomy — from physical and spatial vectors (<span className="text-cyan-400 font-medium">Nano</span>) up to <span className="text-emerald-400 font-medium">Macro</span> game states.
+                Generic AI sees pixels. Spotlight&apos;s discovery engine maps every clip against a proprietary four-tier Hockey Taxonomy — from physical and spatial vectors (<span className="text-cyan-400 font-medium">Nano</span>) up to <span className="text-emerald-400 font-medium">Macro</span> game states.
               </p>
             </div>
 
@@ -506,28 +506,28 @@ export default function CoachsCornerPage() {
                   <h4 className="text-xl font-serif text-cyan-400 font-bold">Nano</h4>
                   <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 0 · Physical</span>
                 </div>
-                <p className="text-sm text-zinc-400">The physics: proximity, vectors, velocity &amp; blade orientation. <em className="text-zinc-300 block mt-2">"Puck proximity 0.18m, 18.4mph velocity vector."</em></p>
+                <p className="text-sm text-zinc-400">The physics: proximity, vectors, velocity &amp; blade orientation. <em className="text-zinc-300 block mt-2">&quot;Puck proximity 0.18m, 18.4mph velocity vector.&quot;</em></p>
               </div>
               <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-indigo-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
                   <h4 className="text-xl font-serif text-indigo-400 font-bold">Micro</h4>
                   <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 1 · Mechanic</span>
                 </div>
-                <p className="text-sm text-zinc-400">The skill: body position, puck placement, timing. <em className="text-zinc-300 block mt-2">"Hips square to the boards, puck on forehand."</em></p>
+                <p className="text-sm text-zinc-400">The skill: body position, puck placement, timing. <em className="text-zinc-300 block mt-2">&quot;Hips square to the boards, puck on forehand.&quot;</em></p>
               </div>
               <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-fuchsia-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
                   <h4 className="text-xl font-serif text-fuchsia-400 font-bold">Meso</h4>
                   <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 2 · Tactical</span>
                 </div>
-                <p className="text-sm text-zinc-400">The system: breakouts, entries, cycles, coverage schemes. <em className="text-zinc-300 block mt-2">"Strong-side breakout on a zone exit."</em></p>
+                <p className="text-sm text-zinc-400">The system: breakouts, entries, cycles, coverage schemes. <em className="text-zinc-300 block mt-2">&quot;Strong-side breakout on a zone exit.&quot;</em></p>
               </div>
               <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-emerald-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
                   <h4 className="text-xl font-serif text-emerald-400 font-bold">Macro</h4>
                   <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 3 · Game state</span>
                 </div>
-                <p className="text-sm text-zinc-400">The situation: zone, strength, possession, pressure. <em className="text-zinc-300 block mt-2">"D-zone, even strength, under forecheck."</em></p>
+                <p className="text-sm text-zinc-400">The situation: zone, strength, possession, pressure. <em className="text-zinc-300 block mt-2">&quot;D-zone, even strength, under forecheck.&quot;</em></p>
               </div>
             </div>
           </div>
@@ -541,7 +541,7 @@ export default function CoachsCornerPage() {
               Take the first <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">shift.</span>
             </h2>
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto">
-              The Teams Beta Program is opening to a limited cohort of youth ice hockey coaching staffs and clubs. Founding teams don't just get early access — they shape what this becomes.
+              The Teams Beta Program is opening to a limited cohort of youth ice hockey coaching staffs and clubs. Founding teams don&apos;t just get early access — they shape what this becomes.
             </p>
             
             <div className="mt-12 text-left max-w-2xl mx-auto">

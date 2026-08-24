@@ -1,6 +1,7 @@
 import { required } from "@/utils/require-env";
 import { NextResponse } from "next/server";
 import { Stripe } from "stripe";
+import { errorMessage } from "@/lib/errors"
 
 // Constructed LAZILY, per request, not at module scope.
 //
@@ -45,10 +46,10 @@ export async function POST(request: Request) {
       url: session.url,
       sessionId: session.id,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("[Stripe Checkout API] Error:", err);
     return NextResponse.json(
-      { error: err.message || "Failed to create Stripe checkout session" },
+      { error: errorMessage(err) || "Failed to create Stripe checkout session" },
       { status: 500 }
     );
   }

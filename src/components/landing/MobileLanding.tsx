@@ -60,7 +60,7 @@ export function MobileLanding() {
               href="/coachs-corner"
               className="w-full rounded-full border border-white/15 bg-black/50 hover:bg-white/10 active:scale-[0.98] px-6 py-3.5 text-xs font-semibold text-zinc-200 flex items-center justify-center gap-2 transition-all"
             >
-              <span>Explore Coach's Corner</span>
+              <span>Explore Coach&apos;s Corner</span>
               <ArrowRight className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             </Link>
           </div>
@@ -104,7 +104,7 @@ export function MobileLanding() {
                 Desktop Experience Recommended for Spotlight
               </h3>
               <p className="text-xs text-zinc-300 leading-relaxed">
-                Spotlight's multi-angle Cut Room, split-screen playback, and spatial telemetry workbench are optimized for desktop monitors. Periodical athlete journals and team beta registration are fully supported on mobile.
+                Spotlight&apos;s multi-angle Cut Room, split-screen playback, and spatial telemetry workbench are optimized for desktop monitors. Periodical athlete journals and team beta registration are fully supported on mobile.
               </p>
             </div>
           </div>
@@ -117,7 +117,7 @@ export function MobileLanding() {
             The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">Connecting the Dots</span>
           </h2>
           <blockquote className="text-sm font-serif italic text-zinc-300 text-center mb-6 leading-relaxed">
-            "The goal lived in the journal. The proof lived in the film. They never met — until now."
+            &quot;The goal lived in the journal. The proof lived in the film. They never met — until now.&quot;
           </blockquote>
 
           <div className="space-y-3">

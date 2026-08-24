@@ -148,7 +148,7 @@ export function TranscendEngineSubstrate() {
               Transcend <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">AI Core Engine</span>
             </h3>
             <p className="text-sm md:text-base text-zinc-300 max-w-2xl font-light leading-relaxed">
-              Spotlight sees the film. Periodical captures the athlete's voice. <strong className="text-white font-medium">Transcend is the decision-grade AI engine underneath</strong> — fusing computer vision, semantic synthesis, and hockey domain graphs into one unified intelligence substrate.
+              Spotlight sees the film. Periodical captures the athlete&apos;s voice. <strong className="text-white font-medium">Transcend is the decision-grade AI engine underneath</strong> — fusing computer vision, semantic synthesis, and hockey domain graphs into one unified intelligence substrate.
             </p>
           </div>
 
