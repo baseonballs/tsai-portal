@@ -1,6 +1,7 @@
 {
   "name": "tsai-portal",
   "version": "2.0.8",
+  "packageManager": "pnpm@10.34.5",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3040",
