@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.production is TRACKED: it is the single source of non-secret production
+# configuration, and it holds no secrets by construction (they are listed
+# commented, as the completeness contract). Matching tsai-periodical.
+!.env.production
 
 # vercel
 .vercel
