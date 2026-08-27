@@ -109,7 +109,9 @@ export async function GET(request: Request) {
       }
 
       // Unlicensed user / shadow profile / unauthorized account: terminate session
-      await supabase.auth.signOut()
+      // GLOBAL, deliberately. An unlicensed or unauthorized account is an account-
+      // level denial, not a browser-level one.
+      await supabase.auth.signOut({ scope: "global" })
       return NextResponse.redirect(new URL('/login?error=unauthorized', publicOrigin))
     }
   }
