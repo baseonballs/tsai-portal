@@ -2,6 +2,12 @@
 # This is NOT the Next.js you know
 
 
+<!-- END:nextjs-agent-rules -->
+
+<!-- Kept OUTSIDE <!--BEGIN/END:nextjs-agent-rules-->. An earlier copy sat inside that
+     managed block and was erased when the block regenerated, so the rule the owner asked
+     to be permanent lasted until the next tool run. -->
+
 ## 🚫 GITHUB ACTIONS IS NOT OUR CI — BINDING, NOT A PREFERENCE
 
 **There is no GitHub Enterprise licence and no Actions budget.** Tests do not run on GitHub, and
@@ -34,7 +40,7 @@ pnpm build
 
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+
 
 # Fail-Fast Architecture & Zero Silent Fallbacks Invariant (First Principles)
 - **Zero Silent Fallbacks:** NEVER implement silent fallbacks, synthetic mock objects in production runtime paths, secondary fallback routing that papers over missing configuration, or unauthenticated dummy defaults.
