@@ -65,25 +65,28 @@ function isAlwaysAllowed(pathname: string): boolean {
     // These pages are static, read-only, and depend on no backend, so serving them
     // during a window costs nothing and cannot mislead: they describe the terms,
     // not the state of the service.
-    pathname.startsWith("/legal") ||
-    // THE PORTAL IS ALSO THE MARKETING SITE, and that is why it was excluded from
-    // maintenance entirely until now.
+    pathname.startsWith("/legal")
+    // NO MARKETING EXEMPTION, and this was tried the other way first.
     //
-    // The exclusion was justified as "the portal does not depend on the tier being
-    // destroyed". That stopped being true: NEXT_PUBLIC_SUPABASE_URL points at the
-    // DGX and the served bundle is full of Supabase calls, which is exactly why a
-    // stale baked anon key made every browser read on hub.tsai-spotlight.com fail
-    // while its Cloud Run pin looked green.
+    // The obvious design is to keep the pages that need no backend — /, /beta,
+    // /coachs-corner, /docs — serving during a window, so a reset does not darken the
+    // public face of the company. It was written that way and it does not work:
     //
-    // But darkening the public face of the company during every reset is a real
-    // cost, and it is avoidable: the pages that describe the product need no
-    // backend. They stay up. The routes that read from the DGX — auth, the locker
-    // room, the API — are the ones that would show a user their data behaving
-    // strangely, and those close.
-    pathname === "/" ||
-    pathname.startsWith("/beta") ||
-    pathname.startsWith("/coachs-corner") ||
-    pathname.startsWith("/docs")
+    // `bifrost cloud maintenance on` does not trust its own update. confirmEnforcing()
+    // POLLS the public hostname and fails after three minutes if it does not see a
+    // 503 — and probe() requests exactly "https://<host>/", the ROOT. A portal whose
+    // root answers 200 can never confirm, so `maintenance on` would fail at STAGE 0 OF
+    // EVERY ROUND. Keeping the front page up would have cost the entire loop.
+    //
+    // Changing probe() to ask for some other path was the alternative, and it is
+    // worse: the whole point of that function is that setting a variable is not the
+    // same as the edge refusing traffic, so the thing it verifies must be the thing
+    // the public actually reaches. Weakening the check to preserve a marketing page
+    // trades a real guarantee for a cosmetic one.
+    //
+    // So the portal closes like the other two frontends. /legal stays open for the
+    // same reason it does in Spotlight — Google fetches those URLs for the OAuth
+    // consent screen, and a 503 there blocks publishing the app.
   );
 }
 
