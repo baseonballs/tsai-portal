@@ -65,7 +65,9 @@ function isAlwaysAllowed(pathname: string): boolean {
     // These pages are static, read-only, and depend on no backend, so serving them
     // during a window costs nothing and cannot mislead: they describe the terms,
     // not the state of the service.
-    pathname.startsWith("/legal")
+    pathname === "/legal" ||
+    // A boundary, not a prefix: startsWith("/legal") also matched /legalXYZ.
+    pathname.startsWith("/legal/")
     // NO MARKETING EXEMPTION, and this was tried the other way first.
     //
     // The obvious design is to keep the pages that need no backend — /, /beta,
@@ -175,6 +177,7 @@ export async function maintenanceResponse(request: NextRequest, appName: string)
   // Operator access. Absent a secret there is NO operator access at all — an empty
   // secret must never mean "everyone is an operator", which is how the mechanism
   // this replaced behaved when its token was unset.
+  let expiredCookies = false;
   const passSecret = (process.env.MAINTENANCE_OPERATOR_SECRET ?? "").trim();
   if (passSecret) {
     const fromUrl = request.nextUrl.searchParams.get(PASS_PARAM);
@@ -187,6 +190,14 @@ export async function maintenanceResponse(request: NextRequest, appName: string)
         const clean = request.nextUrl.clone();
         clean.searchParams.delete(PASS_PARAM);
         const res = NextResponse.redirect(clean, 302);
+        // NEVER CACHEABLE. next.config.ts sets a GLOBAL
+        // "public, max-age=3600, s-maxage=86400" on /:path*, and it applies to this
+        // redirect too — the one carrying Set-Cookie: tsai_operator_pass. A CDN or proxy
+        // obeying RFC 7234 could cache the operator's credential for a day and hand it
+        // to whoever requested that URL next. The 503 paths already say no-store; this
+        // is the path that actually carries a secret.
+        res.headers.set("Cache-Control", "private, no-store, must-revalidate");
+        res.headers.set("Vary", "Cookie");
         const maxAge = passCookieMaxAge(payload);
         res.cookies.set(PASS_COOKIE, fromUrl, {
           httpOnly: true,
@@ -234,9 +245,12 @@ export async function maintenanceResponse(request: NextRequest, appName: string)
       if (payload) return NextResponse.next();
       // Expired or revoked-by-rotation: clear it rather than letting a dead cookie
       // be re-checked on every request for the rest of the window.
-      const closed = NextResponse.next();
-      closed.cookies.delete(PASS_COOKIE);
-      closed.cookies.delete(BANNER_COOKIE);
+      // RECORDED, then applied to whichever 503 we actually return below. The previous
+      // shape built a NextResponse.next() with the deletions attached and never
+      // returned it — execution fell through to a 503 carrying no Set-Cookie at all, so
+      // the dead cookie was never cleared. The browser kept resending it and the gate
+      // kept recomputing an HMAC over it on every request for the rest of the window.
+      expiredCookies = true;
     }
   }
 
@@ -253,18 +267,39 @@ export async function maintenanceResponse(request: NextRequest, appName: string)
   const accept = request.headers.get("accept") ?? "";
   const isDocument = accept.includes("text/html");
   if (!isDocument || request.nextUrl.pathname.startsWith("/api/")) {
-    return new NextResponse(
+    // SET on a clone, not spread. `new Headers({...Object.fromEntries(headers),
+    // "Content-Type": "application/json"})` produced BOTH "content-type" (Headers
+    // lowercases keys) and "Content-Type", and Headers APPENDS rather than replaces —
+    // so the response went out as "text/html; charset=utf-8, application/json" and a
+    // JSON client either failed to parse it or sniffed it as HTML.
+    const jsonHeaders = new Headers(headers);
+    jsonHeaders.set("Content-Type", "application/json");
+    const jsonRes = new NextResponse(
       JSON.stringify({
         error: "maintenance",
         message: `${appName} is temporarily unavailable for planned maintenance.`,
         detail: process.env.MAINTENANCE_MESSAGE ?? undefined,
-        retry_after_seconds: retryAfter,
+        // Guarded like the header is. MAINTENANCE_RETRY_AFTER="60m" makes this NaN,
+        // JSON.stringify turns NaN into null, and an API client expecting an integer
+        // gets one it cannot use — while the Retry-After header was defaulted correctly
+        // all along.
+        retry_after_seconds: Number.isFinite(retryAfter) ? retryAfter : 1800,
       }),
-      { status: 503, headers: new Headers({ ...Object.fromEntries(headers), "Content-Type": "application/json" }) },
+      { status: 503, headers: jsonHeaders },
     );
+    if (expiredCookies) {
+      jsonRes.cookies.delete(PASS_COOKIE);
+      jsonRes.cookies.delete(BANNER_COOKIE);
+    }
+    return jsonRes;
   }
 
-  return new NextResponse(maintenancePage(appName), { status: 503, headers });
+  const pageRes = new NextResponse(maintenancePage(appName), { status: 503, headers });
+  if (expiredCookies) {
+    pageRes.cookies.delete(PASS_COOKIE);
+    pageRes.cookies.delete(BANNER_COOKIE);
+  }
+  return pageRes;
 }
 
 function maintenancePage(appName: string): string {
