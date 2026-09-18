@@ -13,7 +13,8 @@
     "daemon:restart": "./scripts/portal-daemon.sh restart",
     "daemon:status": "./scripts/portal-daemon.sh status",
     "check:secrets": "node scripts/check-no-hardcoded-credentials.mjs",
-    "test:redirect-safety": "node src/lib/auth/safe-internal-next-path.test.mjs"
+    "test:redirect-safety": "node src/lib/auth/safe-internal-next-path.test.mjs",
+    "test:coppa-scout-bridge": "npx tsx src/lib/legal/coppa-scout-consent-bridge.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
