@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import { MultiSheetCommandCenter, TournamentSheet } from "@/components/tournaments/MultiSheetCommandCenter";
 import { LiveTournamentBracketView } from "@/components/tournaments/LiveTournamentBracketView";
 
@@ -130,11 +132,19 @@ const INITIAL_SHEETS: TournamentSheet[] = [
 ];
 
 export default function TournamentDirectorPage() {
+  const [selectedSheetId, setSelectedSheetId] = useState<string>(
+    INITIAL_SHEETS[0].sheetId
+  );
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 flex flex-col gap-8">
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
-        <MultiSheetCommandCenter initialSheets={INITIAL_SHEETS} />
-        <LiveTournamentBracketView />
+        <MultiSheetCommandCenter
+          initialSheets={INITIAL_SHEETS}
+          selectedSheetId={selectedSheetId}
+          onSelectSheet={setSelectedSheetId}
+        />
+        <LiveTournamentBracketView onSelectMatchSheet={setSelectedSheetId} />
       </div>
     </div>
   );

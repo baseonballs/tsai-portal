@@ -56,18 +56,28 @@ interface MultiSheetCommandCenterProps {
   initialSheets?: TournamentSheet[];
   tournamentName?: string;
   venueName?: string;
+  selectedSheetId?: string;
+  onSelectSheet?: (sheetId: string) => void;
 }
 
 export function MultiSheetCommandCenter({
   initialSheets = [],
   tournamentName = "International Silver Stick AAA Finals",
   venueName = "Transcend Sports Complex (8-Sheet Facility)",
+  selectedSheetId: controlledSheetId,
+  onSelectSheet,
 }: MultiSheetCommandCenterProps) {
   const [sheets, setSheets] = useState<TournamentSheet[]>(initialSheets);
   const [globalMute, setGlobalMute] = useState<boolean>(false);
-  const [selectedSheetId, setSelectedSheetId] = useState<string>(
+  const [internalSheetId, setInternalSheetId] = useState<string>(
     initialSheets[0]?.sheetId || ""
   );
+
+  const activeSheetId = controlledSheetId ?? internalSheetId;
+  const handleSelectSheet = (sheetId: string) => {
+    setInternalSheetId(sheetId);
+    onSelectSheet?.(sheetId);
+  };
 
   const toggleGlobalAcousticShieldMute = () => {
     const nextState = !globalMute;
@@ -101,7 +111,7 @@ export function MultiSheetCommandCenter({
     );
   };
 
-  const selectedSheet = sheets.find((s) => s.sheetId === selectedSheetId) || sheets[0];
+  const selectedSheet = sheets.find((s) => s.sheetId === activeSheetId) || sheets[0];
 
   return (
     <div className="flex flex-col gap-6 p-6 bg-slate-950 text-slate-100 rounded-2xl border border-slate-800 shadow-2xl font-sans">
@@ -162,13 +172,13 @@ export function MultiSheetCommandCenter({
       {/* 8-Sheet Grid Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {sheets.map((sheet) => {
-          const isSelected = sheet.sheetId === selectedSheetId;
+          const isSelected = sheet.sheetId === activeSheetId;
           const isLive = sheet.streamState === "LIVE";
 
           return (
             <div
               key={sheet.sheetId}
-              onClick={() => setSelectedSheetId(sheet.sheetId)}
+              onClick={() => handleSelectSheet(sheet.sheetId)}
               className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
                 isSelected
                   ? "bg-slate-900/90 border-cyan-500 ring-1 ring-cyan-500/50 shadow-lg shadow-cyan-950/40"
