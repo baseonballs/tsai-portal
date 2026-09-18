@@ -15,7 +15,9 @@
     "check:secrets": "node scripts/check-no-hardcoded-credentials.mjs",
     "test:redirect-safety": "node src/lib/auth/safe-internal-next-path.test.mjs",
     "test:coppa-scout-bridge": "npx tsx src/lib/legal/coppa-scout-consent-bridge.test.mjs",
-    "test:roster-import": "npx tsx src/lib/roster/gamesheet-roster-service.test.mjs"
+    "test:roster-import": "npx tsx src/lib/roster/gamesheet-roster-service.test.mjs",
+    "test:club-rev-share": "npx tsx src/lib/billing/club-rev-share.test.mjs",
+    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
