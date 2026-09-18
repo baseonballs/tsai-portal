@@ -377,6 +377,196 @@ export default function PricingPage() {
 
             </div>
 
+            {/* TRANSCEND VISION COMMERCIAL & 50% CLUB REV-SHARE SECTION */}
+            <div className="mb-12 border-t border-white/10 pt-16">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                  <div className="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 mb-2">
+                    <Sparkles className="w-4 h-4" /> Transcend Vision Commercial Model
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-serif text-white">
+                    BYOD Zero-Capex Capture &amp; 50% Club Rev-Share
+                  </h2>
+                  <p className="text-sm text-zinc-400 mt-1 max-w-2xl font-light">
+                    Transforming sports video economics: Free 4K capture, zero hardware capex, and 50% of every family subscription paid back directly to your youth club travel fund.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Link
+                    href="/byod-setup"
+                    className="px-4 py-2 rounded-xl border border-white/10 hover:border-white/25 bg-white/5 text-xs font-mono font-semibold text-white transition-all flex items-center gap-1.5"
+                  >
+                    BYOD Setup Wizard <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <Link
+                    href="/club-revshare"
+                    className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-xs font-mono font-bold text-zinc-950 transition-all flex items-center gap-1.5"
+                  >
+                    Rev-Share Calculator <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+                {/* TIER A: FREE BYOD VISION POD */}
+                <div className="group relative rounded-3xl border border-white/10 bg-zinc-900/30 p-8 backdrop-blur-md flex flex-col justify-between hover:border-white/20 transition-all">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+                        Veo Killer · Free
+                      </span>
+                      <Camera className="w-5 h-5 text-emerald-400" />
+                    </div>
+
+                    <h3 className="font-serif text-2xl text-white font-medium">Vision Core BYOD</h3>
+                    <p className="mt-2 text-xs text-zinc-400 font-light leading-relaxed">
+                      Zero hardware purchase. Mount your iPhone or iPad on arena glass for autonomous 4K broadcast &amp; tracking.
+                    </p>
+
+                    <div className="mt-6 mb-8 flex items-baseline gap-2">
+                      <span className="text-4xl font-serif font-bold text-white">$0</span>
+                      <span className="text-xs text-zinc-400 font-mono">/ free forever</span>
+                    </div>
+
+                    <ul className="space-y-3.5 text-xs text-zinc-300 border-t border-white/10 pt-6 font-mono">
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>Autonomous VisionEdge™ skater &amp; puck tracking</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>Sub-180ms local WebRTC mesh to BenchHub</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>Free 4K YouTube Live streaming egress</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>Zero-wait fragmented MP4 local clip export</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-white/10">
+                    <Link
+                      href="/byod-setup"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 py-3 text-xs font-semibold text-white flex items-center justify-center gap-2 transition-all font-mono"
+                    >
+                      <span>Start BYOD Rig Wizard</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* TIER B: PRO FAMILY PASS (50% REV-SHARE HERO) */}
+                <div className="group relative rounded-3xl border border-cyan-500/50 bg-gradient-to-b from-cyan-950/30 via-zinc-900/50 to-zinc-950 p-8 backdrop-blur-md flex flex-col justify-between shadow-[0_0_40px_rgba(6,182,212,0.15)] hover:border-cyan-400 transition-all">
+                  <div className="absolute -top-3 left-8 bg-gradient-to-r from-cyan-500 to-indigo-600 px-3.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-white uppercase tracking-wider shadow-md">
+                    50% Club Rev-Share
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-4 mt-1">
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">
+                        Family Pass
+                      </span>
+                      <Sparkles className="w-5 h-5 text-cyan-400" />
+                    </div>
+
+                    <h3 className="font-serif text-2xl text-white font-medium">Transcend Pro Family</h3>
+                    <p className="mt-2 text-xs text-zinc-300 font-light leading-relaxed">
+                      For parents &amp; relatives. 50% ($4.99/mo or $39.50/yr) goes directly into your youth team&apos;s fundraising wallet.
+                    </p>
+
+                    <div className="mt-6 mb-8 flex items-baseline gap-2">
+                      <span className="text-4xl font-serif font-bold text-white">$9.99</span>
+                      <span className="text-xs text-zinc-400 font-mono">/ mo or $79 / yr</span>
+                    </div>
+
+                    <ul className="space-y-3.5 text-xs text-zinc-200 border-t border-white/10 pt-6">
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                        <span><strong className="text-cyan-300">50% Net Revenue Share</strong> deposited to your club</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                        <span>Global 4K/1080p LL-HLS live stream on iOS, Apple TV, Web</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                        <span>Autonomous PTZ broadcast with live scorebug &amp; clock</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                        <span>Personal shift playlists &amp; highlight reels in Film Room</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-white/10">
+                    <Link
+                      href="/club-revshare"
+                      className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:opacity-95 py-3 text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/40 transition-all font-mono"
+                    >
+                      <span>Calculate Team Payout</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* TIER C: SCOUT & RECRUITER PASS */}
+                <div className="group relative rounded-3xl border border-white/10 bg-zinc-900/30 p-8 backdrop-blur-md flex flex-col justify-between hover:border-white/20 transition-all">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-fuchsia-400 bg-fuchsia-500/10 px-3 py-1 rounded-full border border-fuchsia-500/30">
+                        NCAA / Junior Scout
+                      </span>
+                      <ShieldCheck className="w-5 h-5 text-fuchsia-400" />
+                    </div>
+
+                    <h3 className="font-serif text-2xl text-white font-medium">Scout Intelligence</h3>
+                    <p className="mt-2 text-xs text-zinc-400 font-light leading-relaxed">
+                      For NCAA college coaches, USHL/CHL scouts, and prep recruiters evaluating verified game film.
+                    </p>
+
+                    <div className="mt-6 mb-8 flex items-baseline gap-2">
+                      <span className="text-4xl font-serif font-bold text-white">$29.99</span>
+                      <span className="text-xs text-zinc-400 font-mono">/ mo or $249 / yr</span>
+                    </div>
+
+                    <ul className="space-y-3.5 text-xs text-zinc-300 border-t border-white/10 pt-6 font-mono">
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                        <span>Full access to verified game film across all clubs</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                        <span>Filter by verified top speed (&gt;22 mph) &amp; ShotIQ</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                        <span>Secure Enclave cryptographically signed certificates</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                        <span>Integration with Spotlight prospect watchlists</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-white/10">
+                    <button
+                      disabled
+                      className="w-full rounded-xl border border-white/10 bg-zinc-900/50 py-3 text-xs font-semibold text-zinc-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2 font-mono"
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Scout Verification Required</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* SECTION 2: TEAM & ASSOCIATION PLANS */}
             <div className="mb-12 border-t border-white/10 pt-16">
               <h2 className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400 mb-2">Team &amp; Association Plans</h2>
