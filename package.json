@@ -17,7 +17,8 @@
     "test:coppa-scout-bridge": "npx tsx src/lib/legal/coppa-scout-consent-bridge.test.mjs",
     "test:roster-import": "npx tsx src/lib/roster/gamesheet-roster-service.test.mjs",
     "test:club-rev-share": "npx tsx src/lib/billing/club-rev-share.test.mjs",
-    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share"
+    "test:multi-sheet-director": "npx tsx scripts/test-multi-sheet-command-center.ts",
+    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
