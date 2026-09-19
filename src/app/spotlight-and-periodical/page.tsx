@@ -16,26 +16,26 @@ export default function SpotlightAndPeriodicalPage() {
       <main className="flex flex-col pt-24">
         {/* HERO */}
         <section className="relative px-6 py-24 sm:py-32 lg:px-8 border-b border-white/10 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/30 via-zinc-950/80 to-zinc-950 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-cyan-950/30 via-zinc-950/80 to-zinc-950 pointer-events-none" />
           <div className="mx-auto max-w-4xl text-center relative z-10">
             <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-cyan-500/35 bg-black/90 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-widest backdrop-blur-xl shadow-xl shadow-cyan-500/15 mb-10 sm:mb-12 hover:border-cyan-400/60 transition-all font-mono">
               <Layers className="h-4 w-4 text-cyan-400 shrink-0" />
               <span className="text-cyan-400 font-bold">SYNERGY</span>
               <span className="text-zinc-600 font-normal">·</span>
-              <span className="text-zinc-200 font-medium">CONNECTING VIDEO INTELLIGENCE &amp; ATHLETE REFLECTION</span>
+              <span className="text-zinc-200 font-medium">CONNECTING VIDEO INTELLIGENCE AND ATHLETE REFLECTION</span>
             </div>
             <h1 className="text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Spotlight sees the game.</span><br />
-              Periodical hears <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400">the player.</span>
+              Periodical hears <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">the player.</span>
             </h1>
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto font-light">
               One engine watches every shift with AI precision. The other captures the goals, the journals, and the voices — player, coach, mentor, parent — that turn what the film <em className="text-white">found</em> into who the athlete <em className="text-white">becomes</em>.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="#beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
+              <a href="#beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
                 Join the Teams Beta Program
               </a>
-              <a href="#sequel" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-indigo-300 flex items-center justify-center gap-1.5 py-4 px-6 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all">
+              <a href="#sequel" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-cyan-300 flex items-center justify-center gap-1.5 py-4 px-6 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all">
                 See the 3-Week Journey <ArrowRight className="w-4 h-4" />
               </a>
             </div>
@@ -46,11 +46,11 @@ export default function SpotlightAndPeriodicalPage() {
         </section>
 
         {/* ABSTRACTION: THE LOOP CONNECTS THE DOTS */}
-        <section className="px-6 py-20 lg:px-8 border-b border-white/5 bg-gradient-to-r from-cyan-950/30 via-indigo-950/30 to-fuchsia-950/30 backdrop-blur-md">
+        <section className="px-6 py-20 lg:px-8 border-b border-white/5 bg-gradient-to-r from-cyan-950/30 via-teal-950/30 to-zinc-950/50 backdrop-blur-md">
           <div className="mx-auto max-w-6xl text-center">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase mb-3 block">The Core Synergy</span>
             <h2 className="text-3xl sm:text-5xl font-serif text-white mb-6">
-              The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">Connects the Dots</span>
+              The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">Connects the Dots</span>
             </h2>
             <p className="text-xl font-serif italic text-zinc-200 max-w-3xl mx-auto mb-10">
               &quot;The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots.&quot;
@@ -64,7 +64,7 @@ export default function SpotlightAndPeriodicalPage() {
         <section className="px-6 py-24 lg:px-8 bg-zinc-950 relative">
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <span className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400 uppercase">The Dual-Engine Ecosystem</span>
+              <span className="text-xs font-semibold tracking-[0.2em] text-teal-400 uppercase">The Dual-Engine Ecosystem</span>
               <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">Two engines.<br />One development loop.</h2>
             </div>
 
@@ -72,36 +72,36 @@ export default function SpotlightAndPeriodicalPage() {
               {/* Spotlight Engine */}
               <div className="rounded-2xl border border-cyan-500/30 bg-black/50 p-8 hover:border-cyan-500/50 transition-colors shadow-2xl">
                 <div className="text-[10px] font-semibold tracking-widest text-cyan-400 uppercase mb-4 font-mono">Engine 01 · The Intelligence</div>
-                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-400 mb-4">Spotlight</h3>
+                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-300 to-amber-400 mb-4">Spotlight</h3>
                 <p className="text-zinc-300 text-lg mb-6 border-b border-white/10 pb-6 font-light">Sees the game with AI precision and proves what happened.</p>
                 <ul className="space-y-3 text-sm text-zinc-300">
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Captive AI natural-language discovery</li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-cyan-400" /> 
-                    <span>4-tier Hockey Taxonomy (<span className="text-cyan-400 font-medium">Nano</span>, <span className="text-indigo-400 font-medium">Micro</span>, <span className="text-amber-400 font-medium">Meso</span>, <span className="text-emerald-400 font-medium">Macro</span>)</span>
+                    <span>4-tier Hockey Taxonomy (<span className="text-cyan-400 font-medium">Nano</span>, <span className="text-sky-400 font-medium">Micro</span>, <span className="text-amber-400 font-medium">Meso</span>, <span className="text-emerald-400 font-medium">Macro</span>)</span>
                   </li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Cut Room Workbench &amp; Superpower Rail</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Dual-playback split-screen &amp; locked micro-loops</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Cut Room Workbench and Superpower Rail</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Dual-playback split-screen and locked micro-loops</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-cyan-400" /> Telemetry Board (dwell time, loop counts)</li>
                 </ul>
               </div>
 
               {/* Periodical Engine */}
-              <div className="bg-black/50 border border-indigo-500/30 rounded-2xl p-8 hover:border-indigo-500/50 transition-colors shadow-2xl">
-                <span className="text-xs font-mono font-bold text-indigo-400 uppercase block mb-2">Periodical Engine</span>
-                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-300 mb-4">Periodical</h3>
+              <div className="bg-black/50 border border-teal-500/30 rounded-2xl p-8 hover:border-teal-500/50 transition-colors shadow-2xl">
+                <span className="text-xs font-mono font-bold text-teal-400 uppercase block mb-2">Periodical Engine</span>
+                <h3 className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-300 to-amber-300 mb-4">Periodical</h3>
                 <p className="text-zinc-300 text-lg mb-6 border-b border-white/10 pb-6 font-light">Hears the player and turns reflection into a shared plan.</p>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3">
-                    <Target className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-400 text-sm"><strong className="text-white">Personal Plans &amp; Goals</strong> — objectives the player sets, shaped with coaches, trainers, parents, and scouts.</p>
+                    <Target className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
+                    <p className="text-zinc-400 text-sm"><strong className="text-white">Personal Plans and Goals</strong> — objectives the player sets, shaped with coaches, trainers, parents, and scouts.</p>
                   </li>
                   <li className="flex items-start gap-3">
-                    <FileText className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-400 text-sm"><strong className="text-white">Player Journaling &amp; Read-back</strong> — daily prompts that turn every shift into a coach-reviewed rep.</p>
+                    <FileText className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
+                    <p className="text-zinc-400 text-sm"><strong className="text-white">Player Journaling and Read-back</strong> — daily prompts that turn every shift into a coach-reviewed rep.</p>
                   </li>
                   <li className="flex items-start gap-3">
-                    <Repeat className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+                    <Repeat className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
                     <p className="text-zinc-400 text-sm"><strong className="text-white">Multi-Voice Feedback Loops</strong> — continuous dialogue between player, coach, trainer, parent, and scout.</p>
                   </li>
                 </ul>
@@ -112,8 +112,8 @@ export default function SpotlightAndPeriodicalPage() {
             <TranscendEngineSubstrate />
 
             {/* TOGETHER: THE FLYWHEEL */}
-            <div className="mt-12 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-fuchsia-950/40 border border-white/10 p-8 text-center max-w-3xl mx-auto shadow-xl">
-              <div className="text-xs font-semibold tracking-widest text-fuchsia-400 uppercase mb-3 font-mono">Together: The Flywheel</div>
+            <div className="mt-12 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-teal-950/40 to-emerald-950/40 border border-white/10 p-8 text-center max-w-3xl mx-auto shadow-xl">
+              <div className="text-xs font-semibold tracking-widest text-teal-400 uppercase mb-3 font-mono">Together: The Flywheel</div>
               <p className="text-lg text-zinc-200 leading-relaxed">
                 Spotlight&apos;s telemetry tells Periodical what the player <em className="text-white">did</em>. Periodical&apos;s journals tell Spotlight what the player <em className="text-white">thought</em>. The AI reads both — and surfaces insights neither could produce alone.
               </p>
@@ -152,7 +152,7 @@ export default function SpotlightAndPeriodicalPage() {
               <div className="flex flex-col md:flex-row gap-8 bg-black/40 p-8 rounded-2xl border border-white/5">
                 <div className="md:w-1/4">
                   <div className="text-2xl font-serif text-white">Act II</div>
-                  <div className="text-xs font-mono text-indigo-400">The Synthesis</div>
+                  <div className="text-xs font-mono text-teal-400">The Synthesis</div>
                 </div>
                 <div className="md:w-3/4 text-sm text-zinc-300 leading-relaxed space-y-3">
                   <h4 className="text-lg font-serif text-white">The AI reads between the lines.</h4>
@@ -187,7 +187,7 @@ export default function SpotlightAndPeriodicalPage() {
           <div className="mx-auto max-w-3xl">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase font-mono">Teams Beta Program</span>
             <h2 className="mt-6 text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
-              Connect the dots on <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">player development.</span>
+              Connect the dots on <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400">player development.</span>
             </h2>
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto">
               Get the complete ecosystem — Spotlight&apos;s intelligence and Periodical&apos;s bridge — live on your team&apos;s roster for the season.

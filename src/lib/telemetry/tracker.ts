@@ -28,7 +28,7 @@ export type TelemetryPayload = {
   event_category?: "landing" | "solutions" | "pricing" | "onboarding" | "workbench" | "analytics";
   page_path?: string;
   session_duration_sec?: number;
-  event_properties?: Record<string, any>;
+  event_properties?: Record<string, unknown>;
   lead_id?: string;
   user_id?: string;
 };

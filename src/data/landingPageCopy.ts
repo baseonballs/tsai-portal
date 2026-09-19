@@ -37,7 +37,7 @@ export interface LockerRoomStall {
   title: string;
   persona: string;
   badge: string;
-  hue: "cyan" | "amber" | "emerald" | "violet";
+  hue: "cyan" | "amber" | "emerald" | "sky";
   icon: string;
   focus: string;
   quote: string;
@@ -62,7 +62,7 @@ export const landingPageCopy = {
       {
         id: "athlete" as const,
         role: "Athlete Stall",
-        title: "Micro-Loops & Daily Reflections",
+        title: "Micro-Loops and Daily Reflections",
         persona: "Skater",
         badge: "Periodical Journal",
         hue: "cyan" as const,
@@ -78,7 +78,7 @@ export const landingPageCopy = {
       {
         id: "coach" as const,
         role: "Coach Workbench",
-        title: "Tactical Curation & Whiteboards",
+        title: "Tactical Curation and Whiteboards",
         persona: "Head Coach",
         badge: "Encore Studio",
         hue: "amber" as const,
@@ -94,9 +94,9 @@ export const landingPageCopy = {
       {
         id: "scout" as const,
         role: "Scout Observatory",
-        title: "Possession & Threat Topology",
+        title: "Possession and Threat Topology",
         persona: "Evaluator",
-        badge: "EdgeIQ & Tempest",
+        badge: "EdgeIQ and Tempest",
         hue: "emerald" as const,
         icon: "BarChart2",
         focus: "Possession flow lines, threat mapping, and developmental delta tracking",
@@ -110,10 +110,10 @@ export const landingPageCopy = {
       {
         id: "trainer" as const,
         role: "Skill Scientist",
-        title: "Kinetic Surfaces & Skill Arcs",
+        title: "Kinetic Surfaces and Skill Arcs",
         persona: "Development Lead",
         badge: "Stratus Lab",
-        hue: "violet" as const,
+        hue: "sky" as const,
         icon: "Zap",
         focus: "Micro-skill sequencing, 3D rink twins, and season-long development blueprints",
         quote: '"Sequences what we drill this week, how we know it stuck, and what unlocks next."',

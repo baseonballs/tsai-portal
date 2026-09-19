@@ -13,7 +13,7 @@ export function MobileLanding() {
       {/* Background glow effects tailored for mobile */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-5%] left-[-10%] w-[80%] h-[40%] rounded-full bg-cyan-900/20 blur-[100px]" />
-        <div className="absolute bottom-[-5%] right-[-10%] w-[80%] h-[40%] rounded-full bg-indigo-900/20 blur-[100px]" />
+        <div className="absolute bottom-[-5%] right-[-10%] w-[80%] h-[40%] rounded-full bg-sky-900/20 blur-[100px]" />
       </div>
 
       <LandingHeader />
@@ -31,11 +31,11 @@ export function MobileLanding() {
           {/* Headline */}
           <h1 className="text-4xl font-serif tracking-tight text-white mb-4 leading-[1.18]">
             Where{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-400 font-medium">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-300 to-amber-400 font-medium">
               video intelligence
             </span>{" "}
             meets<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-300 font-medium">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-300 to-amber-300 font-medium">
               player reflection
             </span>
             <span className="text-white">.</span>
@@ -82,13 +82,13 @@ export function MobileLanding() {
             </div>
 
             <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
-              <div className="text-xl font-serif font-bold text-indigo-400">The Loop</div>
+              <div className="text-xl font-serif font-bold text-sky-400">The Loop</div>
               <div className="text-[10px] text-zinc-400 mt-0.5 leading-tight">Continuous Feedback</div>
             </div>
 
             <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
               <div className="text-xl font-serif font-bold text-amber-400">7 Voices</div>
-              <div className="text-[10px] text-zinc-400 mt-0.5 leading-tight">Player, Coach, Trainer, Mentor, Nutritionist, Parent &amp; Scout</div>
+              <div className="text-[10px] text-zinc-400 mt-0.5 leading-tight">Player, Coach, Trainer, Mentor, Nutritionist, Parent and Scout</div>
             </div>
           </div>
         </section>
@@ -114,7 +114,7 @@ export function MobileLanding() {
         <section className="px-5 py-12 border-b border-white/10 bg-zinc-950">
           <span className="text-[10px] font-semibold tracking-[0.2em] text-cyan-400 uppercase mb-2 block text-center">Product Value</span>
           <h2 className="text-2xl font-serif text-white text-center mb-4">
-            The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">Connecting the Dots</span>
+            The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-amber-400">Connecting the Dots</span>
           </h2>
           <blockquote className="text-sm font-serif italic text-zinc-300 text-center mb-6 leading-relaxed">
             &quot;The goal lived in the journal. The proof lived in the film. They never met — until now.&quot;
@@ -131,13 +131,13 @@ export function MobileLanding() {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-black/60 border border-indigo-500/20">
+            <div className="p-4 rounded-xl bg-black/60 border border-sky-500/20">
               <div className="flex items-center gap-2 mb-2">
-                <BookOpen className="w-4 h-4 text-indigo-400" />
+                <BookOpen className="w-4 h-4 text-sky-400" />
                 <h3 className="text-sm font-bold text-white">Periodical Journal</h3>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Daily voice & text player reflections, weekly agendas, and multi-voice accountability.
+                Daily voice and text player reflections, weekly agendas, and multi-voice accountability.
               </p>
             </div>
           </div>

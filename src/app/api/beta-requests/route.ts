@@ -81,8 +81,9 @@ export async function POST(req: NextRequest) {
     console.log("[BetaRequestsAPI] Full res:", res);
 
     if (res.error) {
+      const errMsg = (res.error as { message?: string })?.message || "Failed to submit beta request. Please try again later.";
       return NextResponse.json(
-        { error: (res.error as any).message || "Failed to submit beta request. Please try again later." },
+        { error: errMsg },
         { status: 500 }
       );
     }

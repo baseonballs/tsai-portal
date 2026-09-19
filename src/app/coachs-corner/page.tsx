@@ -34,108 +34,11 @@ import {
   Volume2
 } from "lucide-react";
 
+import { SUPERPOWERS, type SuperpowerId } from "@/data/superpowers";
+
 export default function CoachsCornerPage() {
-  const [activeSuperpower, setActiveSuperpower] = useState<"Explode" | "OwnPuck" | "Threat" | "QuickFeet" | "ReadPlay" | "WinBattle" | "WallMaster" | "DotDominance">("Threat");
-
-  const superpowers = [
-    {
-      id: "Explode" as const,
-      name: "Explode",
-      hue: "amber",
-      border: "border-amber-500/40",
-      bg: "bg-amber-500/10",
-      text: "text-amber-400",
-      badgeBg: "bg-amber-500/20",
-      glow: "shadow-[0_0_25px_rgba(245,158,11,0.15)]",
-      cue: '"First three steps. Explode and go."',
-      tag: "rExplode",
-    },
-    {
-      id: "OwnPuck" as const,
-      name: "Own the Puck",
-      hue: "cyan",
-      border: "border-cyan-500/40",
-      bg: "bg-cyan-500/10",
-      text: "text-cyan-400",
-      badgeBg: "bg-cyan-500/20",
-      glow: "shadow-[0_0_25px_rgba(6,182,212,0.15)]",
-      cue: '"Hold it a beat. Make them come."',
-      tag: "rOwnPuck",
-    },
-    {
-      id: "Threat" as const,
-      name: "Be a Threat",
-      hue: "fuchsia",
-      border: "border-fuchsia-500/40",
-      bg: "bg-fuchsia-500/10",
-      text: "text-fuchsia-400",
-      badgeBg: "bg-fuchsia-500/20",
-      glow: "shadow-[0_0_25px_rgba(217,70,239,0.2)]",
-      cue: '"Shoot first, look second."',
-      tag: "rThreat",
-    },
-    {
-      id: "QuickFeet" as const,
-      name: "Quick Feet",
-      hue: "emerald",
-      border: "border-emerald-500/40",
-      bg: "bg-emerald-500/10",
-      text: "text-emerald-400",
-      badgeBg: "bg-emerald-500/20",
-      glow: "shadow-[0_0_25px_rgba(16,185,129,0.15)]",
-      cue: '"Light feet. Strong edges."',
-      tag: "rQuickFeet",
-    },
-    {
-      id: "ReadPlay" as const,
-      name: "Read the Play",
-      hue: "indigo",
-      border: "border-indigo-500/40",
-      bg: "bg-indigo-500/10",
-      text: "text-indigo-400",
-      badgeBg: "bg-indigo-500/20",
-      glow: "shadow-[0_0_25px_rgba(99,102,241,0.15)]",
-      cue: '"See two passes ahead."',
-      tag: "rReadPlay",
-    },
-    {
-      id: "WinBattle" as const,
-      name: "Win the Battle",
-      hue: "rose",
-      border: "border-rose-500/40",
-      bg: "bg-rose-500/10",
-      text: "text-rose-400",
-      badgeBg: "bg-rose-500/20",
-      glow: "shadow-[0_0_25px_rgba(244,63,94,0.15)]",
-      cue: '"Low leverage. Heavy stick."',
-      tag: "rWinBattle",
-    },
-    {
-      id: "WallMaster" as const,
-      name: "Hard Along Walls",
-      hue: "violet",
-      border: "border-violet-500/40",
-      bg: "bg-violet-500/10",
-      text: "text-violet-400",
-      badgeBg: "bg-violet-500/20",
-      glow: "shadow-[0_0_25px_rgba(139,92,246,0.15)]",
-      cue: '"Clean wall chips. Seal boards."',
-      tag: "rWallMaster",
-    },
-    {
-      id: "DotDominance" as const,
-      name: "Dot Dominance",
-      hue: "sky",
-      border: "border-sky-500/40",
-      bg: "bg-sky-500/10",
-      text: "text-sky-400",
-      badgeBg: "bg-sky-500/20",
-      glow: "shadow-[0_0_25px_rgba(14,165,233,0.15)]",
-      cue: '"Own the dot. Set the tempo."',
-      tag: "rDotDominance",
-    },
-  ];
-
+  const [activeSuperpower, setActiveSuperpower] = useState<SuperpowerId>("Threat");
+  const superpowers = SUPERPOWERS;
   const activeSP = superpowers.find(s => s.id === activeSuperpower)!;
 
   return (
@@ -157,7 +60,7 @@ export default function CoachsCornerPage() {
             
             <h1 className="text-5xl font-serif tracking-tight text-white sm:text-7xl leading-[1.1]">
               Your clipboard<br />
-              just learned <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">hockey.</span>
+              just learned <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400">hockey.</span>
             </h1>
 
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto font-light">
@@ -165,7 +68,7 @@ export default function CoachsCornerPage() {
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="#beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
+              <a href="#beta" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
                 Join the Teams Beta Program
               </a>
               <a href="/locker-room" className="w-full sm:w-auto text-sm font-semibold leading-6 text-white hover:text-cyan-300 flex items-center justify-center gap-1.5 py-4 px-6 rounded-full border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 backdrop-blur-sm transition-all">
@@ -209,11 +112,11 @@ export default function CoachsCornerPage() {
         </section>
 
         {/* ABSTRACTION BANNER: THE LOOP CONNECTS THE DOTS */}
-        <section id="loop" className="px-6 py-20 lg:px-8 border-y border-white/10 bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-amber-950/30 relative backdrop-blur-md">
+        <section id="loop" className="px-6 py-20 lg:px-8 border-y border-white/10 bg-gradient-to-r from-cyan-950/40 via-teal-950/40 to-amber-950/30 relative backdrop-blur-md">
           <div className="mx-auto max-w-6xl text-center">
             <span className="text-xs font-semibold tracking-[0.25em] text-cyan-400 uppercase mb-4 block">The Central Abstraction</span>
             <h2 className="text-4xl sm:text-6xl font-serif text-white mb-6">
-              The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">Connects the Dots</span>
+              The Loop — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400">Connects the Dots</span>
             </h2>
             <blockquote className="text-xl sm:text-2xl font-serif italic text-zinc-200 max-w-4xl mx-auto mb-12">
               &quot;The goal lived in the journal. The proof lived in the film. They never met — until now. The Loop connects the dots.&quot;
@@ -227,7 +130,7 @@ export default function CoachsCornerPage() {
         <section className="px-6 py-24 lg:px-8 bg-zinc-950 border-b border-white/5">
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <span className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400 uppercase">The Cut Room Console</span>
+              <span className="text-xs font-semibold tracking-[0.2em] text-rose-400 uppercase">The Cut Room Console</span>
               <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">8 Superpowers. One Rising Line.</h2>
               <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
                 Select a superpower on the Cut Room rail. The console washes in its hue, filters your moments, and binds the cut directly to the athlete&apos;s personal goal.
@@ -277,7 +180,7 @@ export default function CoachsCornerPage() {
                   <div className="bg-zinc-900/70 p-5 rounded-xl border border-white/5">
                     <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">Bound Player Goal (from Periodical Plan)</span>
                     <p className="text-lg font-serif text-white italic">&quot;Shoot first, look second. Drive the slot.&quot;</p>
-                    <span className="mt-3 inline-flex items-center gap-1.5 text-[10px] uppercase font-bold text-fuchsia-400 bg-fuchsia-500/10 border border-fuchsia-500/20 px-2.5 py-0.5 rounded-full">
+                    <span className="mt-3 inline-flex items-center gap-1.5 text-[10px] uppercase font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
                       <Check className="w-3 h-3" /> She-Asked-For-This Badge
                     </span>
                   </div>
@@ -311,9 +214,9 @@ export default function CoachsCornerPage() {
                   </div>
 
                   <div className="mt-6 flex items-center justify-between gap-4 pt-4 border-t border-white/5">
-                    <span className="text-xs text-zinc-400">One tap bind & send to Periodical</span>
+                    <span className="text-xs text-zinc-400">One tap bind and send to Periodical</span>
                     <button className={`px-6 py-2.5 rounded-lg font-semibold text-xs text-white ${activeSP.badgeBg} border ${activeSP.border} hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer`}>
-                      <Send className="w-3.5 h-3.5" /> Bind & Send Drop
+                      <Send className="w-3.5 h-3.5" /> Bind and Send Drop
                     </button>
                   </div>
                 </div>
@@ -326,7 +229,7 @@ export default function CoachsCornerPage() {
         <section className="px-6 py-24 lg:px-8 bg-zinc-900/50 border-t border-white/5 relative overflow-hidden">
           <div className="mx-auto max-w-5xl relative z-10">
             <div className="text-center mb-20">
-              <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">One Week · One Bench · The Full Loop</span>
+              <span className="text-xs font-semibold tracking-[0.2em] text-sky-400 uppercase">One Week · One Bench · The Full Loop</span>
               <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">Four moments that change<br />how your team learns.</h2>
               <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
                 Same games. Same roster. Same Thursday practice. Watch what happens when the Cut Room connects the dots to Periodical.
@@ -367,22 +270,22 @@ export default function CoachsCornerPage() {
 
               {/* ACT 2 */}
               <div className="flex flex-col md:flex-row gap-12 group">
-                <div className="md:w-1/4 flex flex-col pt-2 border-t-2 border-indigo-500 md:border-t-0 md:border-l-2 md:pl-6 opacity-70 group-hover:opacity-100 transition-opacity">
+                <div className="md:w-1/4 flex flex-col pt-2 border-t-2 border-sky-500 md:border-t-0 md:border-l-2 md:pl-6 opacity-70 group-hover:opacity-100 transition-opacity">
                   <div className="text-3xl font-serif text-white mb-1">Mon</div>
-                  <div className="font-mono text-indigo-400 tracking-wider">7:14 PM</div>
+                  <div className="font-mono text-sky-400 tracking-wider">7:14 PM</div>
                   <div className="mt-4 text-sm text-zinc-500 uppercase tracking-widest font-semibold">Act II<br />The drop</div>
                 </div>
                 <div className="md:w-3/4">
-                  <h3 className="text-2xl font-serif text-white mb-6"><span className="text-indigo-500/50 mr-2">02 /</span> Send it. The Drop lands inside her day.</h3>
+                  <h3 className="text-2xl font-serif text-white mb-6"><span className="text-sky-500/50 mr-2">02 /</span> Send it. The Drop lands inside her day.</h3>
                   <p className="text-zinc-400 mb-8 leading-relaxed">
-                    One tap. The cut arrives in Corinne&apos;s Periodical Film Room as a <strong className="text-fuchsia-400 font-medium">fuchsia cinematic tile</strong> — not a text link to ignore, but a piece of film addressed to her by name and tied to her goal.
+                    One tap. The cut arrives in Corinne&apos;s Periodical Film Room as a <strong className="text-rose-400 font-medium">rose cinematic tile</strong> — not a text link to ignore, but a piece of film addressed to her by name and tied to her goal.
                   </p>
                   
                   {/* UI Mock */}
-                  <div className="rounded-xl border border-fuchsia-500/30 bg-black/40 backdrop-blur-md p-6 shadow-2xl mb-8 transform transition-transform hover:-translate-y-1">
+                  <div className="rounded-xl border border-rose-500/30 bg-black/40 backdrop-blur-md p-6 shadow-2xl mb-8 transform transition-transform hover:-translate-y-1">
                     <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-3 border-b border-white/5">
                       <span className="text-sm font-semibold text-white">Film Room Drop · #26 Corinne L.</span>
-                      <span className="rounded-full bg-fuchsia-500/20 text-fuchsia-300 text-xs px-3 py-1 font-mono font-bold">Be a Threat</span>
+                      <span className="rounded-full bg-rose-500/20 text-rose-300 text-xs px-3 py-1 font-mono font-bold">Be a Threat</span>
                     </div>
                     <div className="bg-zinc-900/60 p-4 rounded-lg border border-white/5 text-zinc-300 font-serif italic mb-4">
                       &quot;New Drop from Coach Dave: &apos;Watch for this — you&apos;re a shooter. The shot&apos;s there a full beat before the pass is. Trust it.&apos;&quot;
@@ -475,7 +378,7 @@ export default function CoachsCornerPage() {
                 <p className="text-sm text-zinc-500 leading-relaxed">Natural-language discovery across <strong className="text-zinc-300">your full game library</strong> plus pro master references. The scrub bar is retired.</p>
               </div>
               <div className="rounded-2xl border border-white/5 bg-zinc-900/30 p-8 text-center hover:bg-zinc-900/50 transition-colors">
-                <div className="text-6xl font-serif text-white mb-2">14<span className="text-3xl text-indigo-500">×</span></div>
+                <div className="text-6xl font-serif text-white mb-2">14<span className="text-3xl text-sky-500">×</span></div>
                 <div className="text-sm font-semibold tracking-wider uppercase text-zinc-300 mb-4">Loops on one window</div>
                 <p className="text-sm text-zinc-500 leading-relaxed">Per-player telemetry shows <strong className="text-zinc-300">exactly how deep</strong> each athlete went on each mechanic — loop counts, duration, timestamps.</p>
               </div>
@@ -493,7 +396,7 @@ export default function CoachsCornerPage() {
         <section className="px-6 py-24 lg:px-8 bg-zinc-900/50 border-t border-white/5">
           <div className="mx-auto max-w-5xl">
             <div className="text-center mb-16">
-              <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase">Under the hood · Hockey Taxonomy</span>
+              <span className="text-xs font-semibold tracking-[0.2em] text-sky-400 uppercase">Under the hood · Hockey Taxonomy</span>
               <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">It speaks hockey.<br />Not just &quot;video.&quot;</h2>
               <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
                 Generic AI sees pixels. Spotlight&apos;s discovery engine maps every clip against a proprietary four-tier Hockey Taxonomy — from physical and spatial vectors (<span className="text-cyan-400 font-medium">Nano</span>) up to <span className="text-emerald-400 font-medium">Macro</span> game states.
@@ -506,18 +409,18 @@ export default function CoachsCornerPage() {
                   <h4 className="text-xl font-serif text-cyan-400 font-bold">Nano</h4>
                   <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 0 · Physical</span>
                 </div>
-                <p className="text-sm text-zinc-400">The physics: proximity, vectors, velocity &amp; blade orientation. <em className="text-zinc-300 block mt-2">&quot;Puck proximity 0.18m, 18.4mph velocity vector.&quot;</em></p>
+                <p className="text-sm text-zinc-400">The physics: proximity, vectors, velocity and blade orientation. <em className="text-zinc-300 block mt-2">&quot;Puck proximity 0.18m, 18.4mph velocity vector.&quot;</em></p>
               </div>
-              <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-indigo-500/30 transition-colors group">
+              <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-sky-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
-                  <h4 className="text-xl font-serif text-indigo-400 font-bold">Micro</h4>
+                  <h4 className="text-xl font-serif text-sky-400 font-bold">Micro</h4>
                   <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 1 · Mechanic</span>
                 </div>
                 <p className="text-sm text-zinc-400">The skill: body position, puck placement, timing. <em className="text-zinc-300 block mt-2">&quot;Hips square to the boards, puck on forehand.&quot;</em></p>
               </div>
-              <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-fuchsia-500/30 transition-colors group">
+              <div className="bg-black/20 border border-white/5 rounded-xl p-6 hover:border-amber-500/30 transition-colors group">
                 <div className="flex items-baseline justify-between mb-4">
-                  <h4 className="text-xl font-serif text-fuchsia-400 font-bold">Meso</h4>
+                  <h4 className="text-xl font-serif text-amber-400 font-bold">Meso</h4>
                   <span className="text-[10px] uppercase tracking-widest text-zinc-500">Tier 2 · Tactical</span>
                 </div>
                 <p className="text-sm text-zinc-400">The system: breakouts, entries, cycles, coverage schemes. <em className="text-zinc-300 block mt-2">&quot;Strong-side breakout on a zone exit.&quot;</em></p>
@@ -538,7 +441,7 @@ export default function CoachsCornerPage() {
           <div className="mx-auto max-w-3xl relative z-10">
             <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Teams Beta Program · Now Forming</span>
             <h2 className="mt-6 text-5xl font-serif tracking-tight text-white sm:text-7xl leading-tight">
-              Take the first <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400">shift.</span>
+              Take the first <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400">shift.</span>
             </h2>
             <p className="mt-8 text-xl leading-8 text-zinc-300 max-w-2xl mx-auto">
               The Teams Beta Program is opening to a limited cohort of youth ice hockey coaching staffs and clubs. Founding teams don&apos;t just get early access — they shape what this becomes.

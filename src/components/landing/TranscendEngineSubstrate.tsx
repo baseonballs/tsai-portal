@@ -4,20 +4,14 @@ import React, { useState, useEffect } from "react";
 import { 
   Cpu, 
   Brain, 
-  Layers, 
-  Activity, 
   Sparkles, 
   ShieldCheck, 
   Zap, 
   Database, 
   GitMerge, 
+  Network,
   Terminal,
-  ChevronRight,
-  TrendingUp,
-  ArrowUp,
-  ArrowUpLeft,
-  ArrowUpRight,
-  ChevronUp
+  ArrowUp
 } from "lucide-react";
 
 export function TranscendEngineSubstrate() {
@@ -53,11 +47,11 @@ export function TranscendEngineSubstrate() {
       title: "Semantic Synthesis Ledger",
       subtitle: "Film Proof × Player Intent",
       desc: "Cross-references hard visual telemetry from Spotlight with subjective reflection notes from Periodical. Resolves what happened against why it happened.",
-      accent: "indigo",
-      badgeBg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
-      border: "border-indigo-500/40",
-      glow: "shadow-[0_0_30px_rgba(99,102,241,0.25)]",
-      gradient: "from-indigo-950/60 via-zinc-900/60 to-black/80",
+      accent: "sky",
+      badgeBg: "bg-sky-500/10 text-sky-400 border-sky-500/30",
+      border: "border-sky-500/40",
+      glow: "shadow-[0_0_30px_rgba(14,165,233,0.25)]",
+      gradient: "from-sky-950/60 via-zinc-900/60 to-black/80",
       metrics: ">95% Decision-Grade Alignment",
       icon: GitMerge,
     },
@@ -66,14 +60,14 @@ export function TranscendEngineSubstrate() {
       tag: "ONTOLOGY",
       title: "4-Tier Hockey Taxonomy",
       subtitle: "Nano · Micro · Meso · Macro Context Domain Model",
-      desc: "Proprietary 4-tier domain graph mapping physical & spatial vectors (Nano), individual skater mechanics (Micro), team tactics (Meso), and game states (Macro).",
+      desc: "Proprietary 4-tier domain graph mapping physical and spatial vectors (Nano), individual skater mechanics (Micro), team tactics (Meso), and game states (Macro).",
       accent: "amber",
       badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/30",
       border: "border-amber-500/40",
       glow: "shadow-[0_0_30px_rgba(251,191,36,0.25)]",
       gradient: "from-amber-950/60 via-zinc-900/60 to-black/80",
       metrics: "100% Hockey Native Ontology",
-      icon: Layers,
+      icon: Network,
     },
     {
       id: 3,
@@ -95,9 +89,9 @@ export function TranscendEngineSubstrate() {
   const CurrentIcon = currentPillar.icon;
 
   return (
-    <div className="w-full relative mt-8 pt-8">
-      {/* POWERING APPLICATIONS ARROW BRIDGE & CONDUITS */}
-      <div className="relative h-32 w-full flex items-center justify-between px-6 pointer-events-none mb-3">
+    <div className="w-full max-w-6xl mx-auto my-12 relative text-left">
+      {/* FLOW CONDUITS / PIPELINE CONNECTOR FROM ENGINES TO PLATFORM */}
+      <div className="relative w-full h-16 sm:h-20 mb-[-8px] pointer-events-none z-0">
         {/* Left Arrow Conduit (Pointing up to Spotlight Card) */}
         <div className="hidden sm:flex flex-col items-center absolute left-[25%] -translate-x-1/2 top-0 bottom-0 justify-between py-1">
           <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-cyan-400 bg-cyan-950/90 px-3 py-1 rounded-full border border-cyan-500/50 backdrop-blur-md shadow-lg animate-bounce">
@@ -110,7 +104,7 @@ export function TranscendEngineSubstrate() {
 
         {/* Center Convergence Badge (Positioned at bottom near pedestal) */}
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 px-5 py-2 rounded-full bg-zinc-950/95 border border-white/20 text-xs font-mono flex items-center gap-2.5 shadow-2xl backdrop-blur-xl">
-          <div className="p-1 rounded-full bg-indigo-500/20 border border-indigo-500/40">
+          <div className="p-1 rounded-full bg-sky-500/20 border border-sky-500/40">
             <Zap className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
           </div>
           <span className="text-zinc-200 font-semibold uppercase tracking-wider text-[11px]">
@@ -123,19 +117,19 @@ export function TranscendEngineSubstrate() {
 
         {/* Right Arrow Conduit (Pointing up to Periodical Card) */}
         <div className="hidden sm:flex flex-col items-center absolute right-[25%] translate-x-1/2 top-0 bottom-0 justify-between py-1">
-          <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-fuchsia-400 bg-fuchsia-950/90 px-3 py-1 rounded-full border border-fuchsia-500/50 backdrop-blur-md shadow-lg animate-bounce">
+          <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-amber-400 bg-amber-950/90 px-3 py-1 rounded-full border border-amber-500/50 backdrop-blur-md shadow-lg animate-bounce">
             <span>Powering Periodical</span>
-            <ArrowUp className="w-3.5 h-3.5 text-fuchsia-400" />
+            <ArrowUp className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <div className="w-0.5 flex-1 bg-gradient-to-t from-fuchsia-500/90 via-fuchsia-400/50 to-fuchsia-500/20 my-1 shadow-[0_0_10px_rgba(217,70,239,0.5)]" />
-          <div className="w-3 h-3 rounded-full bg-fuchsia-400 animate-ping" />
+          <div className="w-0.5 flex-1 bg-gradient-to-t from-amber-500/90 via-amber-400/50 to-amber-500/20 my-1 shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+          <div className="w-3 h-3 rounded-full bg-amber-400 animate-ping" />
         </div>
       </div>
 
       {/* TRANSCEND PLATFORM FOUNDATION PEDESTAL */}
       <div className="rounded-3xl border border-white/15 bg-gradient-to-b from-zinc-950 via-zinc-900/90 to-black p-8 md:p-12 shadow-2xl backdrop-blur-2xl relative overflow-hidden text-left">
         {/* Ambient Neon Platform Glow */}
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/20 via-indigo-500/25 to-fuchsia-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/20 via-sky-500/25 to-amber-500/20 rounded-full blur-3xl pointer-events-none" />
 
         {/* PEDESTAL HEADER */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-8 relative z-10">
@@ -145,7 +139,7 @@ export function TranscendEngineSubstrate() {
               <span>THE UNDERLYING PLATFORM FOUNDATION</span>
             </div>
             <h3 className="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight">
-              Transcend <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">AI Core Engine</span>
+              Transcend <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-amber-400">AI Core Engine</span>
             </h3>
             <p className="text-sm md:text-base text-zinc-300 max-w-2xl font-light leading-relaxed">
               Spotlight sees the film. Periodical captures the athlete&apos;s voice. <strong className="text-white font-medium">Transcend is the decision-grade AI engine underneath</strong> — fusing computer vision, semantic synthesis, and hockey domain graphs into one unified intelligence substrate.
@@ -205,7 +199,7 @@ export function TranscendEngineSubstrate() {
                     <p className="text-xs text-zinc-400 line-clamp-1 mt-0.5 font-light">
                       {pillar.id === 2 ? (
                         <span>
-                          <span className="text-cyan-400 font-medium">Nano</span> · <span className="text-indigo-400 font-medium">Micro</span> · <span className="text-fuchsia-400 font-medium">Meso</span> · <span className="text-emerald-400 font-medium">Macro</span> Context Domain Model
+                          <span className="text-cyan-400 font-medium">Nano</span> · <span className="text-sky-400 font-medium">Micro</span> · <span className="text-amber-400 font-medium">Meso</span> · <span className="text-emerald-400 font-medium">Macro</span> Context Domain Model
                         </span>
                       ) : (
                         pillar.subtitle
@@ -238,9 +232,9 @@ export function TranscendEngineSubstrate() {
                     <span className="flex flex-wrap items-center gap-1.5">
                       <span className="text-cyan-400">Nano</span>
                       <span className="text-zinc-500 font-sans">·</span>
-                      <span className="text-indigo-400">Micro</span>
+                      <span className="text-sky-400">Micro</span>
                       <span className="text-zinc-500 font-sans">·</span>
-                      <span className="text-fuchsia-400">Meso</span>
+                      <span className="text-amber-400">Meso</span>
                       <span className="text-zinc-500 font-sans">·</span>
                       <span className="text-emerald-400">Macro</span>
                       <span className="text-white ml-1">Context Domain Model</span>
@@ -252,11 +246,11 @@ export function TranscendEngineSubstrate() {
                 <p className="text-sm text-zinc-300 leading-relaxed font-light">
                   {currentPillar.id === 2 ? (
                     <>
-                      Proprietary 4-tier domain graph mapping physical &amp; spatial vectors (<span className="text-cyan-400 font-medium">Nano</span>), individual skater mechanics (<span className="text-indigo-400 font-medium">Micro</span>), team tactics (<span className="text-fuchsia-400 font-medium">Meso</span>), and game states (<span className="text-emerald-400 font-medium">Macro</span>).
+                      Proprietary 4-tier domain graph mapping physical and spatial vectors (<span className="text-cyan-400 font-medium">Nano</span>), individual skater mechanics (<span className="text-sky-400 font-medium">Micro</span>), team tactics (<span className="text-amber-400 font-medium">Meso</span>), and game states (<span className="text-emerald-400 font-medium">Macro</span>).
                     </>
                   ) : currentPillar.desc.includes("Multi-Agent Sports Cognition Engine") ? (
                     <>
-                      <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">
+                      <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-amber-400">
                         Multi-Agent Sports Cognition Engine
                       </span>
                       {currentPillar.desc.replace("Multi-Agent Sports Cognition Engine", "")}
@@ -285,9 +279,9 @@ export function TranscendEngineSubstrate() {
                         <span className="text-zinc-400">4-Tier Ontology (</span>
                         <span className="text-cyan-400 font-medium">Nano</span>
                         <span className="text-zinc-500">/</span>
-                        <span className="text-indigo-400 font-medium">Micro</span>
+                        <span className="text-sky-400 font-medium">Micro</span>
                         <span className="text-zinc-500">/</span>
-                        <span className="text-fuchsia-400 font-medium">Meso</span>
+                        <span className="text-amber-400 font-medium">Meso</span>
                         <span className="text-zinc-500">/</span>
                         <span className="text-emerald-400 font-medium">Macro</span>
                         <span className="text-zinc-400">)</span>

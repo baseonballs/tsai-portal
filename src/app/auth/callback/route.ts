@@ -3,7 +3,7 @@ import { resolveAuthRedirectPath } from "@/lib/auth/safe-internal-next-path";
 import { required } from "@/utils/require-env";
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/utils/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createClient as createAdminClient, type SupabaseClient } from '@supabase/supabase-js'
 
 function getPublicOrigin(request: Request): string {
   const url = new URL(request.url)
@@ -28,10 +28,10 @@ function getPublicOrigin(request: Request): string {
  * - Shadow profiles and unlicensed users are rejected.
  */
 async function isUserEntitledToPortal(
-  adminClient: any,
+  adminClient: SupabaseClient,
   userId: string,
   userEmail: string,
-  appMetaData: Record<string, any> = {}
+  appMetaData: Record<string, unknown> = {}
 ): Promise<{ isEntitled: boolean; profileId?: string }> {
   // 1. Query profile for user_type, approval_status, and superadmin flag
   const { data: profile } = await adminClient
@@ -57,7 +57,7 @@ async function isUserEntitledToPortal(
     .select('id, product_id, status')
     .eq('user_id', queryUserId)
 
-  const activeLicenses = userLicenses?.filter((l: any) => l.status === 'active') || []
+  const activeLicenses = userLicenses?.filter((l: { status?: string }) => l.status === 'active') || []
   if (activeLicenses.length > 0) {
     return { isEntitled: true, profileId }
   }

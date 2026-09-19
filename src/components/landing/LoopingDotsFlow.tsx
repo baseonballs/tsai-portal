@@ -12,7 +12,7 @@ interface Stage {
   border: string;
   text: string;
   dotColor: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const stages: Stage[] = [
@@ -31,33 +31,33 @@ const stages: Stage[] = [
     num: "02",
     name: "Cut it",
     sub: "Coach Cut",
-    color: "from-indigo-500/20 via-indigo-500/10 to-transparent",
-    glow: "shadow-[0_0_20px_rgba(99,102,241,0.3)]",
-    border: "border-indigo-500/40",
-    text: "text-indigo-400",
-    dotColor: "bg-indigo-400",
+    color: "from-sky-500/20 via-sky-500/10 to-transparent",
+    glow: "shadow-[0_0_20px_rgba(14,165,233,0.3)]",
+    border: "border-sky-500/40",
+    text: "text-sky-400",
+    dotColor: "bg-sky-400",
     icon: Scissors,
   },
   {
     num: "03",
     name: "Send it",
     sub: "Dispatch",
-    color: "from-purple-500/20 via-purple-500/10 to-transparent",
-    glow: "shadow-[0_0_20px_rgba(168,85,247,0.3)]",
-    border: "border-purple-500/40",
-    text: "text-purple-400",
-    dotColor: "bg-purple-400",
+    color: "from-blue-500/20 via-blue-500/10 to-transparent",
+    glow: "shadow-[0_0_20px_rgba(59,130,246,0.3)]",
+    border: "border-blue-500/40",
+    text: "text-blue-400",
+    dotColor: "bg-blue-400",
     icon: Send,
   },
   {
     num: "04",
     name: "The Drop",
     sub: "Mobile Drop",
-    color: "from-fuchsia-500/20 via-fuchsia-500/10 to-transparent",
-    glow: "shadow-[0_0_20px_rgba(217,70,239,0.3)]",
-    border: "border-fuchsia-500/40",
-    text: "text-fuchsia-400",
-    dotColor: "bg-fuchsia-400",
+    color: "from-teal-500/20 via-teal-500/10 to-transparent",
+    glow: "shadow-[0_0_20px_rgba(20,184,166,0.3)]",
+    border: "border-teal-500/40",
+    text: "text-teal-400",
+    dotColor: "bg-teal-400",
     icon: BookmarkCheck,
   },
   {
@@ -74,7 +74,7 @@ const stages: Stage[] = [
   {
     num: "06",
     name: "The Rip",
-    sub: "Level Up",
+    sub: "Superpower Level Up",
     color: "from-amber-500/20 via-amber-500/10 to-transparent",
     glow: "shadow-[0_0_20px_rgba(245,158,11,0.3)]",
     border: "border-amber-500/40",
@@ -98,7 +98,7 @@ export function LoopingDotsFlow() {
   return (
     <div className="w-full max-w-5xl mx-auto my-6 px-4 py-8 rounded-3xl bg-zinc-950/80 border border-white/10 backdrop-blur-2xl relative overflow-hidden shadow-2xl">
       {/* BACKGROUND CONTINUOUS GLOW BEAM */}
-      <div className="absolute inset-0 bg-gradient-to-r from-cyan-950/30 via-purple-950/20 to-amber-950/30 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-950/30 via-sky-950/20 to-amber-950/30 pointer-events-none" />
 
       {/* CONTINUOUS LOOPING TRACK HEADER */}
       <div className="flex items-center justify-between gap-4 mb-10 px-4 font-mono text-xs border-b border-white/10 pb-4 relative z-10">
@@ -112,20 +112,20 @@ export function LoopingDotsFlow() {
           <span className="tracking-wide">Continuous Closed-Loop Cycle</span>
         </div>
 
-        <div className="flex items-center gap-2 text-fuchsia-400">
+        <div className="flex items-center gap-2 text-amber-400">
           <span className="font-bold tracking-wider text-white">PERIODICAL</span>
-          <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
         </div>
       </div>
 
-      {/* STAGE DOTS & FLOW TRACK */}
+      {/* STAGE DOTS AND FLOW TRACK */}
       <div className="relative z-10 px-2 py-4">
         {/* CONNECTING TRACK LINE */}
         <div className="absolute top-[28px] left-8 right-8 h-[2px] bg-white/10 z-0 pointer-events-none" />
         
         {/* TRAVELING PULSE LINE */}
         <div
-          className="absolute top-[28px] h-[2px] bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-400 transition-all duration-700 z-0 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+          className="absolute top-[28px] h-[2px] bg-gradient-to-r from-cyan-400 via-sky-400 to-amber-400 transition-all duration-700 z-0 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
           style={{
             left: `${(activeDot / (stages.length - 1)) * 80 + 5}%`,
             width: "15%",

@@ -15,12 +15,12 @@ export default function TermsOfServicePage() {
       <main className="relative overflow-hidden">
         {/* HERO HEADER */}
         <section className="relative px-6 pt-20 pb-16 lg:px-8 border-b border-white/10 bg-gradient-to-b from-zinc-900/60 via-zinc-950 to-zinc-950">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-fuchsia-500/10 blur-[120px] pointer-events-none" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/10 via-teal-500/10 to-sky-500/10 blur-[120px] pointer-events-none" />
 
           <div className="mx-auto max-w-4xl text-center relative z-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-cyan-400 uppercase font-mono mb-6">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Legal &amp; Governance</span>
+              <span>Legal and Governance</span>
             </div>
 
             <h1 className="text-4xl font-serif font-normal tracking-tight text-white sm:text-6xl mb-6">
@@ -121,7 +121,7 @@ export default function TermsOfServicePage() {
                 <p>
                   You must be at least 18 years old to create an Account. If you are under 18, you may use the Service only with involvement of a parent, guardian, or authorized coach or organization administrator who accepts these Terms on your behalf.
                 </p>
-                <h3 className="text-sm font-semibold text-zinc-200 mt-2">4.2 Registration &amp; Security</h3>
+                <h3 className="text-sm font-semibold text-zinc-200 mt-2">4.2 Registration and Security</h3>
                 <p>
                   You agree to provide accurate information and keep it current. You are responsible for safeguarding credentials and for all activity under your Account. Notify us promptly of unauthorized access.
                 </p>
@@ -150,7 +150,7 @@ export default function TermsOfServicePage() {
               {/* 6. THIRD-PARTY VIDEO SOURCES */}
               <section className="space-y-3">
                 <h2 className="text-xl font-serif font-semibold text-white border-b border-white/10 pb-2">
-                  6. Third-Party Video Sources &amp; Compliance
+                  6. Third-Party Video Sources and Compliance
                 </h2>
                 <p>
                   Many users obtain game video from Third-Party Video Sources governed by separate terms, subscriptions, league rules, or facility policies. <strong>You are solely responsible</strong> for determining whether you may upload, store, and authorize Processing of User Content.
@@ -218,10 +218,10 @@ export default function TermsOfServicePage() {
                 </p>
               </section>
 
-              {/* 12 & 13. DISCLAIMERS & LIMITATION OF LIABILITY */}
+              {/* 12–13. DISCLAIMERS AND LIMITATION OF LIABILITY */}
               <section className="space-y-3">
                 <h2 className="text-xl font-serif font-semibold text-white border-b border-white/10 pb-2">
-                  12 &amp; 13. Disclaimers and Limitation of Liability
+                  12–13. Disclaimers and Limitation of Liability
                 </h2>
                 <p className="uppercase text-xs font-mono tracking-wider text-zinc-400">
                   THE SERVICE AND ALL OUTPUTS ARE PROVIDED “AS IS” WITHOUT WARRANTIES OF ANY KIND. TSAI’S TOTAL LIABILITY WILL NOT EXCEED THE GREATER OF US $100 OR AMOUNTS PAID IN THE PRIOR 12 MONTHS.
@@ -231,17 +231,17 @@ export default function TermsOfServicePage() {
               {/* 14. DISPUTE RESOLUTION */}
               <section className="space-y-3">
                 <h2 className="text-xl font-serif font-semibold text-white border-b border-white/10 pb-2">
-                  14. Dispute Resolution &amp; Governing Law
+                  14. Dispute Resolution and Governing Law
                 </h2>
                 <p>
                   Any dispute will be resolved through 30-day informal resolution or binding arbitration in Minnesota, USA, under AAA Commercial Arbitration Rules. Governing law: State of Minnesota, USA.
                 </p>
               </section>
 
-              {/* 15 & 16. SUSPENSION & GENERAL */}
+              {/* 15–16. SUSPENSION AND GENERAL */}
               <section className="space-y-3 border-t border-white/10 pt-6">
                 <h2 className="text-xl font-serif font-semibold text-white">
-                  15 &amp; 16. Suspension, Termination, and Contact
+                  15–16. Suspension, Termination, and Contact
                 </h2>
                 <p>
                   We may suspend or terminate access immediately for breach or legal compliance.

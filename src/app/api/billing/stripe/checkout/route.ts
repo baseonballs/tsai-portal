@@ -11,9 +11,7 @@ import { errorMessage } from "@/lib/errors"
 // the handler keeps the fail-fast behaviour exactly where it belongs: on a request that actually
 // needs Stripe.
 function stripeClient(): Stripe {
-  return new Stripe(required(process.env.STRIPE_SECRET_KEY, "STRIPE_SECRET_KEY"), {
-    apiVersion: "2024-06-20" as any,
-  });
+  return new Stripe(required(process.env.STRIPE_SECRET_KEY, "STRIPE_SECRET_KEY"));
 }
 
 export async function POST(request: Request) {

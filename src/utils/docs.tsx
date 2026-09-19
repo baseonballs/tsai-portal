@@ -18,54 +18,54 @@ export type DocBundle = {
 
 const CONTENT_ROOT = path.join(process.cwd(), "src/content/docs");
 
-const components: any = {
-  AppCard: ({ children }: any) => (
+const components = {
+  AppCard: ({ children }: { children?: React.ReactNode }) => (
     <div className="border border-white/10 rounded-lg p-5 my-5 bg-zinc-900/30 backdrop-blur-sm">
       {children}
     </div>
   ),
-  DocCtaLink: ({ href, children }: any) => (
+  DocCtaLink: ({ href, children }: { href: string; children?: React.ReactNode }) => (
     <Link href={href} className="text-cyan-400 font-semibold hover:text-cyan-300 hover:underline transition-colors">
       {children}
     </Link>
   ),
-  DocCtaRow: ({ children }: any) => (
+  DocCtaRow: ({ children }: { children?: React.ReactNode }) => (
     <div className="flex flex-wrap gap-4 my-5 items-center">
       {children}
     </div>
   ),
-  DocHero: ({ title, description }: any) => (
+  DocHero: ({ title, description }: { title: React.ReactNode; description?: React.ReactNode }) => (
     <div className="py-6 border-b border-white/5 mb-8">
       <h1 className="text-3xl font-bold tracking-tight text-white mb-2">{title}</h1>
       {description && <p className="text-zinc-400 text-lg leading-relaxed">{description}</p>}
     </div>
   ),
-  DocHubScreenshot: ({ src, alt }: any) => (
+  DocHubScreenshot: ({ src, alt }: { src: string; alt?: string }) => (
     <div className="my-6 overflow-hidden rounded-lg border border-white/10 shadow-lg shadow-cyan-950/10">
-      <img src={src} alt={alt} className="w-full object-cover" />
+      <img src={src} alt={alt || ""} className="w-full object-cover" />
     </div>
   ),
-  DocParagraph: ({ children }: any) => (
+  DocParagraph: ({ children }: { children?: React.ReactNode }) => (
     <p className="text-zinc-300 leading-7 my-4">{children}</p>
   ),
-  DocPhaseCard: ({ title, children }: any) => (
+  DocPhaseCard: ({ title, children }: { title: React.ReactNode; children?: React.ReactNode }) => (
     <div className="border border-white/10 rounded-lg p-5 bg-zinc-900/30 backdrop-blur-sm my-5">
       <h3 className="text-white font-semibold text-base mb-2">{title}</h3>
       <div className="text-zinc-300 text-sm leading-relaxed">{children}</div>
     </div>
   ),
-  DocPlaneGrid: ({ children }: any) => (
+  DocPlaneGrid: ({ children }: { children?: React.ReactNode }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
       {children}
     </div>
   ),
-  DocPlaneItem: ({ title, children }: any) => (
+  DocPlaneItem: ({ title, children }: { title: React.ReactNode; children?: React.ReactNode }) => (
     <div className="border border-white/5 rounded-lg p-4 bg-zinc-950/50 backdrop-blur-sm flex flex-col gap-1.5">
       <h4 className="text-white font-semibold text-sm">{title}</h4>
       <div className="text-zinc-400 text-xs leading-relaxed">{children}</div>
     </div>
   ),
-  DocPullQuote: ({ children }: any) => (
+  DocPullQuote: ({ children }: { children?: React.ReactNode }) => (
     <blockquote className="border-l-4 border-cyan-500 pl-4 my-6 italic text-zinc-300 leading-relaxed">
       {children}
     </blockquote>
@@ -75,17 +75,17 @@ const components: any = {
       Encore Legacy Feature Help Table
     </div>
   ),
-  Prose: ({ children }: any) => (
+  Prose: ({ children }: { children?: React.ReactNode }) => (
     <div className="prose prose-invert max-w-none">
       {children}
     </div>
   ),
-  Link: ({ href, children, ...props }: any) => (
+  Link: ({ href, children, ...props }: React.ComponentProps<typeof Link>) => (
     <Link href={href} className="text-cyan-400 hover:text-cyan-300 transition-colors" {...props}>
       {children}
     </Link>
   ),
-  DocShortcut: ({ keys }: any) => (
+  DocShortcut: ({ keys }: { keys: React.ReactNode }) => (
     <kbd className="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-xs font-mono text-zinc-300 shadow-sm">
       {keys}
     </kbd>

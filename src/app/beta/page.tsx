@@ -16,7 +16,7 @@ export default function BetaPage() {
       <main className="relative overflow-hidden">
         {/* Ambient background glow */}
         <div className="fixed inset-0 pointer-events-none z-0">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[450px] bg-gradient-to-b from-cyan-500/15 via-indigo-500/10 to-amber-500/5 blur-[140px]" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[450px] bg-gradient-to-b from-cyan-500/15 via-teal-500/10 to-amber-500/5 blur-[140px]" />
         </div>
 
         {/* HERO SECTION */}
@@ -33,7 +33,7 @@ export default function BetaPage() {
 
             {/* PRIMARY HEADLINE */}
             <h1 className="text-5xl sm:text-7xl lg:text-8xl font-serif tracking-tight text-white mb-8 sm:mb-10 leading-[1.15] sm:leading-[1.12] drop-shadow-2xl">
-              Coming Early <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400 font-medium">September 2026.</span>
+              Coming Early <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400 font-medium">September 2026.</span>
             </h1>
 
             {/* SUBTITLE */}
@@ -67,7 +67,7 @@ export default function BetaPage() {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-zinc-900/60 p-6 backdrop-blur-xl">
-                <span className="text-xs font-mono text-indigo-400 font-bold uppercase block mb-2">02. The Loop Ecosystem</span>
+                <span className="text-xs font-mono text-sky-400 font-bold uppercase block mb-2">02. The Loop Ecosystem</span>
                 <h4 className="text-lg font-serif text-white mb-2">Video to Journal Synergy</h4>
                 <p className="text-xs text-zinc-400 leading-relaxed font-light">
                   Spotlight video cuts automatically bound to Periodical mobile athlete development journals.

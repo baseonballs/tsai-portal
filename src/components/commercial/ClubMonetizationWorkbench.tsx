@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { errorMessage } from "@/lib/errors";
 import {
   calculateClubRevenue,
   TURNKEY_ARENA_RIG_BOM,
@@ -62,8 +63,8 @@ export function ClubMonetizationWorkbench({
       } else {
         setFeedbackNotice(data.error || "Failed to initialize Stripe Connect onboarding.");
       }
-    } catch (e: any) {
-      setFeedbackNotice(e.message || "Network communication failure.");
+    } catch (e: unknown) {
+      setFeedbackNotice(errorMessage(e) || "Network communication failure.");
     } finally {
       setIsOnboardingLoading(false);
     }
@@ -90,8 +91,8 @@ export function ClubMonetizationWorkbench({
       } else {
         setFeedbackNotice(data.error || "Failed to create hardware checkout session.");
       }
-    } catch (e: any) {
-      setFeedbackNotice(e.message || "Network communication failure.");
+    } catch (e: unknown) {
+      setFeedbackNotice(errorMessage(e) || "Network communication failure.");
     } finally {
       setIsCheckoutLoading(false);
     }

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/client";
 import { 
   ChevronDown, 
@@ -11,13 +12,12 @@ import {
   Sparkles, 
   Cpu, 
   Layers, 
-  ArrowRight,
   Menu,
   X
 } from "lucide-react";
 
 export function LandingHeader() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [devHubOpen, setDevHubOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const devHubRef = useRef<HTMLDivElement>(null);
@@ -88,7 +88,7 @@ export function LandingHeader() {
         {/* Structured Grouped Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-1 text-sm font-medium text-zinc-300">
           
-          {/* GROUP 1: Player & Coach Dropdown (Coach's Corner, The Locker Room, Player's Development) */}
+          {/* GROUP 1: Player and Coach Dropdown (Coach's Corner, The Locker Room, Player's Development) */}
           <div className="relative" ref={devHubRef}>
             <button
               onClick={() => setDevHubOpen(!devHubOpen)}
@@ -100,7 +100,7 @@ export function LandingHeader() {
               aria-expanded={devHubOpen}
             >
               <Users className="h-3.5 w-3.5 text-cyan-400" />
-              <span>Player & Coach</span>
+              <span>Player and Coach</span>
               <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${devHubOpen ? "rotate-180 text-cyan-400" : "text-zinc-500"}`} />
             </button>
 
@@ -108,7 +108,7 @@ export function LandingHeader() {
             {devHubOpen && (
               <div className="absolute top-full left-0 mt-2 w-80 rounded-2xl border border-white/10 bg-zinc-950/95 p-3 backdrop-blur-2xl shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 px-3 py-1 font-semibold">
-                  Player & Coach Destinations
+                  Player and Coach Destinations
                 </div>
 
                 <div className="mt-1 space-y-1">
@@ -127,7 +127,7 @@ export function LandingHeader() {
                         <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-mono">Workbench</span>
                       </div>
                       <p className="text-[11px] text-zinc-400 leading-snug">
-                        The media-forward coaching studio & video curation workbench.
+                        The media-forward coaching studio and video curation workbench.
                       </p>
                     </div>
                   </Link>
@@ -156,18 +156,18 @@ export function LandingHeader() {
                   <Link
                     href="/players-development"
                     onClick={() => setDevHubOpen(false)}
-                    className="flex items-start gap-3 rounded-xl p-2.5 transition-colors hover:bg-indigo-500/10 hover:border-indigo-500/20 border border-transparent group"
+                    className="flex items-start gap-3 rounded-xl p-2.5 transition-colors hover:bg-sky-500/10 hover:border-sky-500/20 border border-transparent group"
                   >
-                    <div className="rounded-lg p-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 group-hover:scale-105 transition-transform">
+                    <div className="rounded-lg p-2 bg-sky-500/10 text-sky-400 border border-sky-500/20 group-hover:scale-105 transition-transform">
                       <TrendingUp className="h-4 w-4" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-white group-hover:text-indigo-300 flex items-center gap-1">
+                      <div className="text-xs font-bold text-white group-hover:text-sky-300 flex items-center gap-1">
                         Player&apos;s Development
-                        <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.2 rounded font-mono">Growth</span>
+                        <span className="text-[9px] bg-sky-500/20 text-sky-300 px-1.5 py-0.2 rounded font-mono">Growth</span>
                       </div>
                       <p className="text-[11px] text-zinc-400 leading-snug">
-                        Personalized micro-loops & daily reflection journals.
+                        Personalized micro-loops and daily reflection journals.
                       </p>
                     </div>
                   </Link>
@@ -176,13 +176,13 @@ export function LandingHeader() {
             )}
           </div>
 
-          {/* GROUP 2: Spotlight & Periodical (Product Ecosystem) */}
+          {/* GROUP 2: Spotlight and Periodical (Product Ecosystem) */}
           <Link
             href="/spotlight-and-periodical"
             className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all hover:bg-white/5 hover:text-white border border-transparent text-zinc-300"
           >
-            <Layers className="h-3.5 w-3.5 text-indigo-400" />
-            <span>Spotlight & Periodical</span>
+            <Layers className="h-3.5 w-3.5 text-sky-400" />
+            <span>Spotlight and Periodical</span>
           </Link>
 
           {/* GROUP 3: The Platform */}
@@ -260,10 +260,10 @@ export function LandingHeader() {
       {mobileMenuOpen && (
         <div className="lg:hidden border-b border-white/10 bg-zinc-950/98 backdrop-blur-2xl px-6 py-6 space-y-6">
           
-          {/* Section 1: Player & Coach */}
+          {/* Section 1: Player and Coach */}
           <div>
             <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-semibold mb-3">
-              Player & Coach Destinations
+              Player and Coach Destinations
             </div>
             <div className="flex flex-col gap-2">
               <Link 
@@ -274,7 +274,7 @@ export function LandingHeader() {
                 <ShieldCheck className="h-4 w-4 shrink-0" />
                 <div className="flex flex-col">
                   <span>Coach&apos;s Corner</span>
-                  <span className="text-[11px] text-zinc-400 font-normal">The Coach Workbench & Studio</span>
+                  <span className="text-[11px] text-zinc-400 font-normal">The Coach Workbench and Studio</span>
                 </div>
               </Link>
 
@@ -293,21 +293,21 @@ export function LandingHeader() {
               <Link 
                 href="/players-development" 
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 p-3 text-sm font-semibold text-indigo-300"
+                className="flex items-center gap-3 rounded-xl bg-sky-500/10 border border-sky-500/20 p-3 text-sm font-semibold text-sky-300"
               >
                 <TrendingUp className="h-4 w-4 shrink-0" />
                 <div className="flex flex-col">
                   <span>Player&apos;s Development</span>
-                  <span className="text-[11px] text-zinc-400 font-normal">Personalized Micro-Loops & Growth</span>
+                  <span className="text-[11px] text-zinc-400 font-normal">Personalized Micro-Loops and Growth</span>
                 </div>
               </Link>
             </div>
           </div>
 
-          {/* Section 2: Platform & Products */}
+          {/* Section 2: Platform and Products */}
           <div>
             <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold mb-2">
-              Products & Architecture
+              Products and Architecture
             </div>
             <nav className="flex flex-col gap-2 text-sm font-medium text-zinc-300">
               <Link 
@@ -315,7 +315,7 @@ export function LandingHeader() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="hover:text-white transition-colors py-2 border-b border-white/5 flex items-center justify-between"
               >
-                <span>Spotlight &amp; Periodical</span>
+                <span>Spotlight and Periodical</span>
                 <ChevronDown className="-rotate-90 h-4 w-4 text-zinc-500" />
               </Link>
               <Link 

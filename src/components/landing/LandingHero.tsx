@@ -28,7 +28,7 @@ export function LandingHero({ hero }: LandingHeroProps) {
           <h1 className="font-serif text-4xl leading-tight font-normal tracking-tight text-white sm:text-5xl md:text-6xl">
             Zero-hardware capture.
             <br />
-            <span className="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-cyan-400 to-sky-400 bg-clip-text text-transparent">
               Clinical-grade analytics.
             </span>
           </h1>

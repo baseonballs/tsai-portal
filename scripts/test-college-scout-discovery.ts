@@ -167,7 +167,7 @@ function runTests() {
 try {
   runTests();
   process.exit(0);
-} catch (err: any) {
-  console.error("❌ Test failed:", err.message);
+} catch (err: unknown) {
+  console.error("❌ Test failed:", err instanceof Error ? err.message : String(err));
   process.exit(1);
 }

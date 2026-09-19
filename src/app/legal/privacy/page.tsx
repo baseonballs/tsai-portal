@@ -15,12 +15,12 @@ export default function PrivacyPolicyPage() {
       <main className="relative overflow-hidden">
         {/* HERO HEADER */}
         <section className="relative px-6 pt-20 pb-16 lg:px-8 border-b border-white/10 bg-gradient-to-b from-zinc-900/60 via-zinc-950 to-zinc-950">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-fuchsia-500/10 blur-[120px] pointer-events-none" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/10 via-teal-500/10 to-sky-500/10 blur-[120px] pointer-events-none" />
 
           <div className="mx-auto max-w-4xl text-center relative z-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-cyan-400 uppercase font-mono mb-6">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Privacy &amp; COPPA Compliance</span>
+              <span>Privacy and COPPA Compliance</span>
             </div>
 
             <h1 className="text-4xl font-serif font-normal tracking-tight text-white sm:text-6xl mb-6">
@@ -61,7 +61,7 @@ export default function PrivacyPolicyPage() {
               {/* 1. SCOPE */}
               <section className="space-y-3">
                 <h2 className="text-xl font-serif font-semibold text-white border-b border-white/10 pb-2">
-                  1. Scope &amp; Purpose
+                  1. Scope and Purpose
                 </h2>
                 <p>
                   This Privacy Policy describes how Transcendental Sports AI LLC (“<strong>TSAI</strong>,” “<strong>we</strong>,” “<strong>us</strong>,” or “<strong>our</strong>”) collects, uses, stores, and shares personal information in connection with TSAI Spotlight, Periodical, Watson admin control plane, and related sports intelligence services (the “<strong>Services</strong>”).
@@ -74,7 +74,7 @@ export default function PrivacyPolicyPage() {
               {/* 2. AGE FRAMEWORK & COPPA */}
               <section className="space-y-4">
                 <h2 className="text-xl font-serif font-semibold text-white border-b border-white/10 pb-2">
-                  2. Age Framework &amp; COPPA Compliance
+                  2. Age Framework and COPPA Compliance
                 </h2>
                 <p>
                   We enforce date-of-birth gating at onboarding to apply strict age-appropriate security frameworks:
@@ -86,7 +86,7 @@ export default function PrivacyPolicyPage() {
                       <tr className="border-b border-white/10 text-zinc-400 font-mono">
                         <th className="pb-3 pt-1 px-3">Age Group</th>
                         <th className="pb-3 pt-1 px-3">Framework</th>
-                        <th className="pb-3 pt-1 px-3">Consent &amp; Safeguards</th>
+                        <th className="pb-3 pt-1 px-3">Consent and Safeguards</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 text-zinc-300">
@@ -122,7 +122,7 @@ export default function PrivacyPolicyPage() {
                     <p className="text-xs text-zinc-400">Email address, display name, user avatar, profile credentials (Supabase Auth).</p>
                   </div>
                   <div className="rounded-xl border border-white/5 bg-zinc-950/40 p-4">
-                    <h3 className="font-mono text-xs font-bold text-cyan-400 uppercase mb-1">Contact &amp; Consent</h3>
+                    <h3 className="font-mono text-xs font-bold text-cyan-400 uppercase mb-1">Contact and Consent</h3>
                     <p className="text-xs text-zinc-400">Parent/guardian email address, parental consent verifications, contact details.</p>
                   </div>
                   <div className="rounded-xl border border-white/5 bg-zinc-950/40 p-4">
@@ -130,7 +130,7 @@ export default function PrivacyPolicyPage() {
                     <p className="text-xs text-zinc-400">Team affiliation, jersey number, position, skill benchmarks, coach assignments.</p>
                   </div>
                   <div className="rounded-xl border border-white/5 bg-zinc-950/40 p-4">
-                    <h3 className="font-mono text-xs font-bold text-cyan-400 uppercase mb-1">User Content &amp; Media</h3>
+                    <h3 className="font-mono text-xs font-bold text-cyan-400 uppercase mb-1">User Content and Media</h3>
                     <p className="text-xs text-zinc-400">Uploaded game/training video, Periodical journal reflections, voice note cuts, annotations.</p>
                   </div>
                 </div>
@@ -153,14 +153,14 @@ export default function PrivacyPolicyPage() {
               {/* 5. SUBPROCESSORS & INFRASTRUCTURE */}
               <section className="space-y-3">
                 <h2 className="text-xl font-serif font-semibold text-white border-b border-white/10 pb-2">
-                  5. Subprocessors &amp; Cloud Infrastructure
+                  5. Subprocessors and Cloud Infrastructure
                 </h2>
                 <p>
                   We utilize enterprise cloud service providers to maintain platform resilience and security:
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-lg border border-white/5 bg-zinc-950/60 font-mono"><strong className="text-white">Supabase:</strong> Authentication &amp; Database</div>
-                  <div className="p-3 rounded-lg border border-white/5 bg-zinc-950/60 font-mono"><strong className="text-white">Google Cloud (GCP):</strong> Secure Hosting &amp; Ingress</div>
+                  <div className="p-3 rounded-lg border border-white/5 bg-zinc-950/60 font-mono"><strong className="text-white">Supabase:</strong> Authentication and Database</div>
+                  <div className="p-3 rounded-lg border border-white/5 bg-zinc-950/60 font-mono"><strong className="text-white">Google Cloud (GCP):</strong> Secure Hosting and Ingress</div>
                   <div className="p-3 rounded-lg border border-white/5 bg-zinc-950/60 font-mono"><strong className="text-white">Temporal:</strong> Fault-Tolerant Workflow Processing</div>
                   <div className="p-3 rounded-lg border border-white/5 bg-zinc-950/60 font-mono"><strong className="text-white">Google Gemini:</strong> AI Insight Processing</div>
                 </div>
@@ -193,7 +193,7 @@ export default function PrivacyPolicyPage() {
               {/* 7. RETENTION & USER RIGHTS */}
               <section className="space-y-3 border-t border-white/10 pt-6">
                 <h2 className="text-xl font-serif font-semibold text-white">
-                  7. Retention, Deletion &amp; Contact Information
+                  7. Retention, Deletion and Contact Information
                 </h2>
                 <p>
                   Parents and adult users may exercise data privacy rights, request account deletion, or contact our privacy operations team directly:

@@ -73,7 +73,7 @@ export const CollegeScoutDiscoveryPanel: React.FC<CollegeScoutDiscoveryPanelProp
           <label className="block text-slate-400 font-medium">Position</label>
           <select
             value={filters.position}
-            onChange={(e) => setFilters({ ...filters, position: e.target.value as any })}
+            onChange={(e) => setFilters({ ...filters, position: e.target.value as ScoutDiscoveryFilter["position"] })}
             className="mt-1 w-full rounded border border-slate-700 bg-slate-800 p-1.5 text-slate-200 focus:outline-none"
           >
             <option value="ALL">All Positions</option>

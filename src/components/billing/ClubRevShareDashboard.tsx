@@ -51,7 +51,7 @@ export function ClubRevShareDashboard() {
           <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold font-mono transition-all cursor-pointer">
             <Download className="w-3.5 h-3.5" /> Export Ledger CSV
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white text-xs font-bold shadow-lg shadow-cyan-950/40 hover:opacity-95 transition-all cursor-pointer">
+          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 text-white text-xs font-bold shadow-lg shadow-cyan-950/40 hover:opacity-95 transition-all cursor-pointer">
             <CreditCard className="w-3.5 h-3.5" /> Stripe Connect Payouts
           </button>
         </div>
@@ -88,7 +88,7 @@ export function ClubRevShareDashboard() {
         <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6 backdrop-blur-md">
           <div className="flex items-center justify-between text-zinc-400 text-xs font-mono uppercase mb-2">
             <span>Active Family Subscribers</span>
-            <Users className="w-4 h-4 text-indigo-400" />
+            <Users className="w-4 h-4 text-sky-400" />
           </div>
           <div className="text-3xl font-mono font-bold text-white">
             {subscribersCount}
@@ -294,7 +294,7 @@ export function ClubRevShareDashboard() {
       {/* STRIPE CONNECT PAYOUT STATUS */}
       <div className="rounded-3xl border border-white/10 bg-zinc-900/40 p-6 md:p-8 backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-500/40 text-sky-400 flex items-center justify-center shrink-0">
             <Building2 className="w-6 h-6" />
           </div>
           <div>

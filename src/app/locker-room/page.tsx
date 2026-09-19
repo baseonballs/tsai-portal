@@ -28,108 +28,11 @@ import {
   TrendingUp
 } from "lucide-react";
 
+import { SUPERPOWERS, type SuperpowerId } from "@/data/superpowers";
+
 export default function LockerRoomPage() {
-  const [activeSuperpower, setActiveSuperpower] = useState<"Explode" | "OwnPuck" | "Threat" | "QuickFeet" | "ReadPlay" | "WinBattle" | "WallMaster" | "DotDominance">("Threat");
-
-  const superpowers = [
-    {
-      id: "Explode" as const,
-      name: "Explode",
-      hue: "amber",
-      border: "border-amber-500/40",
-      bg: "bg-amber-500/10",
-      text: "text-amber-400",
-      badgeBg: "bg-amber-500/20",
-      glow: "shadow-[0_0_25px_rgba(245,158,11,0.15)]",
-      cue: '"First three steps. Explode and go."',
-      tag: "rExplode",
-    },
-    {
-      id: "OwnPuck" as const,
-      name: "Own the Puck",
-      hue: "cyan",
-      border: "border-cyan-500/40",
-      bg: "bg-cyan-500/10",
-      text: "text-cyan-400",
-      badgeBg: "bg-cyan-500/20",
-      glow: "shadow-[0_0_25px_rgba(6,182,212,0.15)]",
-      cue: '"Protect the house. Protect your ice."',
-      tag: "rOwnPuck",
-    },
-    {
-      id: "Threat" as const,
-      name: "Be a Threat",
-      hue: "rose",
-      border: "border-rose-500/40",
-      bg: "bg-rose-500/10",
-      text: "text-rose-400",
-      badgeBg: "bg-rose-500/20",
-      glow: "shadow-[0_0_25px_rgba(244,63,94,0.15)]",
-      cue: '"Eyes up in the high slot."',
-      tag: "rThreat",
-    },
-    {
-      id: "QuickFeet" as const,
-      name: "Quick Feet",
-      hue: "emerald",
-      border: "border-emerald-500/40",
-      bg: "bg-emerald-500/10",
-      text: "text-emerald-400",
-      badgeBg: "bg-emerald-500/20",
-      glow: "shadow-[0_0_25px_rgba(16,185,129,0.15)]",
-      cue: '"Constant motor. Lateral mobility."',
-      tag: "rQuickFeet",
-    },
-    {
-      id: "ReadPlay" as const,
-      name: "Read the Play",
-      hue: "violet",
-      border: "border-violet-500/40",
-      bg: "bg-violet-500/10",
-      text: "text-violet-400",
-      badgeBg: "bg-violet-500/20",
-      glow: "shadow-[0_0_25px_rgba(139,92,246,0.15)]",
-      cue: '"Anticipate structure before it folds."',
-      tag: "rReadPlay",
-    },
-    {
-      id: "WinBattle" as const,
-      name: "Win the Battle",
-      hue: "blue",
-      border: "border-blue-500/40",
-      bg: "bg-blue-500/10",
-      text: "text-blue-400",
-      badgeBg: "bg-blue-500/20",
-      glow: "shadow-[0_0_25px_rgba(59,130,246,0.15)]",
-      cue: '"Body position first, puck second."',
-      tag: "rWinBattle",
-    },
-    {
-      id: "WallMaster" as const,
-      name: "Wall Master",
-      hue: "indigo",
-      border: "border-indigo-500/40",
-      bg: "bg-indigo-500/10",
-      text: "text-indigo-400",
-      badgeBg: "bg-indigo-500/20",
-      glow: "shadow-[0_0_25px_rgba(99,102,241,0.15)]",
-      cue: '"Puck control under pressure along the glass."',
-      tag: "rWallMaster",
-    },
-    {
-      id: "DotDominance" as const,
-      name: "Dot Dominance",
-      hue: "orange",
-      border: "border-orange-500/40",
-      bg: "bg-orange-500/10",
-      text: "text-orange-400",
-      badgeBg: "bg-orange-500/20",
-      glow: "shadow-[0_0_25px_rgba(249,115,22,0.15)]",
-      cue: '"Clean tie-ups and immediate possession control."',
-      tag: "rDotDominance",
-    },
-  ];
-
+  const [activeSuperpower, setActiveSuperpower] = useState<SuperpowerId>("Threat");
+  const superpowers = SUPERPOWERS;
   const currentSuperpower = superpowers.find((s) => s.id === activeSuperpower) || superpowers[0];
 
   return (

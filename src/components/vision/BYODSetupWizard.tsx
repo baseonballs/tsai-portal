@@ -441,7 +441,7 @@ export function BYODSetupWizard() {
 
             <button
               onClick={nextStep}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-bold text-xs shadow-lg shadow-cyan-950/40 hover:opacity-95 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 text-white font-bold text-xs shadow-lg shadow-cyan-950/40 hover:opacity-95 transition-all cursor-pointer"
             >
               {currentStep === STEPS.length ? "Complete Setup" : "Next Step"}
               <ArrowRight className="w-4 h-4" />

@@ -17,7 +17,7 @@ import {
   MessageSquare,
   ChevronRight
 } from "lucide-react";
-import { landingPageCopy } from "@/data/landingPageCopy";
+import { landingPageCopy, type LockerRoomStall } from "@/data/landingPageCopy";
 
 function DynamicRinkLoopCanvas({ 
   activeStallId, 
@@ -82,7 +82,7 @@ function DynamicRinkLoopCanvas({
         : activeStallId === "scout" 
         ? "rgba(16, 185, 129, 0.25)" 
         : activeStallId === "trainer" 
-        ? "rgba(99, 102, 241, 0.25)" 
+        ? "rgba(14, 165, 233, 0.25)" 
         : "rgba(0, 240, 255, 0.25)";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -93,7 +93,7 @@ function DynamicRinkLoopCanvas({
       }
       ctx.stroke();
 
-      // Blue lines & Red line
+      // Blue lines and Red line
       ctx.strokeStyle = "rgba(239, 68, 68, 0.3)";
       ctx.beginPath();
       ctx.moveTo(w / 2, h * 0.08);
@@ -140,18 +140,18 @@ function DynamicRinkLoopCanvas({
         : activeStallId === "scout" 
         ? "rgba(16, 185, 129, 0.8)" 
         : activeStallId === "trainer" 
-        ? "rgba(99, 102, 241, 0.8)" 
+        ? "rgba(14, 165, 233, 0.8)" 
         : "rgba(0, 240, 255, 0.8)";
       ctx.lineWidth = 3.5;
       ctx.stroke();
 
       // Coach 4-Panel Cut Room Bounding Box or Skater Box
-      ctx.strokeStyle = activeStallId === "coach" ? "#F59E0B" : activeStallId === "scout" ? "#10B981" : activeStallId === "trainer" ? "#6366F1" : "#00F0FF";
+      ctx.strokeStyle = activeStallId === "coach" ? "#F59E0B" : activeStallId === "scout" ? "#10B981" : activeStallId === "trainer" ? "#0EA5E9" : "#00F0FF";
       ctx.lineWidth = 1.5;
       ctx.strokeRect(pathX - 22, pathY - 22, 44, 44);
 
       // Node dot
-      ctx.fillStyle = activeStallId === "coach" ? "#F59E0B" : activeStallId === "scout" ? "#10B981" : activeStallId === "trainer" ? "#6366F1" : "#00F0FF";
+      ctx.fillStyle = activeStallId === "coach" ? "#F59E0B" : activeStallId === "scout" ? "#10B981" : activeStallId === "trainer" ? "#0EA5E9" : "#00F0FF";
       ctx.beginPath();
       ctx.arc(pathX, pathY, 6, 0, Math.PI * 2);
       ctx.fill();
@@ -165,7 +165,7 @@ function DynamicRinkLoopCanvas({
       ctx.fill();
 
       // Vector line
-      ctx.strokeStyle = "#6366F1";
+      ctx.strokeStyle = "#0EA5E9";
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
       ctx.moveTo(pathX, pathY);
@@ -175,7 +175,7 @@ function DynamicRinkLoopCanvas({
 
       // Telemetry HUD text overlays on Canvas
       ctx.font = "11px monospace";
-      ctx.fillStyle = activeStallId === "coach" ? "#F59E0B" : activeStallId === "scout" ? "#10B981" : activeStallId === "trainer" ? "#6366F1" : "#00F0FF";
+      ctx.fillStyle = activeStallId === "coach" ? "#F59E0B" : activeStallId === "scout" ? "#10B981" : activeStallId === "trainer" ? "#0EA5E9" : "#00F0FF";
       
       const hudLabel = activeStallId === "coach" 
         ? `BENCHMARK MATCHUP [SPLIT-SCREEN]`
@@ -233,7 +233,7 @@ const PERSONA_MODE_MAP = {
       hudCode: "ENCORE :: WHITEBOARD-PLAN-404",
       tag: "Tactical Cue: Neutral Zone Trap",
       tagHue: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-      headerTitle: "Pre-Game Coach Whiteboard & Drill Intent",
+      headerTitle: "Pre-Game Coach Whiteboard and Drill Intent",
       skaterInfo: "Coach Workbench | Pre-Game Neutral Zone Blueprint",
       timer: "00:00 / 00:45",
       journalTitle: "Encore Workbench Broadcast Engine",
@@ -254,23 +254,23 @@ const PERSONA_MODE_MAP = {
   },
   scout: {
     pre: {
-      hudCode: "EDGEIQ :: THREAT-MAP-902",
-      tag: "Zone Focus: High-Danger Slot",
+      hudCode: "EDGEIQ :: MATCHUP-PRE-77",
+      tag: "Threat Map: High Danger Slot",
       tagHue: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-      headerTitle: "Pre-Game Threat Topology & Matchup Assessment",
-      skaterInfo: "Scout Observatory | Slot Residence & Defensive Delta",
-      timer: "00:00 / 01:00",
+      headerTitle: "Pre-Game Threat Topology and Matchup Assessment",
+      skaterInfo: "EdgeIQ Scouting Suite | Slot Residence and Defensive Delta",
+      timer: "00:00 / 01:15",
       journalTitle: "EdgeIQ Scouting Observatory",
-      journalType: "SCOUTING BRIEFING",
-      journalText: '"Pre-Game Opponent Brief: Opponent D-pair vacates left corner on puck retrieval. High-danger slot open for F2."',
+      journalType: "OPPONENT READ DOSSIER",
+      journalText: '"Opponent Tendency: #7 defenseman turns to his forehand side on the cycle. Exploit the slot crease on quick transitions."',
     },
     post: {
       hudCode: "TEMPEST :: TELEMETRY-DWELL-880",
-      tag: "Metrics: 24.2 MPH · 68% Poss",
+      tag: "Possession: +22s Ozone Dwell",
       tagHue: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-      headerTitle: "Post-Game Possession & Spatial Dwell Telemetry",
-      skaterInfo: "Tempest Telemetry Console | 68% Offensive Zone Residence",
-      timer: "00:54.0 / 01:00.0",
+      headerTitle: "Post-Game Possession and Spatial Dwell Telemetry",
+      skaterInfo: "Tempest Telemetry Console | Shift-by-Shift Threat Gradient",
+      timer: "01:04.2 / 01:15.0",
       journalTitle: "EdgeIQ Scouting Observatory",
       journalType: "SCOUT DOSSIER GENERATED",
       journalText: '"Post-Game Scout Report: #19 recorded top-speed burst of 24.2 MPH with +18% increase in high-danger pass completions."',
@@ -280,8 +280,8 @@ const PERSONA_MODE_MAP = {
     pre: {
       hudCode: "STRATUS :: SKILL-BLUEPRINT-303",
       tag: "Blueprint: 3-Step Burst Arc",
-      tagHue: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-      headerTitle: "Pre-Skate Micro-Skill Sequence & Target Twins",
+      tagHue: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+      headerTitle: "Pre-Skate Micro-Skill Sequence and Target Twins",
       skaterInfo: "Stratus Lab | Holographic 3D Rink Twin Blueprint",
       timer: "00:00 / 00:30",
       journalTitle: "Stratus Development Lab",
@@ -291,8 +291,8 @@ const PERSONA_MODE_MAP = {
     post: {
       hudCode: "STRATUS :: KINETIC-TWIN-3D",
       tag: "Twin Delta: +14% Acceleration",
-      tagHue: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-      headerTitle: "Post-Skate Kinetic Twin & Posture Progression",
+      tagHue: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+      headerTitle: "Post-Skate Kinetic Twin and Posture Progression",
       skaterInfo: "3D Posture Model | Season-Long Development Blueprint",
       timer: "00:28.5 / 00:30.0",
       journalTitle: "Stratus Development Lab",
@@ -304,7 +304,7 @@ const PERSONA_MODE_MAP = {
 
 export function LockerRoomHub() {
   const copy = landingPageCopy.lockerRoom;
-  const [activeStallId, setActiveStallId] = useState<"athlete" | "coach" | "scout" | "trainer">("athlete");
+  const [activeStallId, setActiveStallId] = useState<LockerRoomStall["id"]>("athlete");
   const [mode, setMode] = useState<"pre" | "post">("pre");
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
 
@@ -340,15 +340,15 @@ export function LockerRoomHub() {
           badgeBg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
           gradient: "from-emerald-500/20 via-emerald-500/5 to-transparent",
         };
-      case "indigo":
+      case "sky":
       default:
         return {
-          border: "border-indigo-500/40 hover:border-indigo-400/60",
-          activeBg: "bg-indigo-500/15",
-          activeBorder: "border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.15)]",
-          text: "text-indigo-400",
-          badgeBg: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-          gradient: "from-indigo-500/20 via-indigo-500/5 to-transparent",
+          border: "border-sky-500/40 hover:border-sky-400/60",
+          activeBg: "bg-sky-500/15",
+          activeBorder: "border-sky-400 shadow-[0_0_20px_rgba(14,165,233,0.15)]",
+          text: "text-sky-400",
+          badgeBg: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+          gradient: "from-sky-500/20 via-sky-500/5 to-transparent",
         };
     }
   };
@@ -383,7 +383,7 @@ export function LockerRoomHub() {
             <span>Interactive Locker Room Hub</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-serif text-white tracking-tight">
-            One Loop. <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-amber-300 to-indigo-400">Four Perspectives.</span>
+            One Loop. <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-amber-300 to-sky-400">Four Perspectives.</span>
           </h2>
           <p className="mt-4 text-base sm:text-lg text-zinc-400 leading-relaxed font-light">
             Select a stall to experience how Spotlight video intelligence binds directly into Periodical athlete journals.
@@ -398,7 +398,7 @@ export function LockerRoomHub() {
             return (
               <button
                 key={stall.id}
-                onClick={() => setActiveStallId(stall.id as any)}
+                onClick={() => setActiveStallId(stall.id)}
                 className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all cursor-pointer min-h-[72px] ${
                   isActive
                     ? `${hue.activeBg} ${hue.activeBorder} text-white`
@@ -447,7 +447,7 @@ export function LockerRoomHub() {
 
         {/* Main Interactive Locker Room Hub Glass Card */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Persona Details & Feature Pillars */}
+          {/* Left Column: Persona Details and Feature Pillars */}
           <div className="lg:col-span-5 flex flex-col gap-6">
             <div className={`rounded-2xl border ${currentHue.border} bg-zinc-900/70 p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden`}>
               <div className={`absolute top-0 right-0 h-40 w-40 bg-gradient-to-bl ${currentHue.gradient} blur-2xl pointer-events-none`} />

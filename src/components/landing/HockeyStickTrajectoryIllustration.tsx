@@ -19,18 +19,18 @@ export function HockeyStickTrajectoryIllustration() {
   return (
     <section className="px-6 py-24 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-zinc-900/40 to-zinc-950 relative overflow-hidden text-left">
       {/* Background Neon Ambient Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-sky-500/10 blur-[150px] rounded-full pointer-events-none" />
 
       <div className="mx-auto max-w-7xl relative z-10">
         {/* HEADER */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-xs font-mono font-bold text-sky-400 uppercase tracking-widest mb-6">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>ATHLETE TRAJECTORY METAPHOR</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-white tracking-tight leading-tight">
             The Hockey Stick Curve: <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-amber-400">
               Where Development Transcends.
             </span>
           </h2>
@@ -50,7 +50,7 @@ export function HockeyStickTrajectoryIllustration() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-zinc-500">Curved Inflection:</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 font-bold uppercase">Transcend Engine Substrate</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-sky-400 font-bold uppercase">Transcend Engine Substrate</span>
             </div>
           </div>
 
@@ -61,8 +61,8 @@ export function HockeyStickTrajectoryIllustration() {
                 {/* Curve Gradient */}
                 <linearGradient id="hockeyStickGrad" x1="0%" y1="100%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
-                  <stop offset="35%" stopColor="#6366f1" stopOpacity="0.9" />
-                  <stop offset="70%" stopColor="#e879f9" stopOpacity="1" />
+                  <stop offset="35%" stopColor="#0284c7" stopOpacity="0.9" />
+                  <stop offset="70%" stopColor="#f59e0b" stopOpacity="1" />
                   <stop offset="100%" stopColor="#34d399" stopOpacity="1" />
                 </linearGradient>
 
@@ -76,7 +76,7 @@ export function HockeyStickTrajectoryIllustration() {
               {/* Grid Lines */}
               <line x1="100" y1="350" x2="850" y2="350" stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4" />
               <line x1="100" y1="50" x2="100" y2="350" stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4" />
-              <line x1="380" y1="50" x2="380" y2="350" stroke="rgba(99,102,241,0.2)" strokeDasharray="2 2" />
+              <line x1="380" y1="50" x2="380" y2="350" stroke="rgba(56,189,248,0.2)" strokeDasharray="2 2" />
 
               {/* HOCKEY STICK CURVE PATH */}
               {/* Path starts at (120, 270) -> flat blade to (340, 290) -> heel curve at (380, 295) -> shoots steep to (820, 50) */}
@@ -99,19 +99,19 @@ export function HockeyStickTrajectoryIllustration() {
                 <rect 
                   x="0" y="0" width="200" height="60" rx="12" 
                   fill="rgba(15, 23, 42, 0.9)" 
-                  stroke={selectedPhase === "magic" ? "#818cf8" : "rgba(255, 255, 255, 0.2)"} 
+                  stroke={selectedPhase === "magic" ? "#38bdf8" : "rgba(255, 255, 255, 0.2)"} 
                   strokeWidth={selectedPhase === "magic" ? "2" : "1"}
                 />
                 <text x="100" y="26" textAnchor="middle" fill="#ffffff" fontSize="13" fontWeight="bold" fontFamily="serif">
                   The magic happens here
                 </text>
-                <text x="100" y="44" textAnchor="middle" fill="#818cf8" fontSize="10" fontFamily="monospace">
+                <text x="100" y="44" textAnchor="middle" fill="#38bdf8" fontSize="10" fontFamily="monospace">
                   Transcend AI Engine
                 </text>
 
                 {/* Arrow Pointer Down to Inflection Node (Centered at X=100 -> Absolute X=410) */}
-                <path d="M 100 60 L 100 120" stroke="#818cf8" strokeWidth="2" strokeDasharray="3 3" />
-                <polygon points="95,118 100,128 105,118" fill="#818cf8" />
+                <path d="M 100 60 L 100 120" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3 3" />
+                <polygon points="95,118 100,128 105,118" fill="#38bdf8" />
               </g>
 
               {/* PHASE 1 NODE: HISTORY */}
@@ -133,8 +133,8 @@ export function HockeyStickTrajectoryIllustration() {
                 className="cursor-pointer"
                 onClick={() => setSelectedPhase("magic")}
               >
-                <circle r="16" fill="#0f172a" stroke="#818cf8" strokeWidth="3" className="animate-pulse" />
-                <circle r="7" fill="#e879f9" />
+                <circle r="16" fill="#0f172a" stroke="#38bdf8" strokeWidth="3" className="animate-pulse" />
+                <circle r="7" fill="#f59e0b" />
               </g>
 
               {/* PHASE 3 NODE: FUTURE SKYWARD */}
@@ -152,7 +152,7 @@ export function HockeyStickTrajectoryIllustration() {
 
               {/* AXIS LABELS */}
               <text x="180" y="380" fill="#64748b" fontSize="12" fontFamily="monospace" fontWeight="bold">
-                &larr; HISTORY (Past Reps &amp; Film)
+                &larr; HISTORY (Past Reps and Film)
               </text>
               <text x="600" y="380" fill="#64748b" fontSize="12" fontFamily="monospace" fontWeight="bold">
                 FUTURE (Compounding Mastery) &rarr;
@@ -175,23 +175,23 @@ export function HockeyStickTrajectoryIllustration() {
                 <Clock className="w-4 h-4 text-cyan-400" />
               </div>
               <h3 className="text-lg font-serif font-bold text-white mb-1">Plateaued Repetition</h3>
-              <p className="text-xs text-zinc-400 font-light">Static 2D video clips &amp; unguided ice reps without mechanical provenance lead to lesser skills and plateaued growth.</p>
+              <p className="text-xs text-zinc-400 font-light">Static 2D video clips and unguided ice reps without mechanical provenance lead to lesser skills and plateaued growth.</p>
             </button>
 
             <button
               onClick={() => setSelectedPhase("magic")}
               className={`p-5 rounded-2xl border text-left transition-all ${
                 selectedPhase === "magic"
-                  ? "bg-gradient-to-r from-indigo-950/60 via-purple-950/40 to-black border-indigo-500/50 ring-1 ring-indigo-500/30 shadow-[0_0_25px_rgba(99,102,241,0.2)]"
+                  ? "bg-gradient-to-r from-sky-950/60 via-amber-950/40 to-black border-sky-500/50 ring-1 ring-sky-500/30 shadow-[0_0_25px_rgba(56,189,248,0.2)]"
                   : "bg-zinc-900/30 border-white/10 hover:bg-zinc-900/60"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest">INFLECTION POINT</span>
-                <Sparkles className="w-4 h-4 text-indigo-400" />
+                <span className="text-[10px] font-mono font-bold text-sky-400 uppercase tracking-widest">INFLECTION POINT</span>
+                <Sparkles className="w-4 h-4 text-sky-400" />
               </div>
               <h3 className="text-lg font-serif font-bold text-white mb-1">The Magic Happens Here</h3>
-              <p className="text-xs text-zinc-300 font-light">Transcend AI Engine (<span className="text-cyan-400">Nano</span>/<span className="text-indigo-400">Micro</span>/<span className="text-fuchsia-400">Meso</span>/<span className="text-emerald-400">Macro</span>) unlocks the vertical bend.</p>
+              <p className="text-xs text-zinc-300 font-light">Transcend AI Engine (<span className="text-cyan-400">Nano</span>/<span className="text-sky-400">Micro</span>/<span className="text-amber-400">Meso</span>/<span className="text-emerald-400">Macro</span>) unlocks the vertical bend.</p>
             </button>
 
             <button

@@ -34,7 +34,7 @@ export default function PricingPage() {
       <main className="relative overflow-hidden">
         {/* HERO SECTION */}
         <section className="relative px-6 pt-20 pb-16 lg:px-8 border-b border-white/10 bg-gradient-to-b from-zinc-900/60 via-zinc-950 to-zinc-950">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-fuchsia-500/10 blur-[120px] pointer-events-none" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/10 via-teal-500/10 to-emerald-500/10 blur-[120px] pointer-events-none" />
 
           <div className="mx-auto max-w-4xl text-center relative z-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-cyan-400 uppercase font-mono mb-6">
@@ -43,7 +43,7 @@ export default function PricingPage() {
 
             <h1 className="text-4xl font-serif font-normal tracking-tight text-white sm:text-6xl mb-6">
               Decision-Grade AI Intelligence. <br />
-              <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400 bg-clip-text text-transparent font-medium">
+              <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400 bg-clip-text text-transparent font-medium">
                 Built for Every Bench.
               </span>
             </h1>
@@ -58,7 +58,7 @@ export default function PricingPage() {
                 onClick={() => setBillingCycle("team")}
                 className={`px-5 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   billingCycle === "team"
-                    ? "bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow-md shadow-cyan-950/40"
+                    ? "bg-gradient-to-r from-cyan-500 to-teal-600 text-white shadow-md shadow-cyan-950/40"
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
@@ -68,7 +68,7 @@ export default function PricingPage() {
                 onClick={() => setBillingCycle("season")}
                 className={`px-5 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   billingCycle === "season"
-                    ? "bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow-md shadow-cyan-950/40"
+                    ? "bg-gradient-to-r from-cyan-500 to-teal-600 text-white shadow-md shadow-cyan-950/40"
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
@@ -82,9 +82,9 @@ export default function PricingPage() {
         <section className="px-6 py-20 lg:px-8 bg-zinc-950 relative">
           <div className="mx-auto max-w-7xl">
             
-            {/* SECTION 1: INDIVIDUAL & FAMILY PLANS */}
+            {/* SECTION 1: INDIVIDUAL and FAMILY PLANS */}
             <div className="mb-12">
-              <h2 className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400 mb-2">Individual &amp; Family Plans</h2>
+              <h2 className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400 mb-2">Individual and Family Plans</h2>
               <p className="text-lg font-serif text-white">Habit-building tools for skaters, families, and elite prospects.</p>
             </div>
 
@@ -117,11 +117,11 @@ export default function PricingPage() {
                     </li>
                     <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <span>Receive coach micro-loops &amp; voice note cuts</span>
+                      <span>Receive coach micro-loops and voice note cuts</span>
                     </li>
                     <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <span>1–5 self-rating &amp; voice note reflections</span>
+                      <span>1–5 self-rating and voice note reflections</span>
                     </li>
                     <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
@@ -139,28 +139,30 @@ export default function PricingPage() {
                     <span>Included for Roster Athletes</span>
                   </button>
                 </div>
-              </div>              {/* TIER 2: FAMILY PLAN */}
-              <div className="group relative rounded-3xl border border-indigo-500/30 bg-gradient-to-b from-indigo-950/20 via-zinc-900/40 to-zinc-950 p-8 backdrop-blur-md flex flex-col justify-between hover:border-indigo-400/50 transition-all">
+              </div>
+
+              {/* TIER 2: FAMILY PLAN */}
+              <div className="group relative rounded-3xl border border-sky-500/30 bg-gradient-to-b from-sky-950/20 via-zinc-900/40 to-zinc-950 p-8 backdrop-blur-md flex flex-col justify-between hover:border-sky-400/50 transition-all">
                 <div>
                   {/* TOP BADGE ROW */}
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/30">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-sky-400 bg-sky-500/10 px-3 py-1 rounded-full border border-sky-500/30">
                       Family Pass
                     </span>
-                    <Users className="w-5 h-5 text-indigo-400" />
+                    <Users className="w-5 h-5 text-sky-400" />
                   </div>
 
-                  {/* TITLE & SUB-TIER TOGGLE ROW */}
+                  {/* TITLE and SUB-TIER TOGGLE ROW */}
                   <div className="flex items-center justify-between gap-2 mb-3">
                     <h3 className="font-serif text-2xl text-white font-medium">Family</h3>
                     
                     {/* SUB-TIER LINK TOGGLE */}
-                    <div className="inline-flex items-center p-0.5 rounded-lg bg-zinc-900/90 border border-indigo-500/30 text-[11px]">
+                    <div className="inline-flex items-center p-0.5 rounded-lg bg-zinc-900/90 border border-sky-500/30 text-[11px]">
                       <button
                         onClick={() => setFamilyTier("basic")}
                         className={`px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer ${
                           familyTier === "basic"
-                            ? "bg-indigo-600 text-white shadow-sm font-semibold"
+                            ? "bg-sky-600 text-white shadow-sm font-semibold"
                             : "text-zinc-400 hover:text-white"
                         }`}
                       >
@@ -170,7 +172,7 @@ export default function PricingPage() {
                         onClick={() => setFamilyTier("advantage")}
                         className={`px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer ${
                           familyTier === "advantage"
-                            ? "bg-indigo-600 text-white shadow-sm font-semibold"
+                            ? "bg-sky-600 text-white shadow-sm font-semibold"
                             : "text-zinc-400 hover:text-white"
                         }`}
                       >
@@ -202,35 +204,35 @@ export default function PricingPage() {
                     {familyTier === "basic" ? (
                       <>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                          <span>Single skater &amp; guardian account link</span>
+                          <Check className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                          <span>Single skater and guardian account link</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                          <span>Shared Periodical reflection log &amp; parent co-journaling</span>
+                          <Check className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                          <span>Shared Periodical reflection log and parent co-journaling</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                          <span>Standard video clip vault &amp; micro-loop feed</span>
+                          <Check className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                          <span>Standard video clip vault and micro-loop feed</span>
                         </li>
                       </>
                     ) : (
                       <>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
                           <span>4 seats: 2 guardians + 2 members / skaters</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                          <span>Shared Periodical reflection log &amp; parent co-journaling</span>
+                          <Check className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                          <span>Shared Periodical reflection log and parent co-journaling</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
                           <span>Multi-skater Superpower Matrix comparison</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                          <span>Shared video clip vault &amp; coach micro-loop archive</span>
+                          <Check className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                          <span>Shared video clip vault and coach micro-loop archive</span>
                         </li>
                       </>
                     )}
@@ -249,29 +251,29 @@ export default function PricingPage() {
               </div>
 
               {/* TIER 3: PRO PROSPECT PLAN */}
-              <div className="group relative rounded-3xl border border-fuchsia-500/30 bg-gradient-to-b from-fuchsia-950/20 via-zinc-900/40 to-zinc-950 p-8 backdrop-blur-md flex flex-col justify-between hover:border-fuchsia-400/50 transition-all">
+              <div className="group relative rounded-3xl border border-teal-500/30 bg-gradient-to-b from-teal-950/20 via-zinc-900/40 to-zinc-950 p-8 backdrop-blur-md flex flex-col justify-between hover:border-teal-400/50 transition-all">
                 <div>
                   {/* TOP BADGE ROW */}
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-fuchsia-400 bg-fuchsia-500/10 px-3 py-1 rounded-full border border-fuchsia-500/30">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-teal-400 bg-teal-500/10 px-3 py-1 rounded-full border border-teal-500/30">
                       Prospect Pass
                     </span>
-                    <Sparkles className="w-5 h-5 text-fuchsia-400" />
+                    <Sparkles className="w-5 h-5 text-teal-400" />
                   </div>
 
-                  {/* TITLE & SUB-TIER TOGGLE ROW */}
+                  {/* TITLE and SUB-TIER TOGGLE ROW */}
                   <div className="flex items-center justify-between gap-2 mb-3">
                     <h3 className="font-serif text-2xl text-white font-medium">
                       {proTier === "advantage" ? "Elite Prospect" : "Pro Prospect"}
                     </h3>
                     
                     {/* SUB-TIER LINK TOGGLE */}
-                    <div className="inline-flex items-center p-0.5 rounded-lg bg-zinc-900/90 border border-fuchsia-500/30 text-[11px]">
+                    <div className="inline-flex items-center p-0.5 rounded-lg bg-zinc-900/90 border border-teal-500/30 text-[11px]">
                       <button
                         onClick={() => setProTier("standard")}
                         className={`px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer ${
                           proTier === "standard"
-                            ? "bg-fuchsia-600 text-white shadow-sm font-semibold"
+                            ? "bg-teal-600 text-white shadow-sm font-semibold"
                             : "text-zinc-400 hover:text-white"
                         }`}
                       >
@@ -281,7 +283,7 @@ export default function PricingPage() {
                         onClick={() => setProTier("advantage")}
                         className={`px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer ${
                           proTier === "advantage"
-                            ? "bg-fuchsia-600 text-white shadow-sm font-semibold"
+                            ? "bg-teal-600 text-white shadow-sm font-semibold"
                             : "text-zinc-400 hover:text-white"
                         }`}
                       >
@@ -292,8 +294,8 @@ export default function PricingPage() {
 
                   <p className="text-xs text-zinc-300 font-light leading-relaxed">
                     {proTier === "standard"
-                      ? "Dedicated AI shift parsing & individual development tracking for AAA prospects."
-                      : "For AAA prospects, private skills coaches, and scouts wanting solo AI shift parsing & dossiers."}
+                      ? "Dedicated AI shift parsing and individual development tracking for AAA prospects."
+                      : "For AAA prospects, private skills coaches, and scouts wanting solo AI shift parsing and dossiers."}
                   </p>
 
                   <div className="mt-6 mb-8 flex items-baseline gap-2">
@@ -309,54 +311,54 @@ export default function PricingPage() {
                     {proTier === "standard" ? (
                       <>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
                           <span>EdgeIQ Video Intelligence Suite</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                          <span>Solo MASCE AI game parsing &amp; individual shift tagging</span>
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
+                          <span>Solo MASCE AI game parsing and individual shift tagging</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                          <span>Standard Cut Room Workbench &amp; Natural Language Discovery &amp; Semantic Search</span>
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
+                          <span>Standard Cut Room Workbench and Natural Language Discovery and Semantic Search</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
                           <span>1 TB Cloud Storage, Cloud GPU/CPU Workloads</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
                           <span>$10 monthly credits of GPU tokens</span>
                         </li>
                       </>
                     ) : (
                       <>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                          <span>EdgeIQ &amp; Stratus Performance &amp; Scout Suite</span>
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
+                          <span>EdgeIQ and Stratus Performance and Scout Suite</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                          <span>Solo MASCE AI game parsing &amp; individual shift tagging</span>
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
+                          <span>Solo MASCE AI game parsing and individual shift tagging</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                          <span>Private Cut Room Workbench &amp; 41s Natural Language Querying</span>
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
+                          <span>Private Cut Room Workbench and 41s Natural Language Querying</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                          <span>Bi-weekly AI Superpower synthesis &amp; scouting dossiers</span>
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
+                          <span>Bi-weekly AI Superpower synthesis and scouting dossiers</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
                           <span>Priority processing queue on dedicated GPU fabric</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
                           <span>1 TB Cloud Storage, Cloud GPU/CPU Workloads</span>
                         </li>
                         <li className="flex items-start gap-2.5">
-                          <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
                           <span>$20 monthly credits of GPU tokens</span>
                         </li>
                       </>
@@ -377,7 +379,7 @@ export default function PricingPage() {
 
             </div>
 
-            {/* TRANSCEND VISION COMMERCIAL & 50% CLUB REV-SHARE SECTION */}
+            {/* TRANSCEND VISION COMMERCIAL and 50% CLUB REV-SHARE SECTION */}
             <div className="mb-12 border-t border-white/10 pt-16">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div>
@@ -385,7 +387,7 @@ export default function PricingPage() {
                     <Sparkles className="w-4 h-4" /> Transcend Vision Commercial Model
                   </div>
                   <h2 className="text-2xl md:text-3xl font-serif text-white">
-                    BYOD Zero-Capex Capture &amp; 50% Club Rev-Share
+                    BYOD Zero-Capex Capture and 50% Club Rev-Share
                   </h2>
                   <p className="text-sm text-zinc-400 mt-1 max-w-2xl font-light">
                     Transforming sports video economics: Free 4K capture, zero hardware capex, and 50% of every family subscription paid back directly to your youth club travel fund.
@@ -420,7 +422,7 @@ export default function PricingPage() {
 
                     <h3 className="font-serif text-2xl text-white font-medium">Vision Core BYOD</h3>
                     <p className="mt-2 text-xs text-zinc-400 font-light leading-relaxed">
-                      Zero hardware purchase. Mount your iPhone or iPad on arena glass for autonomous 4K broadcast &amp; tracking.
+                      Zero hardware purchase. Mount your iPhone or iPad on arena glass for autonomous 4K broadcast and tracking.
                     </p>
 
                     <div className="mt-6 mb-8 flex items-baseline gap-2">
@@ -431,7 +433,7 @@ export default function PricingPage() {
                     <ul className="space-y-3.5 text-xs text-zinc-300 border-t border-white/10 pt-6 font-mono">
                       <li className="flex items-start gap-2.5">
                         <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span>Autonomous VisionEdge™ skater &amp; puck tracking</span>
+                        <span>Autonomous VisionEdge™ skater and puck tracking</span>
                       </li>
                       <li className="flex items-start gap-2.5">
                         <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
@@ -461,7 +463,7 @@ export default function PricingPage() {
 
                 {/* TIER B: PRO FAMILY PASS (50% REV-SHARE HERO) */}
                 <div className="group relative rounded-3xl border border-cyan-500/50 bg-gradient-to-b from-cyan-950/30 via-zinc-900/50 to-zinc-950 p-8 backdrop-blur-md flex flex-col justify-between shadow-[0_0_40px_rgba(6,182,212,0.15)] hover:border-cyan-400 transition-all">
-                  <div className="absolute -top-3 left-8 bg-gradient-to-r from-cyan-500 to-indigo-600 px-3.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-white uppercase tracking-wider shadow-md">
+                  <div className="absolute -top-3 left-8 bg-gradient-to-r from-cyan-500 to-sky-600 px-3.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-white uppercase tracking-wider shadow-md">
                     50% Club Rev-Share
                   </div>
 
@@ -475,7 +477,7 @@ export default function PricingPage() {
 
                     <h3 className="font-serif text-2xl text-white font-medium">Transcend Pro Family</h3>
                     <p className="mt-2 text-xs text-zinc-300 font-light leading-relaxed">
-                      For parents &amp; relatives. 50% ($4.99/mo or $39.50/yr) goes directly into your youth team&apos;s fundraising wallet.
+                      For parents and relatives. 50% ($4.99/mo or $39.50/yr) goes directly into your youth team&apos;s fundraising wallet.
                     </p>
 
                     <div className="mt-6 mb-8 flex items-baseline gap-2">
@@ -494,11 +496,11 @@ export default function PricingPage() {
                       </li>
                       <li className="flex items-start gap-2.5">
                         <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                        <span>Autonomous PTZ broadcast with live scorebug &amp; clock</span>
+                        <span>Autonomous PTZ broadcast with live scorebug and clock</span>
                       </li>
                       <li className="flex items-start gap-2.5">
                         <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                        <span>Personal shift playlists &amp; highlight reels in Film Room</span>
+                        <span>Personal shift playlists and highlight reels in Film Room</span>
                       </li>
                     </ul>
                   </div>
@@ -506,7 +508,7 @@ export default function PricingPage() {
                   <div className="mt-8 pt-6 border-t border-white/10">
                     <Link
                       href="/club-revshare"
-                      className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:opacity-95 py-3 text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/40 transition-all font-mono"
+                      className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 hover:opacity-95 py-3 text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/40 transition-all font-mono"
                     >
                       <span>Calculate Team Payout</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -518,10 +520,10 @@ export default function PricingPage() {
                 <div className="group relative rounded-3xl border border-white/10 bg-zinc-900/30 p-8 backdrop-blur-md flex flex-col justify-between hover:border-white/20 transition-all">
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-fuchsia-400 bg-fuchsia-500/10 px-3 py-1 rounded-full border border-fuchsia-500/30">
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/30">
                         NCAA / Junior Scout
                       </span>
-                      <ShieldCheck className="w-5 h-5 text-fuchsia-400" />
+                      <ShieldCheck className="w-5 h-5 text-rose-400" />
                     </div>
 
                     <h3 className="font-serif text-2xl text-white font-medium">Scout Intelligence</h3>
@@ -536,19 +538,19 @@ export default function PricingPage() {
 
                     <ul className="space-y-3.5 text-xs text-zinc-300 border-t border-white/10 pt-6 font-mono">
                       <li className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                        <Check className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                         <span>Full access to verified game film across all clubs</span>
                       </li>
                       <li className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                        <span>Filter by verified top speed (&gt;22 mph) &amp; ShotIQ</span>
+                        <Check className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <span>Filter by verified top speed (&gt;22 mph) and ShotIQ</span>
                       </li>
                       <li className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                        <Check className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                         <span>Secure Enclave cryptographically signed certificates</span>
                       </li>
                       <li className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                        <Check className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                         <span>Integration with Spotlight prospect watchlists</span>
                       </li>
                     </ul>
@@ -567,9 +569,9 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {/* SECTION 2: TEAM & ASSOCIATION PLANS */}
+            {/* SECTION 2: TEAM and ASSOCIATION PLANS */}
             <div className="mb-12 border-t border-white/10 pt-16">
-              <h2 className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400 mb-2">Team &amp; Association Plans</h2>
+              <h2 className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400 mb-2">Team and Association Plans</h2>
               <p className="text-lg font-serif text-white">Full-roster video intelligence and organization-wide infrastructure.</p>
             </div>
 
@@ -577,7 +579,7 @@ export default function PricingPage() {
               
               {/* TIER 4: FOUNDING TEAMS BETA (HIGHLIGHTED) */}
               <div className="group relative rounded-3xl border border-cyan-500/40 bg-gradient-to-b from-cyan-950/30 via-zinc-900/50 to-zinc-950 p-8 sm:p-10 backdrop-blur-md flex flex-col justify-between shadow-[0_0_50px_rgba(6,182,212,0.12)] hover:border-cyan-400 transition-all">
-                <div className="absolute -top-3.5 left-8 bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-1 rounded-full text-[10px] font-mono font-bold text-white uppercase tracking-widest shadow-md">
+                <div className="absolute -top-3.5 left-8 bg-gradient-to-r from-cyan-500 to-teal-600 px-4 py-1 rounded-full text-[10px] font-mono font-bold text-white uppercase tracking-widest shadow-md">
                   Founding Teams Beta
                 </div>
 
@@ -606,15 +608,15 @@ export default function PricingPage() {
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs text-zinc-200 border-t border-white/10 pt-6">
                     <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                      <span>Full MASCE AI video ingest &amp; telemetry parsing</span>
+                      <span>Full MASCE AI video ingest and telemetry parsing</span>
                     </li>
                     <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                      <span>41s Natural Language Querying &amp; Cut Room</span>
+                      <span>41s Natural Language Querying and Cut Room</span>
                     </li>
                     <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                      <span>Provenance-Tagged Event &amp; Possession Ledgers</span>
+                      <span>Provenance-Tagged Event and Possession Ledgers</span>
                     </li>
                     <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
@@ -622,7 +624,7 @@ export default function PricingPage() {
                     </li>
                     <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                      <span>Automated 14-point physics &amp; rule audit</span>
+                      <span>Automated 14-point physics and rule audit</span>
                     </li>
                     <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
@@ -646,10 +648,10 @@ export default function PricingPage() {
               <div className="group relative rounded-3xl border border-white/10 bg-zinc-900/30 p-8 sm:p-10 backdrop-blur-md flex flex-col justify-between hover:border-white/20 transition-all">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-fuchsia-400 bg-fuchsia-500/10 px-3 py-1 rounded-full border border-fuchsia-500/30">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
                       Association / Club
                     </span>
-                    <ShieldCheck className="w-6 h-6 text-fuchsia-400" />
+                    <ShieldCheck className="w-6 h-6 text-amber-400" />
                   </div>
 
                   <h3 className="font-serif text-3xl text-white font-medium">Enterprise Organization</h3>
@@ -664,24 +666,24 @@ export default function PricingPage() {
 
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs text-zinc-300 border-t border-white/10 pt-6">
                     <li className="flex items-start gap-2.5">
-                      <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                       <span>Dedicated GPU fabric node allocation</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                      <span>Custom Hockey Taxonomy &amp; ML tuning</span>
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Custom Hockey Taxonomy and ML tuning</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                      <span>MinIO S3 Video Vault &amp; Temporal workers</span>
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>MinIO S3 Video Vault and Temporal workers</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                       <span>Multi-rink automated video ingestion</span>
                     </li>
                     <li className="flex items-start gap-2.5 sm:col-span-2">
-                      <Check className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
-                      <span>COPPA Minor &amp; SOC 2 Type II audit compliance</span>
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>COPPA Minor and SOC 2 Type II audit compliance</span>
                     </li>
                   </ul>
                 </div>
@@ -703,7 +705,7 @@ export default function PricingPage() {
 
         {/* COST UNLOCK COMPARISON STRIP */}
         <section className="px-6 py-20 lg:px-8 border-t border-white/10 bg-zinc-950">
-          <div className="mx-auto max-w-5xl rounded-3xl border border-white/10 bg-gradient-to-r from-cyan-950/40 via-zinc-900/80 to-fuchsia-950/40 p-8 sm:p-12 backdrop-blur-xl shadow-2xl">
+          <div className="mx-auto max-w-5xl rounded-3xl border border-white/10 bg-gradient-to-r from-cyan-950/40 via-zinc-900/80 to-teal-950/40 p-8 sm:p-12 backdrop-blur-xl shadow-2xl">
             <div className="text-center max-w-3xl mx-auto mb-10">
               <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest block mb-2">The Economic Collapse</span>
               <h2 className="text-3xl font-serif text-white sm:text-4xl">How We Achieved $2.87 Per Game</h2>

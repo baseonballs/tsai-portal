@@ -8,7 +8,7 @@ export function TechnologyPlatform() {
   const iconMap: Record<string, React.ReactNode> = {
     Camera: <Camera className="h-6 w-6 text-cyan-400" />,
     Network: <Network className="h-6 w-6 text-emerald-400" />,
-    Server: <Server className="h-6 w-6 text-indigo-400" />,
+    Server: <Server className="h-6 w-6 text-sky-400" />,
   };
 
   return (
@@ -69,7 +69,7 @@ export function TechnologyPlatform() {
 
         {/* Tactical Pipeline Visualization Mockup */}
         <div className="mt-16 sm:mt-24 rounded-3xl border border-white/10 bg-zinc-900/20 p-2 overflow-hidden relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-indigo-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-sky-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
           <div className="rounded-2xl border border-white/5 bg-zinc-950 p-6 md:p-12 relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
             {/* Animated Grid Background */}
             <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
@@ -90,9 +90,9 @@ export function TechnologyPlatform() {
 
               {/* Node 2: Inference */}
               <div className="flex flex-col items-center gap-3">
-                <div className="w-20 h-20 rounded-xl border border-indigo-500/30 bg-indigo-950/30 flex items-center justify-center relative">
-                  <div className="absolute inset-0 rounded-xl border border-indigo-500/50 animate-[spin_4s_linear_infinite]" style={{ borderStyle: 'dashed' }} />
-                  <Network className="text-indigo-400 w-8 h-8" />
+                <div className="w-20 h-20 rounded-xl border border-sky-500/30 bg-sky-950/30 flex items-center justify-center relative">
+                  <div className="absolute inset-0 rounded-xl border border-sky-500/50 animate-[spin_4s_linear_infinite]" style={{ borderStyle: 'dashed' }} />
+                  <Network className="text-sky-400 w-8 h-8" />
                 </div>
                 <span className="font-mono text-[10px] tracking-widest text-zinc-500 text-center">MASCE ENGINE<br/>L1-L4 CHRONOLOGY</span>
               </div>
@@ -113,7 +113,7 @@ export function TechnologyPlatform() {
             
             <div className="relative z-10 mt-12 text-center">
                <p className="text-xs text-zinc-400 font-mono">
-                 Deterministic Provenance-Tagged Event &amp; Possession Ledgers • 14-Point Integrity Audit
+                 Deterministic Provenance-Tagged Event and Possession Ledgers • 14-Point Integrity Audit
                </p>
             </div>
           </div>

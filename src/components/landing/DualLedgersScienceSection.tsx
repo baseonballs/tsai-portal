@@ -23,7 +23,7 @@ export function DualLedgersScienceSection() {
     <section className="px-6 py-28 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-zinc-900/60 to-zinc-950 relative overflow-hidden text-left">
       {/* Background Neon Ambient Glows */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[300px] bg-cyan-500/10 blur-[130px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[300px] bg-indigo-500/10 blur-[130px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[300px] bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none" />
 
       <div className="mx-auto max-w-7xl relative z-10">
         {/* SECTION HEADER */}
@@ -36,7 +36,7 @@ export function DualLedgersScienceSection() {
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-white tracking-tight leading-tight">
             The Dual Ledgers: The Bedrock of <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-emerald-400">
               Decision-Grade Sports Science.
             </span>
           </h2>
@@ -70,22 +70,22 @@ export function DualLedgersScienceSection() {
             onClick={() => setActiveLedger("possession")}
             className={`p-6 rounded-2xl border transition-all text-left flex items-start gap-4 ${
               activeLedger === "possession"
-                ? "bg-gradient-to-r from-indigo-950/60 via-zinc-900/60 to-black border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.2)] ring-1 ring-indigo-500/30"
+                ? "bg-gradient-to-r from-emerald-950/60 via-zinc-900/60 to-black border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)] ring-1 ring-emerald-500/30"
                 : "bg-zinc-900/40 border-white/10 hover:border-white/20 hover:bg-zinc-900/70"
             }`}
           >
-            <div className={`p-3 rounded-xl border ${activeLedger === "possession" ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-400" : "bg-zinc-950 border-white/10 text-zinc-400"}`}>
+            <div className={`p-3 rounded-xl border ${activeLedger === "possession" ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400" : "bg-zinc-950 border-white/10 text-zinc-400"}`}>
               <Database className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-mono font-bold tracking-widest text-indigo-400 uppercase block mb-1">FOUNDATIONAL LEDGER 02</span>
+              <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase block mb-1">FOUNDATIONAL LEDGER 02</span>
               <h3 className="text-lg font-serif font-bold text-white">Puck Possession Ledger</h3>
               <p className="text-xs text-zinc-400 font-light mt-1">Spatial-temporal physics and control state tracking across every frame.</p>
             </div>
           </button>
         </div>
 
-        {/* ACTIVE LEDGER DEEP DIVE & LIVE TERMINAL DEMO */}
+        {/* ACTIVE LEDGER DEEP DIVE and LIVE TERMINAL DEMO */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* LEDGER DETAILS CARD */}
           <div className="lg:col-span-6 rounded-3xl border border-white/15 bg-zinc-900/50 p-8 md:p-10 backdrop-blur-xl flex flex-col justify-between shadow-2xl">
@@ -140,7 +140,7 @@ export function DualLedgersScienceSection() {
               ) : (
                 <>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
+                    <span className="px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
                       SPATIAL-TEMPORAL VECTOR MECHANICS
                     </span>
                     <span className="text-xs font-mono text-zinc-500">Physics Proximity Matrix</span>
@@ -154,7 +154,7 @@ export function DualLedgersScienceSection() {
 
                   <div className="space-y-4 mb-8">
                     <div className="flex items-start gap-3">
-                      <div className="p-1 rounded bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 mt-0.5">
+                      <div className="p-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mt-0.5">
                         <Check className="w-4 h-4" />
                       </div>
                       <div>
@@ -164,21 +164,21 @@ export function DualLedgersScienceSection() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-1 rounded bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 mt-0.5">
+                      <div className="p-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mt-0.5">
                         <Check className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-semibold text-white">Stick-Blade &amp; Velocity Vector Proximity</h4>
+                        <h4 className="text-sm font-semibold text-white">Stick-Blade and Velocity Vector Proximity</h4>
                         <p className="text-xs text-zinc-400 font-light mt-0.5">Translates 2D camera pixels to 3D homography meters to verify skater-to-puck control radii.</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-1 rounded bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 mt-0.5">
+                      <div className="p-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mt-0.5">
                         <Check className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-semibold text-white">Space-Earning &amp; Pressure Metrics</h4>
+                        <h4 className="text-sm font-semibold text-white">Space-Earning and Pressure Metrics</h4>
                         <p className="text-xs text-zinc-400 font-light mt-0.5">Quantifies how skaters gain high-danger ice under pressure versus forfeiting transition leverage.</p>
                       </div>
                     </div>
@@ -214,7 +214,7 @@ export function DualLedgersScienceSection() {
                 <div className="space-y-3 text-[11px] leading-relaxed">
                   {activeLedger === "chronology" ? (
                     <>
-                      <div className="text-zinc-500">// CHRONOLOGY_LEDGER_RECORD_ID: 1048-A</div>
+                      <div className="text-zinc-500">{"// CHRONOLOGY_LEDGER_RECORD_ID: 1048-A"}</div>
                       <div className="grid grid-cols-2 gap-x-8 gap-y-1">
                         <div className="text-zinc-300">
                           <span className="text-cyan-400">TIMESTAMP:</span> 14:22:08.412
@@ -298,43 +298,43 @@ export function DualLedgersScienceSection() {
                     </>
                   ) : (
                     <>
-                      <div className="text-zinc-500">// POSSESSION_LEDGER_RECORD_ID: 2091-P</div>
+                      <div className="text-zinc-500">{"// POSSESSION_LEDGER_RECORD_ID: 2091-P"}</div>
                       <div className="grid grid-cols-2 gap-x-8 gap-y-1">
                         <div className="text-zinc-300">
-                          <span className="text-indigo-400">POSSESSION_STATE:</span> Controlled
+                          <span className="text-emerald-400">POSSESSION_STATE:</span> Controlled
                         </div>
                         <div className="text-zinc-300 pl-6 sm:pl-10">
-                          <span className="text-indigo-400">CONTROL_RADIUS:</span> 0.18m
+                          <span className="text-emerald-400">CONTROL_RADIUS:</span> 0.18m
                         </div>
                         <div className="text-zinc-300">
-                          <span className="text-indigo-400">PRIMARY_POSSESSOR:</span> #26 Corinne L.
+                          <span className="text-emerald-400">PRIMARY_POSSESSOR:</span> #26 Corinne L.
                         </div>
                         <div className="text-zinc-300 pl-6 sm:pl-10">
-                          <span className="text-indigo-400">PRESSURE_INDEX:</span> Heavy (2 Def)
+                          <span className="text-emerald-400">PRESSURE_INDEX:</span> Heavy (2 Def)
                         </div>
                       </div>
                       <div className="text-zinc-300">
-                        <span className="text-indigo-400">TRANSITION_VECTOR:</span>{" Disputed → Controlled"}
+                        <span className="text-emerald-400">TRANSITION_VECTOR:</span>{" Disputed → Controlled"}
                       </div>
                       <div className="text-zinc-300">
-                        <span className="text-indigo-400">SPACE_EARNED:</span> +4.2m High-Danger Corridor
+                        <span className="text-emerald-400">SPACE_EARNED:</span> +4.2m High-Danger Corridor
                       </div>
 
                       {/* 2D/3D Homography Matrix Block */}
-                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-indigo-500/25 text-zinc-400 text-[10px] space-y-2">
-                        <div className="flex items-center justify-between text-indigo-400 font-bold border-b border-indigo-500/15 pb-1">
-                          <span>&gt; SPATIAL VECTOR DECODE &amp; 3D PHYSICS MESH</span>
+                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-emerald-500/25 text-zinc-400 text-[10px] space-y-2">
+                        <div className="flex items-center justify-between text-emerald-400 font-bold border-b border-emerald-500/15 pb-1">
+                          <span>&gt; SPATIAL VECTOR DECODE and 3D PHYSICS MESH</span>
                           <span className="text-emerald-400 font-mono">14-GATE OK</span>
                         </div>
                         <div className="grid grid-cols-3 gap-2 text-center text-[9.5px]">
                           <div className="bg-black/60 p-2 rounded border border-white/5">
                             <div className="text-zinc-500 text-[8.5px]">VELOCITY DIFF</div>
-                            <div className="text-indigo-300 font-bold mt-0.5">+2.1 m/s</div>
+                            <div className="text-emerald-300 font-bold mt-0.5">+2.1 m/s</div>
                             <div className="text-zinc-400 text-[8px]">Under Forecheck</div>
                           </div>
                           <div className="bg-black/60 p-2 rounded border border-white/5">
                             <div className="text-zinc-500 text-[8.5px]">HOMOGRAPHY</div>
-                            <div className="text-indigo-300 font-bold mt-0.5">2D → 3D OK</div>
+                            <div className="text-emerald-300 font-bold mt-0.5">2D → 3D OK</div>
                             <div className="text-zinc-400 text-[8px]">Rink Metric Lock</div>
                           </div>
                           <div className="bg-black/60 p-2 rounded border border-white/5">
@@ -346,10 +346,10 @@ export function DualLedgersScienceSection() {
                       </div>
 
                       {/* Live Parallel Audit Verification Log */}
-                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-indigo-500/25 text-[10px] space-y-2">
-                        <div className="flex items-center justify-between text-indigo-400 font-bold border-b border-indigo-500/15 pb-1 text-[9.5px]">
+                      <div className="p-3.5 rounded-xl bg-zinc-950 border border-emerald-500/25 text-[10px] space-y-2">
+                        <div className="flex items-center justify-between text-emerald-400 font-bold border-b border-emerald-500/15 pb-1 text-[9.5px]">
                           <span className="flex items-center gap-1.5">
-                            <Activity className="w-3 h-3 text-indigo-400 animate-pulse" />
+                            <Activity className="w-3 h-3 text-emerald-400 animate-pulse" />
                             PARALLEL AUDIT VERIFICATION LOG
                           </span>
                           <span className="text-emerald-400 text-[8.5px]">PASS 14/14</span>
@@ -361,16 +361,16 @@ export function DualLedgersScienceSection() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-zinc-500">20:91:04.300 · VECTOR_EVAL:</span>
-                            <span className="text-indigo-300">High-Danger Space (+4.2m)</span>
+                            <span className="text-emerald-300">High-Danger Space (+4.2m)</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-zinc-500">20:91:04.512 · AUDIT_COMMIT:</span>
-                            <span className="text-emerald-400 font-bold">State Verified &amp; Hashed</span>
+                            <span className="text-emerald-400 font-bold">State Verified and Hashed</span>
                           </div>
                         </div>
                         <div className="pt-1.5 border-t border-white/5 flex items-center justify-between text-[8.5px] text-zinc-500">
                           <span>RRM_SHA256: <code className="text-zinc-400">7f8a91c2...04a1</code></span>
-                          <span className="text-indigo-400 font-semibold">ZERO OCCLUSION DRIFT</span>
+                          <span className="text-emerald-400 font-semibold">ZERO OCCLUSION DRIFT</span>
                         </div>
                       </div>
                     </>

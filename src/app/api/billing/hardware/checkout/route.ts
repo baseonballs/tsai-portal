@@ -5,9 +5,7 @@ import { errorMessage } from "@/lib/errors";
 import { HARDWARE_RIG_KIT_PRICE_CENTS } from "@/lib/commercial/club-revenue-calculator";
 
 function stripeClient(): Stripe {
-  return new Stripe(required(process.env.STRIPE_SECRET_KEY, "STRIPE_SECRET_KEY"), {
-    apiVersion: "2024-06-20" as any,
-  });
+  return new Stripe(required(process.env.STRIPE_SECRET_KEY, "STRIPE_SECRET_KEY"));
 }
 
 export async function POST(request: Request) {

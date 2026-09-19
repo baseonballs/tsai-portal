@@ -49,7 +49,7 @@ export default function TechnologySolutionsPage() {
       id: "tempest" as const,
       name: "Tempest",
       tagline: "THE POSSESSION ANALOGUE",
-      badgeColor: "text-indigo-400 border-indigo-500/30 bg-indigo-500/10",
+      badgeColor: "text-sky-400 border-sky-500/30 bg-sky-500/10",
       description: "Translates team structure into plain bench language. Flow lines, zone grids, tactics lab, possession console, and storm decks.",
       keyFeatures: [
         "Narrates how your team earns space, zone residence, and pressure cycles",
@@ -57,7 +57,7 @@ export default function TechnologySolutionsPage() {
         "Situational analysis for special teams and overtime rhythms"
       ],
       icon: Activity,
-      color: "indigo"
+      color: "sky"
     },
     {
       id: "edgeiq" as const,
@@ -77,7 +77,7 @@ export default function TechnologySolutionsPage() {
       id: "stratus" as const,
       name: "Stratus",
       tagline: "THE SKILLS SCIENTIST",
-      badgeColor: "text-fuchsia-400 border-fuchsia-500/30 bg-fuchsia-500/10",
+      badgeColor: "text-teal-400 border-teal-500/30 bg-teal-500/10",
       description: "Sequences micro-skills into season-long developmental arcs. Neural coaching lab, rink twins, kinetic surfaces, and apex arenas.",
       keyFeatures: [
         "Sequences what we drill this week, how we know it stuck, and what unlocks next",
@@ -85,7 +85,7 @@ export default function TechnologySolutionsPage() {
         "Provides a plain-language development blueprint parents easily recognize"
       ],
       icon: Sparkles,
-      color: "fuchsia"
+      color: "teal"
     }
   ];
 
@@ -111,7 +111,7 @@ export default function TechnologySolutionsPage() {
 
           <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white mb-6 leading-[1.1]">
             Zero-hardware capture.<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400">
               Decision-grade analytics.
             </span>
           </h1>
@@ -121,7 +121,7 @@ export default function TechnologySolutionsPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <a href="#beta-access" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
+            <a href="#beta-access" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all transform hover:scale-105">
               Apply for Teams Beta Access
             </a>
             <a href="#architecture" className="w-full sm:w-auto rounded-full border border-white/10 bg-white/5 px-8 py-4 text-sm font-semibold text-zinc-300 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2">
@@ -130,7 +130,7 @@ export default function TechnologySolutionsPage() {
           </div>
         </section>
 
-        {/* THE SCIENCE: DUAL LEDGER ARCHITECTURE (CHRONOLOGY & POSSESSION) */}
+        {/* THE SCIENCE: DUAL LEDGER ARCHITECTURE (CHRONOLOGY and POSSESSION) */}
         <div id="science">
           <DualLedgersScienceSection />
         </div>
@@ -172,7 +172,7 @@ export default function TechnologySolutionsPage() {
               })}
             </div>
 
-            {/* Active Sub-Stack Card & Live Telemetry Grid */}
+            {/* Active Sub-Stack Card and Live Telemetry Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
               <div className="lg:col-span-6 bg-zinc-900/40 border border-white/10 rounded-3xl p-8 backdrop-blur-xl flex flex-col justify-between shadow-2xl">
                 <div>
@@ -220,13 +220,13 @@ export default function TechnologySolutionsPage() {
 
 
         {/* PERIODICAL: ACCOUNTABILITY THROUGH COLLABORATION */}
-        <section className="px-6 py-24 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-indigo-950/20 to-zinc-950 relative">
+        <section className="px-6 py-24 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-sky-950/20 to-zinc-950 relative">
           <div className="mx-auto max-w-7xl">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
-                <span className="text-xs font-semibold tracking-[0.2em] text-indigo-400 uppercase font-mono">Accountability Through Collaboration</span>
+                <span className="text-xs font-semibold tracking-[0.2em] text-sky-400 uppercase font-mono">Accountability Through Collaboration</span>
                 <h2 className="mt-4 text-4xl md:text-5xl font-serif text-white leading-tight">
-                  Periodical: Personalized journals & micro-loops in their hands.
+                  Periodical: Personalized journals and micro-loops in their hands.
                 </h2>
                 <p className="mt-6 text-lg text-zinc-300 font-light leading-relaxed">
                   Feedback is only valuable if it is lived. Periodical is the collaborative bridge connecting coach intent with player execution. It packages whiteboard sketches, tagged clips, and coaching annotations into personalized journals and micro-loops.
@@ -236,23 +236,23 @@ export default function TechnologySolutionsPage() {
                 </p>
 
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Link href="/players-development" className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <Link href="/players-development" className="inline-flex items-center gap-2 text-sm font-semibold text-sky-400 hover:text-sky-300 transition-colors">
                     Explore Player&apos;s Development <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="bg-black/50 border border-indigo-500/20 p-6 rounded-2xl">
+                <div className="bg-black/50 border border-sky-500/20 p-6 rounded-2xl">
                   <div className="flex items-center gap-3 mb-2">
-                    <BookOpen className="w-5 h-5 text-indigo-400" />
+                    <BookOpen className="w-5 h-5 text-sky-400" />
                     <h4 className="font-serif text-lg text-white">Daily Athlete Journaling</h4>
                   </div>
                   <p className="text-sm text-zinc-400 leading-relaxed">Voice note reflections and 1–5 self-ratings attached to coach cuts within 24 hours of ice time.</p>
                 </div>
-                <div className="bg-black/50 border border-fuchsia-500/20 p-6 rounded-2xl">
+                <div className="bg-black/50 border border-teal-500/20 p-6 rounded-2xl">
                   <div className="flex items-center gap-3 mb-2">
-                    <Zap className="w-5 h-5 text-fuchsia-400" />
+                    <Zap className="w-5 h-5 text-teal-400" />
                     <h4 className="font-serif text-lg text-white">Macro / Meso / Micro Cycle Planners</h4>
                   </div>
                   <p className="text-sm text-zinc-400 leading-relaxed">Aligning personal Superpower goals with seasonal team tactical development arcs.</p>
@@ -270,7 +270,7 @@ export default function TechnologySolutionsPage() {
         </section>
 
 
-        {/* THE AI EDGE · MASCE ENGINE & COST UNLOCK */}
+        {/* THE AI EDGE · MASCE ENGINE and COST UNLOCK */}
         <section className="px-6 py-24 lg:px-8 border-t border-white/10 bg-zinc-950 relative">
           <div className="mx-auto max-w-7xl">
             <div className="text-center max-w-3xl mx-auto mb-20">
@@ -305,32 +305,32 @@ export default function TechnologySolutionsPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 shrink-0 text-cyan-500 mt-0.5" />
-                    <span>Every analytics run self-checks against 14 physics & hockey rules to prevent drift.</span>
+                    <span>Every analytics run self-checks against 14 physics and hockey rules to prevent drift.</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="group relative rounded-3xl border border-white/10 bg-zinc-900/30 p-8 backdrop-blur-md transition-all hover:border-indigo-500/40 hover:bg-zinc-900/60">
+              <div className="group relative rounded-3xl border border-white/10 bg-zinc-900/30 p-8 backdrop-blur-md transition-all hover:border-sky-500/40 hover:bg-zinc-900/60">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-zinc-950 shadow-inner group-hover:scale-110 transition-transform">
-                  <Network className="h-6 w-6 text-indigo-400" />
+                  <Network className="h-6 w-6 text-sky-400" />
                 </div>
-                <h3 className="mt-8 font-serif text-xl font-medium text-white group-hover:text-indigo-400 transition-colors">
+                <h3 className="mt-8 font-serif text-xl font-medium text-white group-hover:text-sky-400 transition-colors">
                   Semantic Chronology
                 </h3>
-                <span className="mt-1 font-mono text-[10px] tracking-widest text-indigo-400 uppercase block mb-6">
+                <span className="mt-1 font-mono text-[10px] tracking-widest text-sky-400 uppercase block mb-6">
                   L1 → L4 Architecture
                 </span>
                 <ul className="space-y-3 text-sm text-zinc-400">
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 shrink-0 text-indigo-400 mt-0.5" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-sky-400 mt-0.5" />
                     <span>Atomic facts (Nano) roll deterministically up to shifts (Meso) and stats (Macro).</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 shrink-0 text-indigo-400 mt-0.5" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-sky-400 mt-0.5" />
                     <span>YOLO tracking stabilized into consistent identities, grounded by OCR scoreboards.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 shrink-0 text-indigo-400 mt-0.5" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-sky-400 mt-0.5" />
                     <span>Timeline never drifts: reproducible, auditable, and not summarized.</span>
                   </li>
                 </ul>
@@ -344,37 +344,36 @@ export default function TechnologySolutionsPage() {
                   The Cost Unlock
                 </h3>
                 <span className="mt-1 font-mono text-[10px] tracking-widest text-emerald-400 uppercase block mb-6">
-                  From $30 to $2.87 per game
+                  Hybrid AI Topology
                 </span>
                 <ul className="space-y-3 text-sm text-zinc-400">
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
-                    <span>Optimized cloud GPU architecture eliminates traditional compute overhead.</span>
+                    <span>Runs high-cadence CV and OCR on cost-effective, dedicated GPU instances.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
-                    <span>Processes a full 90-minute 1080p game in under 60 minutes for pennies.</span>
+                    <span>Distills structured game events into compact semantic tokens.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
-                    <span>Scale-to-zero cloud keeps fixed overhead near zero, producing high margins.</span>
+                    <span>Passes distilled tokens to flagship LLMs for natural language queries at pennies per game.</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            {/* Tactical Pipeline Node Visualization */}
-            <div className="rounded-3xl border border-white/10 bg-zinc-900/20 p-2 overflow-hidden relative group">
-              <div className="rounded-2xl border border-white/5 bg-zinc-950 p-8 md:p-12 relative overflow-hidden flex flex-col items-center justify-center min-h-[280px]">
-                {/* Radial Grid */}
-                <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
-                
-                <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full max-w-4xl justify-center">
+            {/* Architecture Pipeline Visual Diagram */}
+            <div className="mt-16 rounded-3xl border border-white/10 bg-black/40 p-8 md:p-12 relative overflow-hidden backdrop-blur-md">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-emerald-500/5 pointer-events-none" />
+              
+              <div className="relative z-10 max-w-4xl mx-auto">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 rounded-full border border-cyan-500/30 bg-cyan-950/30 flex items-center justify-center animate-pulse">
-                      <Camera className="text-cyan-400 w-6 h-6" />
+                    <div className="w-16 h-16 rounded-full border border-cyan-500/30 bg-cyan-950/30 flex items-center justify-center shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+                      <Film className="text-cyan-400 w-6 h-6" />
                     </div>
-                    <span className="font-mono text-[10px] tracking-widest text-zinc-400">RAW FOOTAGE INGEST</span>
+                    <span className="font-mono text-[10px] tracking-widest text-zinc-400">RAW BROADCAST VIDEO</span>
                   </div>
 
                   <div className="hidden md:flex flex-1 h-px bg-zinc-800 relative">
@@ -382,9 +381,9 @@ export default function TechnologySolutionsPage() {
                   </div>
 
                   <div className="flex flex-col items-center gap-3">
-                    <div className="w-20 h-20 rounded-xl border border-indigo-500/30 bg-indigo-950/30 flex items-center justify-center relative">
-                      <div className="absolute inset-0 rounded-xl border border-indigo-500/50 animate-[spin_4s_linear_infinite]" style={{ borderStyle: 'dashed' }} />
-                      <Network className="text-indigo-400 w-8 h-8" />
+                    <div className="w-20 h-20 rounded-xl border border-sky-500/30 bg-sky-950/30 flex items-center justify-center relative">
+                      <div className="absolute inset-0 rounded-xl border border-sky-500/50 animate-[spin_4s_linear_infinite]" style={{ borderStyle: 'dashed' }} />
+                      <Network className="text-sky-400 w-8 h-8" />
                     </div>
                     <span className="font-mono text-[10px] tracking-widest text-zinc-400 text-center">MASCE ENGINE<br/>L1–L4 CHRONOLOGY</span>
                   </div>
@@ -403,7 +402,7 @@ export default function TechnologySolutionsPage() {
                 
                 <div className="relative z-10 mt-10 text-center">
                   <p className="text-xs text-zinc-400 font-mono">
-                    Deterministic Provenance-Tagged Event &amp; Possession Ledgers · 14-Point Hockey Integrity Audit
+                    Deterministic Provenance-Tagged Event and Possession Ledgers · 14-Point Hockey Integrity Audit
                   </p>
                 </div>
               </div>
@@ -412,10 +411,10 @@ export default function TechnologySolutionsPage() {
         </section>
 
 
-        {/* ENTERPRISE INFRASTRUCTURE & SECURITY */}
+        {/* ENTERPRISE INFRASTRUCTURE and SECURITY */}
         <section className="px-6 py-20 lg:px-8 border-t border-white/10 bg-zinc-950/60">
           <div className="mx-auto max-w-6xl">
-            <h2 className="text-center font-serif text-3xl text-white mb-12">Enterprise-Grade Infrastructure & Minor Athlete Protection</h2>
+            <h2 className="text-center font-serif text-3xl text-white mb-12">Enterprise-Grade Infrastructure and Minor Athlete Protection</h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
               <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-sm hover:border-cyan-500/30 transition-colors">
@@ -426,9 +425,9 @@ export default function TechnologySolutionsPage() {
                 <p className="text-xs text-zinc-400 leading-relaxed font-light">Fault-tolerant workflow execution ensuring video ingest, AI inferencing, and clip stitching resume seamlessly across node restarts.</p>
               </div>
 
-              <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-sm hover:border-indigo-500/30 transition-colors">
-                <div className="w-10 h-10 rounded-lg bg-indigo-950/50 flex items-center justify-center mb-4 border border-indigo-500/20">
-                  <Server className="w-5 h-5 text-indigo-400" />
+              <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-sm hover:border-sky-500/30 transition-colors">
+                <div className="w-10 h-10 rounded-lg bg-sky-950/50 flex items-center justify-center mb-4 border border-sky-500/20">
+                  <Server className="w-5 h-5 text-sky-400" />
                 </div>
                 <h3 className="text-lg font-serif text-white mb-2">MinIO S3 Video Vault</h3>
                 <p className="text-xs text-zinc-400 leading-relaxed font-light">Encrypted multi-tenant storage with strict retention rules and sub-second timestamped segment retrieval.</p>
@@ -446,7 +445,7 @@ export default function TechnologySolutionsPage() {
                 <div className="w-10 h-10 rounded-lg bg-amber-950/50 flex items-center justify-center mb-4 border border-amber-500/20">
                   <Lock className="w-5 h-5 text-amber-400" />
                 </div>
-                <h3 className="text-lg font-serif text-white mb-2">SOC 2 & Zero-Trust</h3>
+                <h3 className="text-lg font-serif text-white mb-2">SOC 2 and Zero-Trust</h3>
                 <p className="text-xs text-zinc-400 leading-relaxed font-light">SOC 2 Type II architectural alignment, enterprise tenant isolation, end-to-end media encryption, and immutable audit logs.</p>
               </div>
             </div>

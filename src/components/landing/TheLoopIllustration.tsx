@@ -31,7 +31,7 @@ interface StepItem {
   subtitle: string;
   desc: string;
   badge: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   borderColor: string;
   glowColor: string;
@@ -52,7 +52,7 @@ const steps: StepItem[] = [
     step: "01",
     title: "Spot it",
     subtitle: "AI Telemetry Ingest",
-    desc: "MASCE engine detects plays & surfaces reads in 41s.",
+    desc: "MASCE engine detects plays and surfaces reads in 41s.",
     badge: "Spotlight Engine",
     icon: Search,
     color: "cyan",
@@ -65,7 +65,7 @@ const steps: StepItem[] = [
     detail: {
       label: "Autonomous Play Tagging",
       metrics: ">95% Precision · 41s Scan",
-      previewText: "Game video parsed. Shift boundaries & puck possession events tagged with millisecond timestamps.",
+      previewText: "Game video parsed. Shift boundaries and puck possession events tagged with millisecond timestamps.",
       cinematicMeta: "MASCE v2.4 Neural Ingest"
     }
   },
@@ -76,13 +76,13 @@ const steps: StepItem[] = [
     desc: "Bind teaching moments directly to athlete goals.",
     badge: "Tactical Clip",
     icon: Scissors,
-    color: "indigo",
-    borderColor: "border-indigo-500/50 hover:border-indigo-400",
-    glowColor: "shadow-[0_0_30px_rgba(99,102,241,0.25)]",
-    gradient: "from-indigo-950/80 via-zinc-900/80 to-black",
-    badgeBg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
-    iconColor: "text-indigo-400",
-    accentHex: "#6366f1",
+    color: "sky",
+    borderColor: "border-sky-500/50 hover:border-sky-400",
+    glowColor: "shadow-[0_0_30px_rgba(14,165,233,0.25)]",
+    gradient: "from-sky-950/80 via-zinc-900/80 to-black",
+    badgeBg: "bg-sky-500/10 text-sky-400 border-sky-500/30",
+    iconColor: "text-sky-400",
+    accentHex: "#0ea5e9",
     detail: {
       label: "Superpower Alignment",
       metrics: "8 Core Superpowers",
@@ -94,16 +94,16 @@ const steps: StepItem[] = [
     step: "03",
     title: "Send it",
     subtitle: "Continuous Feedback",
-    desc: "Push directed video cut with audio & voice notes.",
+    desc: "Push directed video cut with audio and voice notes.",
     badge: "Continuous Feedback",
     icon: Send,
-    color: "purple",
-    borderColor: "border-purple-500/50 hover:border-purple-400",
-    glowColor: "shadow-[0_0_30px_rgba(168,85,247,0.25)]",
-    gradient: "from-purple-950/80 via-zinc-900/80 to-black",
-    badgeBg: "bg-purple-500/10 text-purple-400 border-purple-500/30",
-    iconColor: "text-purple-400",
-    accentHex: "#a855f7",
+    color: "blue",
+    borderColor: "border-blue-500/50 hover:border-blue-400",
+    glowColor: "shadow-[0_0_30px_rgba(59,130,246,0.25)]",
+    gradient: "from-blue-950/80 via-zinc-900/80 to-black",
+    badgeBg: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+    iconColor: "text-blue-400",
+    accentHex: "#3b82f6",
     detail: {
       label: "1-Tap Coach Dispatch",
       metrics: "Sub-Minute Sync",
@@ -118,13 +118,13 @@ const steps: StepItem[] = [
     desc: "Cinematic cut lands directly in athlete's feed.",
     badge: "Journal Entry",
     icon: BookmarkCheck,
-    color: "fuchsia",
-    borderColor: "border-fuchsia-500/50 hover:border-fuchsia-400",
-    glowColor: "shadow-[0_0_30px_rgba(217,70,239,0.25)]",
-    gradient: "from-fuchsia-950/80 via-zinc-900/80 to-black",
-    badgeBg: "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30",
-    iconColor: "text-fuchsia-400",
-    accentHex: "#d946ef",
+    color: "teal",
+    borderColor: "border-teal-500/50 hover:border-teal-400",
+    glowColor: "shadow-[0_0_30px_rgba(20,184,166,0.25)]",
+    gradient: "from-teal-950/80 via-zinc-900/80 to-black",
+    badgeBg: "bg-teal-500/10 text-teal-400 border-teal-500/30",
+    iconColor: "text-teal-400",
+    accentHex: "#14b8a6",
     detail: {
       label: "Personalized Athlete Feed",
       metrics: "High-Visibility Alert",
@@ -136,7 +136,7 @@ const steps: StepItem[] = [
     step: "05",
     title: "Read-back",
     subtitle: "Athlete Ownership",
-    desc: "Player reflects, rates rep & records voice note.",
+    desc: "Player reflects, rates rep and records voice note.",
     badge: "Self-Reflection",
     icon: MessageSquareQuote,
     color: "emerald",
@@ -156,7 +156,7 @@ const steps: StepItem[] = [
   {
     step: "06",
     title: "The Rip",
-    subtitle: "Growth Tracked",
+    subtitle: "Superpower Level Up",
     desc: "Superpower levels up on record with verified reps.",
     badge: "Superpower Level Up",
     icon: TrendingUp,
@@ -170,7 +170,7 @@ const steps: StepItem[] = [
     detail: {
       label: "Progress Trend Line",
       metrics: "+1 Verified Rep",
-      previewText: "Analytics engine updates skill trend lines, unlocking positive reinforcement for player & parents.",
+      previewText: "Analytics engine updates skill trend lines, unlocking positive reinforcement for player and parents.",
       cinematicMeta: "Verified Mastery Ledger"
     }
   }
@@ -201,38 +201,38 @@ export function TheLoopIllustration() {
             <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 relative" />
           </div>
           <span className="font-bold tracking-wider uppercase text-white">SPOTLIGHT</span>
-          <span className="text-zinc-500 text-[10px] hidden sm:inline">(Film & AI Telemetry)</span>
+          <span className="text-zinc-500 text-[10px] hidden sm:inline">(Film and AI Telemetry)</span>
         </div>
 
         <div className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2">
-          <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/60 via-indigo-500/60 to-fuchsia-500/60" />
+          <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/60 via-sky-500/60 to-emerald-500/60" />
           <div className="px-3.5 py-1 rounded-full bg-black/80 border border-white/15 flex items-center gap-2 shadow-inner">
             <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span className="text-[11px] font-sans font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-200 to-fuchsia-300">
+            <span className="text-[11px] font-sans font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-amber-300">
               The Continuous Development Continuum
             </span>
           </div>
-          <div className="h-px flex-1 bg-gradient-to-r from-fuchsia-500/60 via-emerald-500/60 to-amber-500/60" />
+          <div className="h-px flex-1 bg-gradient-to-r from-emerald-500/60 via-amber-500/60 to-amber-400/60" />
         </div>
 
-        <div className="flex items-center gap-2.5 text-fuchsia-400">
+        <div className="flex items-center gap-2.5 text-amber-400">
           <span className="font-bold tracking-wider uppercase text-white">PERIODICAL</span>
           <span className="text-zinc-500 text-[10px] hidden sm:inline">(Athlete Journal)</span>
           <div className="relative flex items-center justify-center">
-            <div className="w-3 h-3 rounded-full bg-fuchsia-400 animate-ping absolute opacity-75" />
-            <div className="w-2.5 h-2.5 rounded-full bg-fuchsia-400 relative" />
+            <div className="w-3 h-3 rounded-full bg-amber-400 animate-ping absolute opacity-75" />
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-400 relative" />
           </div>
         </div>
       </div>
 
-      {/* STAGE CONTINUUM CONNECTORS & CARDS GRID */}
+      {/* STAGE CONTINUUM CONNECTORS AND CARDS GRID */}
       <div className="relative">
         {/* HORIZONTAL GLOW CONNECTOR LINE */}
-        <div className="hidden lg:block absolute top-[44px] left-6 right-6 h-[2px] bg-gradient-to-r from-cyan-500/30 via-purple-500/30 to-amber-500/30 z-0 pointer-events-none" />
+        <div className="hidden lg:block absolute top-[44px] left-6 right-6 h-[2px] bg-gradient-to-r from-cyan-500/30 via-sky-500/30 to-amber-500/30 z-0 pointer-events-none" />
         
         {/* ACTIVE PULSE BEAM ALONG CONNECTOR */}
         <div 
-          className="hidden lg:block absolute top-[44px] h-[3px] bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-400 z-0 transition-all duration-500 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+          className="hidden lg:block absolute top-[44px] h-[3px] bg-gradient-to-r from-cyan-400 via-sky-400 to-amber-400 z-0 transition-all duration-500 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.8)]"
           style={{
             left: `${(activeStep / (steps.length - 1)) * 80 + 5}%`,
             width: "15%"
@@ -407,12 +407,12 @@ export function TheLoopIllustration() {
 
               {activeStep === 1 && (
                 <div className="space-y-3 font-mono text-xs">
-                  <div className="bg-zinc-900/90 p-3 rounded-lg border border-indigo-500/30 flex items-center justify-between">
-                    <span className="text-indigo-400">Cut Room Workbench</span>
+                  <div className="bg-zinc-900/90 p-3 rounded-lg border border-sky-500/30 flex items-center justify-between">
+                    <span className="text-sky-400">Cut Room Workbench</span>
                     <span className="text-zinc-400">4s Clip</span>
                   </div>
-                  <div className="bg-indigo-950/40 p-3 rounded-lg border border-indigo-500/30 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" />
+                  <div className="bg-sky-950/40 p-3 rounded-lg border border-sky-500/30 flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-sky-400 shrink-0" />
                     <span className="text-zinc-200 text-xs font-sans font-medium">Bound Superpower: &apos;Explode&apos; (First 3 Steps)</span>
                   </div>
                 </div>
@@ -420,15 +420,15 @@ export function TheLoopIllustration() {
 
               {activeStep === 2 && (
                 <div className="space-y-3 font-mono text-xs">
-                  <div className="bg-zinc-900/90 p-3 rounded-lg border border-purple-500/30 flex items-center justify-between">
-                    <span className="text-purple-400">Dispatch Queued</span>
+                  <div className="bg-zinc-900/90 p-3 rounded-lg border border-blue-500/30 flex items-center justify-between">
+                    <span className="text-blue-400">Dispatch Queued</span>
                     <span className="text-zinc-400">1-Tap Push</span>
                   </div>
                   <div className="bg-black/60 p-3 rounded-lg border border-white/10 flex items-center gap-3">
-                    <Mic className="w-4 h-4 text-purple-400 shrink-0" />
+                    <Mic className="w-4 h-4 text-blue-400 shrink-0" />
                     <div className="flex-1">
-                      <div className="h-1.5 bg-purple-500/30 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-400 w-3/4 animate-pulse" />
+                      <div className="h-1.5 bg-blue-500/30 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-400 w-3/4 animate-pulse" />
                       </div>
                     </div>
                     <span className="text-[10px] text-zinc-400">8s Voice Note</span>
@@ -438,13 +438,13 @@ export function TheLoopIllustration() {
 
               {activeStep === 3 && (
                 <div className="space-y-3 font-mono text-xs">
-                  <div className="bg-zinc-900/90 p-3 rounded-lg border border-fuchsia-500/30 flex items-center justify-between">
-                    <span className="text-fuchsia-400">Periodical Mobile Drop</span>
+                  <div className="bg-zinc-900/90 p-3 rounded-lg border border-teal-500/30 flex items-center justify-between">
+                    <span className="text-teal-400">Periodical Mobile Drop</span>
                     <span className="text-zinc-400">Received</span>
                   </div>
-                  <div className="bg-fuchsia-950/30 p-3 rounded-lg border border-fuchsia-500/30 text-xs font-sans text-zinc-200 space-y-1">
+                  <div className="bg-teal-950/30 p-3 rounded-lg border border-teal-500/30 text-xs font-sans text-zinc-200 space-y-1">
                     <div className="font-semibold text-white flex items-center gap-1.5">
-                      <Zap className="w-3.5 h-3.5 text-fuchsia-400" /> New Film Room Card
+                      <Zap className="w-3.5 h-3.5 text-teal-400" /> New Film Room Card
                     </div>
                     <div className="text-zinc-400 text-[11px]">&quot;Watch how you turn your hips before taking the pass.&quot;</div>
                   </div>

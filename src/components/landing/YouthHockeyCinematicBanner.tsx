@@ -186,7 +186,7 @@ export function YouthHockeyCinematicBanner() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_10%,_#09090b_90%)]" />
       
       {/* Spotlight Overhead Cone Beam */}
-      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-cyan-500/20 via-indigo-500/10 to-transparent blur-3xl opacity-60 rounded-full" />
+      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-cyan-500/20 via-sky-500/10 to-transparent blur-3xl opacity-60 rounded-full" />
 
       {/* 3. DYNAMIC CANVAS PARTICLES & HUD SCANNER */}
       <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-0 opacity-70" />
@@ -212,17 +212,17 @@ export function YouthHockeyCinematicBanner() {
         {/* MAIN HEADLINE WITH DUAL-THEME GLOW */}
         <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif tracking-tight text-white mb-4 sm:mb-6 leading-[1.15] sm:leading-[1.08] drop-shadow-2xl">
           Where{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-400 font-medium">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-300 to-amber-400 font-medium">
             video intelligence
           </span>{" "}
           meets<br className="hidden sm:inline" />{" "}
           <span className="relative inline-block sm:mt-1">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-300 font-medium">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-300 to-amber-300 font-medium">
               player reflection
             </span>
             <span className="text-white">.</span>
             {/* Underline reflection glow */}
-            <span className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-indigo-500 to-amber-500 rounded-full blur-xs opacity-80" />
+            <span className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-sky-500 to-amber-500 rounded-full blur-xs opacity-80" />
           </span>
         </h1>
 
@@ -257,22 +257,22 @@ export function YouthHockeyCinematicBanner() {
               <span>41s</span>
               <Sparkles className="w-4 h-4 text-cyan-400" />
             </div>
-            <div className="text-xs text-zinc-400 mt-1">Natural Language Discovery &amp; Semantic Searches</div>
+            <div className="text-xs text-zinc-400 mt-1">Natural Language Discovery and Semantic Searches</div>
           </div>
           <div>
             <div className="text-xl sm:text-3xl font-serif font-bold text-cyan-400 flex items-baseline gap-1.5">
               <span>8</span>
               <span className="text-base sm:text-lg text-cyan-300 font-sans font-semibold">Superpowers</span>
             </div>
-            <div className="text-xs text-zinc-400 mt-1">Explode, Own Puck, Threat, Read the Play, Wall Master &amp; more</div>
+            <div className="text-xs text-zinc-400 mt-1">Explode, Own Puck, Threat, Read the Play, Hard Along Walls and more</div>
           </div>
           <div>
-            <div className="text-xl sm:text-3xl font-serif font-bold text-indigo-400">The Loop</div>
+            <div className="text-xl sm:text-3xl font-serif font-bold text-sky-400">The Loop</div>
             <div className="text-xs text-zinc-400 mt-1">Cut Rooms × Journal Loops, Continuous Feedback</div>
           </div>
           <div>
             <div className="text-xl sm:text-3xl font-serif font-bold text-amber-400">8 Voices</div>
-            <div className="text-xs text-zinc-400 mt-1">Player, Teammate, Coach, Trainer, Mentor, Nutritionist, Parent &amp; Scout</div>
+            <div className="text-xs text-zinc-400 mt-1">Player, Teammate, Coach, Trainer, Mentor, Nutritionist, Parent and Scout</div>
           </div>
         </div>
 
@@ -280,7 +280,7 @@ export function YouthHockeyCinematicBanner() {
 
       {/* Slideshow Progress Bar */}
       <div className="absolute bottom-0 left-0 z-20 h-[3px] w-full bg-white/10">
-        <div key={activeIndex} className="gallery-slideshow-progress-bar h-full bg-gradient-to-r from-cyan-400 to-indigo-500" />
+        <div key={activeIndex} className="gallery-slideshow-progress-bar h-full bg-gradient-to-r from-cyan-400 to-sky-500" />
       </div>
     </section>
   );
