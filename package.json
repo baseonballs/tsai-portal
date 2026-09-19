@@ -21,7 +21,8 @@
     "test:ical-provisioner": "npx tsx scripts/test-ical-tournament-provisioner.ts",
     "test:club-monetization": "npx tsx scripts/test-club-monetization.ts",
     "test:live-broadcast-player": "npx tsx scripts/test-live-broadcast-player.ts",
-    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director && pnpm run test:ical-provisioner && pnpm run test:club-monetization && pnpm run test:live-broadcast-player"
+    "test:milestone-toast": "npx tsx scripts/test-milestone-notification-toast.ts",
+    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director && pnpm run test:ical-provisioner && pnpm run test:club-monetization && pnpm run test:live-broadcast-player && pnpm run test:milestone-toast"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
