@@ -21,6 +21,7 @@
     "test:multi-sheet-director": "npx tsx scripts/test-multi-sheet-command-center.ts",
     "test:ical-provisioner": "npx tsx scripts/test-ical-tournament-provisioner.ts",
     "test:club-monetization": "npx tsx scripts/test-club-monetization.ts",
+    "test:club-revshare-dashboard": "npx tsx scripts/test-club-revshare-dashboard.ts",
     "test:live-broadcast-player": "npx tsx scripts/test-live-broadcast-player.ts",
     "test:milestone-toast": "npx tsx scripts/test-milestone-notification-toast.ts",
     "test:arena-scoreboard-banner": "npx tsx scripts/test-arena-scoreboard-banner.ts",
@@ -31,7 +32,7 @@
     "test:stream-failover": "npx tsx scripts/test-stream-failover-monitor.ts",
     "test:broadcast-cloud-switcher": "npx tsx scripts/test-broadcast-cloud-switcher.ts",
     "test:bracket-highlight-slicer": "npx tsx scripts/test-bracket-highlight-slicer.ts",
-    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director && pnpm run test:ical-provisioner && pnpm run test:club-monetization && pnpm run test:live-broadcast-player && pnpm run test:milestone-toast && pnpm run test:arena-scoreboard-banner && pnpm run test:tournament-embed && pnpm run test:college-scout-discovery && pnpm run test:tournament-tiebreaker && pnpm run test:schedule-compensator && pnpm run test:stream-failover && pnpm run test:broadcast-cloud-switcher && pnpm run test:bracket-highlight-slicer"
+    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director && pnpm run test:ical-provisioner && pnpm run test:club-monetization && pnpm run test:club-revshare-dashboard && pnpm run test:live-broadcast-player && pnpm run test:milestone-toast && pnpm run test:arena-scoreboard-banner && pnpm run test:tournament-embed && pnpm run test:college-scout-discovery && pnpm run test:tournament-tiebreaker && pnpm run test:schedule-compensator && pnpm run test:stream-failover && pnpm run test:broadcast-cloud-switcher && pnpm run test:bracket-highlight-slicer"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
