@@ -22,7 +22,8 @@
     "test:club-monetization": "npx tsx scripts/test-club-monetization.ts",
     "test:live-broadcast-player": "npx tsx scripts/test-live-broadcast-player.ts",
     "test:milestone-toast": "npx tsx scripts/test-milestone-notification-toast.ts",
-    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director && pnpm run test:ical-provisioner && pnpm run test:club-monetization && pnpm run test:live-broadcast-player && pnpm run test:milestone-toast"
+    "test:arena-scoreboard-banner": "npx tsx scripts/test-arena-scoreboard-banner.ts",
+    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director && pnpm run test:ical-provisioner && pnpm run test:club-monetization && pnpm run test:live-broadcast-player && pnpm run test:milestone-toast && pnpm run test:arena-scoreboard-banner"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
