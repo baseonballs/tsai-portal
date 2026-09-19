@@ -19,7 +19,8 @@
     "test:club-rev-share": "npx tsx src/lib/billing/club-rev-share.test.mjs",
     "test:multi-sheet-director": "npx tsx scripts/test-multi-sheet-command-center.ts",
     "test:ical-provisioner": "npx tsx scripts/test-ical-tournament-provisioner.ts",
-    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director && pnpm run test:ical-provisioner"
+    "test:club-monetization": "npx tsx scripts/test-club-monetization.ts",
+    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director && pnpm run test:ical-provisioner && pnpm run test:club-monetization"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
