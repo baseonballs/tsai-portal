@@ -1,6 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import {
+  parseICalFeed,
+  provisionTournamentSheetsFromICal,
+  generateSampleTournamentICal,
+  type ProvisioningReport,
+  type SheetScheduleConflict,
+} from "@/lib/tournament/ical-tournament-provisioner";
 
 export type BroadcastAngle =
   | "TACTICAL_PRIMARY"
@@ -73,6 +80,11 @@ export function MultiSheetCommandCenter({
     initialSheets[0]?.sheetId || ""
   );
 
+  // iCal Provisioning Modal State
+  const [isIcalModalOpen, setIsIcalModalOpen] = useState(false);
+  const [icalText, setIcalText] = useState("");
+  const [provisionReport, setProvisionReport] = useState<ProvisioningReport | null>(null);
+
   const activeSheetId = controlledSheetId ?? internalSheetId;
   const handleSelectSheet = (sheetId: string) => {
     setInternalSheetId(sheetId);
@@ -96,19 +108,46 @@ export function MultiSheetCommandCenter({
     );
   };
 
-  const toggleSheetState = (sheetId: string) => {
+  const setSheetStreamState = (sheetId: string, state: SheetStreamState) => {
     setSheets((prev) =>
-      prev.map((s) => {
-        if (s.sheetId !== sheetId) return s;
-        const next: SheetStreamState =
-          s.streamState === "LIVE"
-            ? "PAUSED_INTERMISSION"
-            : s.streamState === "PAUSED_INTERMISSION"
-            ? "LIVE"
-            : "LIVE";
-        return { ...s, streamState: next };
-      })
+      prev.map((s) => (s.sheetId === sheetId ? { ...s, streamState: state } : s))
     );
+  };
+
+  const toggleSheetAcousticMute = (sheetId: string) => {
+    setSheets((prev) =>
+      prev.map((s) =>
+        s.sheetId === sheetId ? { ...s, acousticShieldMuted: !s.acousticShieldMuted } : s
+      )
+    );
+  };
+
+  // iCal Handlers
+  const handleLoadSampleIcal = () => {
+    const sample = generateSampleTournamentICal();
+    setIcalText(sample);
+    const events = parseICalFeed(sample);
+    const report = provisionTournamentSheetsFromICal(events);
+    setProvisionReport(report);
+  };
+
+  const handleParseIcalInput = (text: string) => {
+    setIcalText(text);
+    if (!text.trim()) {
+      setProvisionReport(null);
+      return;
+    }
+    const events = parseICalFeed(text);
+    const report = provisionTournamentSheetsFromICal(events);
+    setProvisionReport(report);
+  };
+
+  const handleApplyProvisioning = () => {
+    if (provisionReport && provisionReport.sheets.length > 0) {
+      setSheets(provisionReport.sheets);
+      setInternalSheetId(provisionReport.sheets[0].sheetId);
+      setIsIcalModalOpen(false);
+    }
   };
 
   const selectedSheet = sheets.find((s) => s.sheetId === activeSheetId) || sheets[0];
@@ -137,6 +176,16 @@ export function MultiSheetCommandCenter({
 
         {/* Global Action Bar */}
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsIcalModalOpen(true)}
+            className="px-4 py-2 text-sm font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-2 border border-indigo-500 shadow-lg shadow-indigo-950/40 transition-all active:scale-95"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            AUTO-PROVISION iCAL
+          </button>
+
           <button
             onClick={toggleGlobalAcousticShieldMute}
             className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 border ${
@@ -179,28 +228,30 @@ export function MultiSheetCommandCenter({
             <div
               key={sheet.sheetId}
               onClick={() => handleSelectSheet(sheet.sheetId)}
-              className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+              className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col gap-3 ${
                 isSelected
-                  ? "bg-slate-900/90 border-cyan-500 ring-1 ring-cyan-500/50 shadow-lg shadow-cyan-950/40"
-                  : "bg-slate-900/40 border-slate-800 hover:border-slate-700"
+                  ? "bg-slate-900 border-cyan-500 shadow-lg shadow-cyan-950/40 ring-1 ring-cyan-500"
+                  : "bg-slate-900/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/70"
               }`}
             >
-              {/* Sheet Header */}
+              {/* Sheet Card Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                    S{sheet.sheetNumber}
+                  <span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white">
+                    {sheet.sheetNumber}
                   </span>
-                  <span className="text-sm font-semibold text-white truncate max-w-[140px]">
-                    {sheet.rinkName}
+                  <span className="text-xs font-semibold text-slate-300 truncate max-w-[120px]">
+                    {sheet.rinkName.replace(/Sheet \d+\s*/i, "")}
                   </span>
                 </div>
                 <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase ${
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     isLive
                       ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
                       : sheet.streamState === "PAUSED_INTERMISSION"
                       ? "bg-amber-500/20 text-amber-400 border border-amber-500/40"
+                      : sheet.streamState === "TESTING"
+                      ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
                       : "bg-slate-800 text-slate-400"
                   }`}
                 >
@@ -211,10 +262,10 @@ export function MultiSheetCommandCenter({
               {/* Match Scorebug */}
               <div className="bg-slate-950/80 p-2.5 rounded-lg border border-slate-800/80 flex items-center justify-between">
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium text-slate-300">
+                  <span className="text-xs font-medium text-slate-300 truncate max-w-[90px]">
                     {sheet.matchInfo.homeTeam}
                   </span>
-                  <span className="text-xs font-medium text-slate-300">
+                  <span className="text-xs font-medium text-slate-300 truncate max-w-[90px]">
                     {sheet.matchInfo.awayTeam}
                   </span>
                 </div>
@@ -270,6 +321,11 @@ export function MultiSheetCommandCenter({
               <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
                 {selectedSheet.youtubeBroadcastId}
               </span>
+              {selectedSheet.acousticShieldMuted && (
+                <span className="text-xs px-2 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 font-semibold">
+                  MUTE -24dB
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-400">
               Active Angle: <span className="text-cyan-400 font-mono font-semibold">{selectedSheet.activeAngle}</span> • Hardware: {selectedSheet.hardwareHealth.temperatureCelsius}°C (ISP {selectedSheet.hardwareHealth.ispLoadPercentage}%)
@@ -301,15 +357,22 @@ export function MultiSheetCommandCenter({
               ))}
             </div>
 
-            {/* Stream Lifecycle Toggle */}
-            <button
-              onClick={() => toggleSheetState(selectedSheet.sheetId)}
-              className="px-4 py-2 text-xs font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-all"
-            >
-              {selectedSheet.streamState === "LIVE"
-                ? "PAUSE (INTERMISSION)"
-                : "RESUME BROADCAST"}
-            </button>
+            {/* Stream Lifecycle State Selector */}
+            <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
+              {(["TESTING", "LIVE", "PAUSED_INTERMISSION", "COMPLETED"] as SheetStreamState[]).map((state) => (
+                <button
+                  key={state}
+                  onClick={() => setSheetStreamState(selectedSheet.sheetId, state)}
+                  className={`px-2.5 py-1 text-[11px] font-semibold rounded transition-all ${
+                    selectedSheet.streamState === state
+                      ? "bg-indigo-600 text-white font-bold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {state === "PAUSED_INTERMISSION" ? "PAUSE" : state}
+                </button>
+              ))}
+            </div>
 
             {/* Watch Live YouTube Link */}
             <a
@@ -323,6 +386,89 @@ export function MultiSheetCommandCenter({
               </svg>
               WATCH YOUTUBE
             </a>
+          </div>
+        </div>
+      )}
+
+      {/* ── iCal Automated Provisioning Modal ── */}
+      {isIcalModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-2xl bg-[#0B0F17] border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-white">iCal Automated Tournament Provisioner</h3>
+                <p className="text-xs text-slate-400">
+                  Parse RFC 5545 .ics calendar feed to automatically configure 8-sheet YouTube streaming pipelines.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsIcalModalOpen(false)}
+                className="text-slate-400 hover:text-white text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-300 font-semibold">iCalendar Feed (.ics text)</span>
+                <button
+                  type="button"
+                  onClick={handleLoadSampleIcal}
+                  className="text-xs text-cyan-400 hover:underline font-semibold"
+                >
+                  Load 8-Sheet Silver Stick Sample
+                </button>
+              </div>
+
+              <textarea
+                rows={7}
+                value={icalText}
+                onChange={(e) => handleParseIcalInput(e.target.value)}
+                placeholder="Paste VCALENDAR / VEVENT data here..."
+                className="w-full rounded-xl border border-slate-800 bg-[#121824] p-3 text-xs font-mono text-white placeholder:text-slate-600 focus:border-cyan-500 focus:outline-none"
+              />
+
+              {provisionReport && (
+                <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2 text-xs">
+                  <div className="flex justify-between font-medium">
+                    <span className="text-slate-400">Events Parsed:</span>
+                    <span className="text-white font-bold">{provisionReport.totalEventsParsed}</span>
+                  </div>
+                  <div className="flex justify-between font-medium">
+                    <span className="text-slate-400">Sheets Configured:</span>
+                    <span className="text-cyan-400 font-bold">{provisionReport.sheetsProvisionedCount} / 8</span>
+                  </div>
+                  {provisionReport.conflictsDetected.length > 0 ? (
+                    <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-2 text-rose-300 text-[11px]">
+                      ⚠️ {provisionReport.conflictsDetected.length} sheet scheduling conflict(s) detected!
+                    </div>
+                  ) : (
+                    <div className="text-emerald-400 text-[11px] font-semibold">
+                      ✓ Zero scheduling conflicts detected across 8 sheets.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsIcalModalOpen(false)}
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyProvisioning}
+                disabled={!provisionReport || provisionReport.sheets.length === 0}
+                className="px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white shadow-lg shadow-emerald-950"
+              >
+                Apply Provisioning Matrix
+              </button>
+            </div>
           </div>
         </div>
       )}
