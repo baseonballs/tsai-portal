@@ -18,7 +18,8 @@
     "test:roster-import": "npx tsx src/lib/roster/gamesheet-roster-service.test.mjs",
     "test:club-rev-share": "npx tsx src/lib/billing/club-rev-share.test.mjs",
     "test:multi-sheet-director": "npx tsx scripts/test-multi-sheet-command-center.ts",
-    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director"
+    "test:ical-provisioner": "npx tsx scripts/test-ical-tournament-provisioner.ts",
+    "test": "pnpm run test:redirect-safety && pnpm run test:coppa-scout-bridge && pnpm run test:roster-import && pnpm run test:club-rev-share && pnpm run test:multi-sheet-director && pnpm run test:ical-provisioner"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
