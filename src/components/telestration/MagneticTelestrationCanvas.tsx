@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   TelestrationPoint2D,
   TelestrationToolType,
@@ -245,7 +245,7 @@ export function MagneticTelestrationCanvas({
           ))}
 
           {/* Render Committed Strokes */}
-          {effectiveStrokes.map((s) => renderStrokeSvg(s))}
+          {effectiveStrokes.map((s: MagneticSplineStroke) => renderStrokeSvg(s))}
 
           {/* Render Active In-Progress Stroke */}
           {currentStroke && renderStrokeSvg(currentStroke, true)}
