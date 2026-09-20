@@ -1,53 +1,16 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   TelestrationPoint2D,
   TelestrationToolType,
-  MagneticTelestrationAnchor,
   MagneticSplineStroke,
-  TrackCandidate,
   MagneticTelestrationCanvasProps,
 } from "../../types/magnetic-telestration-types";
-
-function resolveNearestCandidate(
-  point: TelestrationPoint2D,
-  candidates: TrackCandidate[],
-  radius: number
-): MagneticTelestrationAnchor {
-  let closestDist = Infinity;
-  let closestTrack: TrackCandidate | null = null;
-
-  for (const track of candidates) {
-    const dx = point.x - track.screenPos.x;
-    const dy = point.y - track.screenPos.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < closestDist) {
-      closestDist = dist;
-      closestTrack = track;
-    }
-  }
-
-  if (closestDist <= radius && closestTrack) {
-    return {
-      anchorId: `anchor-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      targetTrackId: closestTrack.trackId,
-      anchorType: closestTrack.type,
-      screenPositionPx: { ...closestTrack.screenPos },
-      icePositionMeters: { ...closestTrack.icePos },
-      isMagneticallyLocked: true,
-    };
-  }
-
-  return {
-    anchorId: `anchor-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    targetTrackId: "ice_ground_plane",
-    anchorType: "iceGroundPlane",
-    screenPositionPx: { ...point },
-    icePositionMeters: { x: 0, y: 0 },
-    isMagneticallyLocked: false,
-  };
-}
+import {
+  resolveNearestCandidate,
+  recalculateLockedStrokes,
+} from "./magnetic-anchor-tracker";
 
 export function MagneticTelestrationCanvas({
   candidates = [],
@@ -63,6 +26,15 @@ export function MagneticTelestrationCanvas({
   const [strokes, setStrokes] = useState<MagneticSplineStroke[]>(initialStrokes);
   const [currentStroke, setCurrentStroke] = useState<MagneticSplineStroke | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+
+  // Dynamically update magnetically locked stroke anchors when candidate positions shift (MAJOR-5)
+  useEffect(() => {
+    const { nextStrokes, changed } = recalculateLockedStrokes(strokes, candidates);
+    if (changed) {
+      setStrokes(nextStrokes);
+      onStrokesChange?.(nextStrokes);
+    }
+  }, [candidates, strokes, onStrokesChange]);
 
   const getCoordinates = (e: React.MouseEvent<SVGSVGElement>): TelestrationPoint2D => {
     if (!svgRef.current) return { x: 0, y: 0 };

@@ -18,10 +18,8 @@ export interface MagneticTelestrationAnchor {
   anchorType: TelestrationAnchorType;
   screenPositionPx: TelestrationPoint2D;
   icePositionMeters: TelestrationPoint2D;
-  isMagneticallyLocked: BoolOrBoolean;
+  isMagneticallyLocked: boolean;
 }
-
-type BoolOrBoolean = boolean;
 
 export interface MagneticSplineStroke {
   strokeId: string;
