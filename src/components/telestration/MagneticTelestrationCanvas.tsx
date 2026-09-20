@@ -28,13 +28,16 @@ export function MagneticTelestrationCanvas({
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Dynamically update magnetically locked stroke anchors when candidate positions shift (MAJOR-5)
+  const effectiveStrokes = useMemo(() => {
+    return recalculateLockedStrokes(strokes, candidates).nextStrokes;
+  }, [strokes, candidates]);
+
   useEffect(() => {
-    const { nextStrokes, changed } = recalculateLockedStrokes(strokes, candidates);
+    const { changed } = recalculateLockedStrokes(strokes, candidates);
     if (changed) {
-      setStrokes(nextStrokes);
-      onStrokesChange?.(nextStrokes);
+      onStrokesChange?.(effectiveStrokes);
     }
-  }, [candidates, strokes, onStrokesChange]);
+  }, [candidates, strokes, effectiveStrokes, onStrokesChange]);
 
   const getCoordinates = (e: React.MouseEvent<SVGSVGElement>): TelestrationPoint2D => {
     if (!svgRef.current) return { x: 0, y: 0 };
@@ -242,7 +245,7 @@ export function MagneticTelestrationCanvas({
           ))}
 
           {/* Render Committed Strokes */}
-          {strokes.map((s) => renderStrokeSvg(s))}
+          {effectiveStrokes.map((s) => renderStrokeSvg(s))}
 
           {/* Render Active In-Progress Stroke */}
           {currentStroke && renderStrokeSvg(currentStroke, true)}
@@ -257,7 +260,7 @@ export function MagneticTelestrationCanvas({
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> End Lock
           </span>
           <span>Snap Radius: {snapRadiusPx}px</span>
-          <span>Strokes: {strokes.length}</span>
+          <span>Strokes: {effectiveStrokes.length}</span>
         </div>
       </div>
     </div>

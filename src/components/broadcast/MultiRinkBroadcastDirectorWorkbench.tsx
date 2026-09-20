@@ -31,8 +31,7 @@ export const MultiRinkBroadcastDirectorWorkbench: React.FC<Props> = ({
   const [events] = useState<HighlightTriggerEvent[]>(initialEvents);
 
   const handleManualSwitch = (feed: RinkCameraFeed) => {
-    const switchStart = performance.now();
-    const latency = Math.round(performance.now() - switchStart + 45); // simulated switching transit < 500ms
+    const latency = 45; // simulated switching transit < 500ms
 
     setProgram((prev) => ({
       ...prev,
