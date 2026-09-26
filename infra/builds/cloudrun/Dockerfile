@@ -5,14 +5,14 @@
 
 ARG NODE_VERSION=22-bookworm
 
-FROM node:${NODE_VERSION} AS deps
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION} AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
-FROM node:${NODE_VERSION} AS builder
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION} AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV TSAI_DEPLOY_TARGET=cloudrun
@@ -34,7 +34,7 @@ ENV API_GATEWAY_URL=${API_GATEWAY_URL}
 
 RUN pnpm run build
 
-FROM node:22-bookworm-slim AS runner
+FROM --platform=linux/amd64 node:22-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

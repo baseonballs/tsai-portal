@@ -30,7 +30,7 @@ PROJECT_ID="${PROJECT_ID:-tsai-18832}"
 REGION="${REGION:-us-west1}"
 SERVICE="${SERVICE:-tsai-portal}"
 IMAGE_NAME="${IMAGE_NAME:-tsai-portal}"
-DEPLOY_VIA="${DEPLOY_VIA:-cloudbuild}"
+DEPLOY_VIA="${DEPLOY_VIA:-local}"
 
 TSAI_DGX_ORIGIN="${TSAI_DGX_ORIGIN:-https://spark-62db.tail18f71b.ts.net:8443}"
 NEXT_PUBLIC_SUPABASE_URL="${TSAI_DGX_ORIGIN}/supabase"
@@ -97,5 +97,18 @@ fi
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 echo ""
 echo "✅ Deployed: $URL"
+echo ""
+echo "→ Pruning inactive Cloud Run revisions (capping at latest)…"
+for rev in $(gcloud run revisions list --service="$SERVICE" --region="$REGION" --format='value(name)' | tail -n +2 || true); do
+  gcloud run revisions delete "$rev" --region="$REGION" --quiet 2>/dev/null || true
+done
+
+echo "→ Pruning older Artifact Registry images (retaining strictly latest)…"
+for old_digest in $(gcloud artifacts docker images list "${REGION}-docker.pkg.dev/${PROJECT_ID}/tsai-frontends/${IMAGE_NAME}" --format='value(version)' --sort-by='~createTime' 2>/dev/null | tail -n +2 || true); do
+  if [[ -n "$old_digest" ]]; then
+    gcloud artifacts docker images delete "${REGION}-docker.pkg.dev/${PROJECT_ID}/tsai-frontends/${IMAGE_NAME}@${old_digest}" --delete-tags --quiet 2>/dev/null || true
+  fi
+done
+
 echo "👉 Version: $APP_VERSION"
 echo "👉 Canonical Cloud Run URL (use for OAuth): $URL"
