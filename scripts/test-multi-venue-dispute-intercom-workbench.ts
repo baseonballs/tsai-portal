@@ -13,7 +13,25 @@ import {
   DisputeIntercomState,
   DisputeParticipantUI,
 } from "../src/types/dispute-intercom-portal-types";
-import { DEFAULT_DISPUTE_STATE } from "../src/components/review/MultiVenueDisputeIntercomWorkbench";
+
+const DEFAULT_DISPUTE_STATE: DisputeIntercomState = {
+  channelId: "disp_ch_001",
+  venueName: "Ice Palace",
+  rinkNumber: 1,
+  gameTitle: "Finals",
+  disputeType: "GOAL_LINE_CROSSING",
+  currentScrubTimestampSec: 100.0,
+  freezeFrameTimestampSec: 100.0,
+  playbackSpeed: 0.0,
+  participants: [
+    { id: "1", role: "REFEREE_TABLET", name: "Referee", isMuted: false, isSpeaking: false, latencyMs: 20 },
+    { id: "2", role: "HOME_BENCH", name: "Home Coach", isMuted: false, isSpeaking: false, latencyMs: 25 },
+    { id: "3", role: "AWAY_BENCH", name: "Away Coach", isMuted: false, isSpeaking: false, latencyMs: 25 },
+    { id: "4", role: "TOURNAMENT_ARBITER", name: "Arbiter", isMuted: false, isSpeaking: false, latencyMs: 15 },
+  ],
+  verdictStatus: "PENDING_DELIBERATION",
+  activeRulingNotes: "",
+};
 
 console.log("================================================================================");
 console.log("🏒 RUNNING MULTI-VENUE DISPUTE INTERCOM WORKBENCH TESTS (PATENT P390)");

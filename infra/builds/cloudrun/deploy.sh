@@ -81,10 +81,32 @@ if [[ "$DEPLOY_VIA" == "local" ]]; then
   docker push "${IMAGE_REF}:latest"
   docker push "${IMAGE_REF}:${DOCKER_VERSION_TAG}"
   
-  gcloud run services update "$SERVICE" \
-    --region="$REGION" \
-    --image="${IMAGE_REF}:${DOCKER_VERSION_TAG}" \
-    --quiet
+  HAS_TAILSCALE_KEY="$(gcloud secrets versions list tailscale-authkey --project="$PROJECT_ID" --filter="STATE:ENABLED" --format='value(name)' 2>/dev/null | head -n 1 || true)"
+  PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)' 2>/dev/null || echo "480200193728")"
+
+  if [[ -n "$HAS_TAILSCALE_KEY" ]]; then
+    echo "→ Tailscale Auth Key detected in Secret Manager! Deploying Multi-Container Tailnet Sidecar Mesh topology…"
+    SIDECAR_MANIFEST="infra/builds/cloudrun/service-sidecar.yaml"
+    sed \
+      -e "s|\${SERVICE}|${SERVICE}|g" \
+      -e "s|\${PROJECT_ID}|${PROJECT_ID}|g" \
+      -e "s|\${PROJECT_NUMBER}|${PROJECT_NUMBER}|g" \
+      -e "s|\${REGION}|${REGION}|g" \
+      -e "s|\${IMAGE_REF}|${IMAGE_REF}|g" \
+      -e "s|\${DOCKER_VERSION_TAG}|${DOCKER_VERSION_TAG}|g" \
+      -e "s|\${TSAI_DGX_ORIGIN}|${TSAI_DGX_ORIGIN}|g" \
+      -e "s|\${API_GATEWAY_URL}|${API_GATEWAY_URL}|g" \
+      infra/builds/cloudrun/service-sidecar.yaml.template > "$SIDECAR_MANIFEST"
+
+    gcloud run services replace "$SIDECAR_MANIFEST" --region="$REGION" --quiet
+    rm -f "$SIDECAR_MANIFEST"
+  else
+    echo "→ No tailscale-authkey secret version found. Deploying single-container topology…"
+    gcloud run services update "$SERVICE" \
+      --region="$REGION" \
+      --image="${IMAGE_REF}:${DOCKER_VERSION_TAG}" \
+      --quiet
+  fi
     
 else
   echo "→ Cloud Build (Artifact Registry push + Cloud Run deploy)…"

@@ -1,0 +1,110 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ${SERVICE}
+  namespace: '${PROJECT_NUMBER}'
+  labels:
+    cloud.googleapis.com/location: ${REGION}
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '1'
+        autoscaling.knative.dev/maxScale: '20'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 578.0.0
+        run.googleapis.com/cpu-throttling: 'true'
+        run.googleapis.com/sessionAffinity: 'false'
+        run.googleapis.com/startup-cpu-boost: 'true'
+        run.googleapis.com/container-dependencies: '{"app":["tailscale"]}'
+      labels:
+        run.googleapis.com/startupProbeType: Default
+    spec:
+      containerConcurrency: 80
+      serviceAccountName: tsai-portal-sa@${PROJECT_ID}.iam.gserviceaccount.com
+      timeoutSeconds: 300
+      containers:
+      # Container 1: Application Container (Next.js BFF)
+      - name: app
+        image: ${IMAGE_REF}:${DOCKER_VERSION_TAG}
+        ports:
+        - name: http1
+          containerPort: 8080
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1024Mi
+        env:
+        - name: NODE_OPTIONS
+          value: "--use-env-proxy"
+        - name: HTTP_PROXY
+          value: "http://localhost:1056"
+        - name: HTTPS_PROXY
+          value: "http://localhost:1056"
+        - name: ALL_PROXY
+          value: "socks5://localhost:1055"
+        - name: NO_PROXY
+          value: "localhost,127.0.0.1,metadata.google.internal,169.254.169.254"
+        - name: NEXT_PUBLIC_SUPABASE_URL
+          value: ${TSAI_DGX_ORIGIN}/supabase
+        - name: TSAI_DEPLOY_TARGET
+          value: cloudrun
+        - name: TSAI_DGX_ORIGIN
+          value: ${TSAI_DGX_ORIGIN}
+        - name: API_GATEWAY_URL
+          value: ${API_GATEWAY_URL}
+        - name: SUPABASE_SERVICE_ROLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: portal-supabase-service-role
+              key: '16'
+        - name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: portal-supabase-anon-key
+              key: '16'
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+
+      # Container 2: Tailscale Sidecar Container (WireGuard Userspace Mesh)
+      - name: tailscale
+        image: docker.io/tailscale/tailscale:stable
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        env:
+        - name: TS_AUTHKEY
+          valueFrom:
+            secretKeyRef:
+              name: tailscale-authkey
+              key: latest
+        - name: TS_SOCKS5_SERVER
+          value: ":1055"
+        - name: TS_OUTBOUND_HTTP_PROXY_LISTEN
+          value: ":1056"
+        - name: TS_EXTRA_ARGS
+          value: "--accept-routes=true"
+        - name: TS_USERSPACE
+          value: "true"
+        - name: TS_STATE_DIR
+          value: "mem:"
+        - name: TS_HOSTNAME
+          value: "portal-cloudrun"
+        startupProbe:
+          tcpSocket:
+            port: 1055
+          periodSeconds: 2
+          failureThreshold: 30
+          timeoutSeconds: 2
+  traffic:
+  - latestRevision: true
+    percent: 100
