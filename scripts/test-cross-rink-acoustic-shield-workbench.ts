@@ -9,7 +9,7 @@ import {
   INITIAL_SHEET_CHANNELS,
 } from '../src/types/acoustic-shield-portal-types';
 
-function assert(condition: boolean, message: string) {
+function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     console.error(`❌ Assertion Failed: ${message}`);
     process.exit(1);
