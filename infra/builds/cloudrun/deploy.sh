@@ -40,7 +40,12 @@ if [[ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" && -f "$ROOT/.env.local" ]]; then
   NEXT_PUBLIC_SUPABASE_ANON_KEY="$(grep '^NEXT_PUBLIC_SUPABASE_ANON_KEY=' "$ROOT/.env.local" | cut -d= -f2- || true)"
 fi
 
-: "${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Set NEXT_PUBLIC_SUPABASE_ANON_KEY or add it to .env.local}"
+if [[ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]]; then
+  NEXT_PUBLIC_SUPABASE_ANON_KEY="$(gcloud secrets versions access latest \
+    --secret=portal-supabase-anon-key --project="$PROJECT_ID" 2>/dev/null || true)"
+fi
+
+: "${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Could not read portal-supabase-anon-key from Secret Manager (and NEXT_PUBLIC_SUPABASE_ANON_KEY is unset)}"
 
 echo "→ project=$PROJECT_ID region=$REGION service=$SERVICE"
 echo "→ app_version=$APP_VERSION (docker tag: $DOCKER_VERSION_TAG)"
