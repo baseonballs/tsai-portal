@@ -4,6 +4,7 @@
 #   docker build -f infra/builds/cloudrun/Dockerfile -t tsai-portal:local .
 
 ARG NODE_VERSION=22-bookworm
+ARG BUILDPLATFORM=linux/amd64
 
 FROM --platform=$BUILDPLATFORM node:${NODE_VERSION} AS deps
 WORKDIR /app

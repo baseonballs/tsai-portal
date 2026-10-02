@@ -17,6 +17,7 @@ steps:
       - -c
       - |
         set -euo pipefail
+        export DOCKER_BUILDKIT=1
         if [[ -z "${_APP_VERSION}" ]]; then
           echo "ERROR: set _APP_VERSION substitution (from root VERSION via deploy.sh)" >&2
           exit 1
