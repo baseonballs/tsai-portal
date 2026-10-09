@@ -42,6 +42,11 @@ pnpm build
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 
 
+## 🔍 ALWAYS USE GRAPHIFY FIRST FOR CODEBASE QUERIES (NO BROAD GREP)
+- **Graphify First Invariant:** Whenever exploring the codebase, researching architecture, tracing relationships, or locating symbols across `dev/tsai`, agents MUST query the existing knowledge graph FIRST using graphify (e.g. MCP tool `query_graph`, CLI `graphify query "<question>"`, or `./graphify-query.sh`).
+- **Strict Prohibition on Broad Grep Scans:** Agents must NEVER run recursive, unbounded `grep -rn` or tree-wide scans across `dev/tsai`. Grep wastes execution context, triggers background command timeouts, and bypasses the pre-computed AST index. Grep is only permitted for pinpoint verification of an exact string within a specific, already-identified file or tight directory.
+- **Querying Does Not Rebuild:** Querying the existing graph (`graphify query` / MCP `query_graph`) is instant and read-only. It provides scoped subgraphs without triggering a rebuild.
+
 # Fail-Fast Architecture & Zero Silent Fallbacks Invariant (First Principles)
 - **Zero Silent Fallbacks:** NEVER implement silent fallbacks, synthetic mock objects in production runtime paths, secondary fallback routing that papers over missing configuration, or unauthenticated dummy defaults.
 - **Fail Fast, Fail Loud:** If a required credential, environment variable, upstream service, session context, or database record is missing, corrupted, or unreachable, fail immediately and explicitly with an actionable error message describing the exact missing prerequisite.

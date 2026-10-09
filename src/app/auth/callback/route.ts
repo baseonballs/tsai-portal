@@ -15,7 +15,7 @@ function getPublicOrigin(request: Request): string {
   }
 
   if (url.origin.includes("0.0.0.0")) {
-    return "https://hub.tsai-spotlight.com"
+    return "https://hub.transcendental-sports.ai"
   }
 
   return url.origin

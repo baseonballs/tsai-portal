@@ -30,8 +30,8 @@ To package and build the Docker container locally (without submitting to GCP):
 DEPLOY_VIA=local ./deploy.sh
 ```
 
-### Custom Domain Setup (`hub.tsai-spotlight.com`)
-To configure or update the Cloud Run custom domain mapping pointing `hub.tsai-spotlight.com` -> `tsai-portal`:
+### Custom Domain Setup (`portal.transcendental-sports.ai`)
+To configure or update the Cloud Run custom domain mapping pointing `portal.transcendental-sports.ai` -> `tsai-portal`:
 ```bash
 ./map-domain.sh
 ```

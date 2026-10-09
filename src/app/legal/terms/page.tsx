@@ -194,7 +194,7 @@ export default function TermsOfServicePage() {
                   9. Intellectual Property — TSAI Materials
                 </h2>
                 <p>
-                  The Service, including software, models, pipelines, interface, and trademarks, is owned by TSAI. DMCA copyright infringement notices may be submitted to <strong className="text-cyan-400">legal@tsai-spotlight.com</strong>.
+                  The Service, including software, models, pipelines, interface, and trademarks, is owned by TSAI. DMCA copyright infringement notices may be submitted to <strong className="text-cyan-400">legal@transcendental-sports.ai</strong>.
                 </p>
               </section>
 
@@ -248,7 +248,7 @@ export default function TermsOfServicePage() {
                 </p>
                 <div className="pt-4 font-mono text-xs text-zinc-400">
                   Transcendental Sports AI LLC · Legal Department <br />
-                  Email: <a href="mailto:legal@tsai-spotlight.com" className="text-cyan-400 underline hover:text-cyan-300">legal@tsai-spotlight.com</a>
+                  Email: <a href="mailto:legal@transcendental-sports.ai" className="text-cyan-400 underline hover:text-cyan-300">legal@transcendental-sports.ai</a>
                 </div>
               </section>
 
