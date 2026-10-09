@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Map hub.tsai-spotlight.com (or custom domain) to Cloud Run tsai-portal service.
+# Map portal.transcendental-sports.ai (or custom domain) to Cloud Run tsai-portal service.
 #
 # Environment variables:
 #   PROJECT_ID     (default: tsai-18832)
 #   REGION         (default: us-west1)
 #   SERVICE        (default: tsai-portal)
-#   DOMAIN         (default: hub.tsai-spotlight.com)
+#   DOMAIN         (default: portal.transcendental-sports.ai)
 #
 set -euo pipefail
 
@@ -15,7 +15,7 @@ cd "$ROOT"
 PROJECT_ID="${PROJECT_ID:-tsai-18832}"
 REGION="${REGION:-us-west1}"
 SERVICE="${SERVICE:-tsai-portal}"
-DOMAIN="${DOMAIN:-hub.tsai-spotlight.com}"
+DOMAIN="${DOMAIN:-portal.transcendental-sports.ai}"
 
 echo "→ Configuring domain mapping for $DOMAIN..."
 echo "  • Project: $PROJECT_ID"

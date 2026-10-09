@@ -200,8 +200,8 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <div className="pt-2 font-mono text-xs text-zinc-400 space-y-1">
                   <div>Transcendental Sports AI LLC · Data Privacy Operations</div>
-                  <div>Email: <a href="mailto:privacy@transcendentalsports.ai" className="text-cyan-400 underline hover:text-cyan-300">privacy@transcendentalsports.ai</a></div>
-                  <div>Legal inquiries: <a href="mailto:legal@tsai-spotlight.com" className="text-cyan-400 underline hover:text-cyan-300">legal@tsai-spotlight.com</a></div>
+                  <div>Email: <a href="mailto:privacy@transcendental-sports.ai" className="text-cyan-400 underline hover:text-cyan-300">privacy@transcendental-sports.ai</a></div>
+                  <div>Legal inquiries: <a href="mailto:legal@transcendental-sports.ai" className="text-cyan-400 underline hover:text-cyan-300">legal@transcendental-sports.ai</a></div>
                 </div>
               </section>
 
