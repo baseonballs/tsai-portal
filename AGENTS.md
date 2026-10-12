@@ -51,3 +51,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Zero Silent Fallbacks:** NEVER implement silent fallbacks, synthetic mock objects in production runtime paths, secondary fallback routing that papers over missing configuration, or unauthenticated dummy defaults.
 - **Fail Fast, Fail Loud:** If a required credential, environment variable, upstream service, session context, or database record is missing, corrupted, or unreachable, fail immediately and explicitly with an actionable error message describing the exact missing prerequisite.
 - **Root Cause Transparency:** Papering over failures with synthetic fallbacks causes state desynchronization, ghost bugs, mixed profile persona bugs, and false-positive health passes. Systems must always enforce strict precondition assertions at the boundary.
+
+## 🔴 LIVE DATA MANDATE — TRANSCEND BETA PRODUCTION STAGING (BINDING INVARIANT)
+
+- **Live Data Only:** Going forward, all development, testing, validation, and runtime operations across the Transcend platform MUST use live data.
+- **Production Staged as Live:** The product is officially staged in production as live for the Transcend Beta.
+- **Strict Prohibition on Synthetic / Mock / Dummy Data:** Mock fallback datasets, hardcoded placeholder rosters (e.g., `DEFAULT_16AAA_ROSTER`, static webcal JSON fixtures, dummy schedules, synthetic persona records) must NEVER be substituted into runtime paths or used as fallbacks.
+- **Fail-Closed on Missing Data:** If real-world or live team/athlete data is absent, the system must fail-closed into an authentic empty state (e.g., Off-Season / Independent Training mode) or throw an explicit, actionable error. Never paper over absent data with mock or cross-tenant datasets.
+- **COPPA & Tenancy Guard:** All live data access must strictly respect tenant boundaries and legal guardian consent scopes (e.g., 15U athletes must never be exposed to 16U team records, and vice versa). Cross-pollination between minor athlete profiles or rosters is a severe COPPA violation.
+
