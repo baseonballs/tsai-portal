@@ -586,12 +586,25 @@ export function LockerRoomHub() {
                 <p className="mt-2 text-xs sm:text-sm text-zinc-300 italic">
                   {activeMedia.journalText}
                 </p>
-                <div className="mt-3 flex items-center justify-between text-xs font-medium text-cyan-400">
-                  <span>Synced directly across TSAI ecosystem</span>
-                  <Link href="/players-development" className="inline-flex items-center gap-1 hover:underline">
-                    <span>View Micro-Loop Ledger</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
+                <div className="mt-4 pt-3 border-t border-cyan-500/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-medium">
+                  <div className="flex items-center gap-1.5 text-cyan-400">
+                    <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+                    <span>Live sync with Periodical athlete journal</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Link href="/players-development" className="text-zinc-400 hover:text-white transition-colors">
+                      Micro-Loop Ledger
+                    </Link>
+                    <a
+                      href={process.env.NEXT_PUBLIC_PERIODICAL_URL || "https://periodical.transcendsports.ai"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 px-3.5 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500 hover:text-zinc-950 transition-all min-h-[44px] sm:min-h-0"
+                    >
+                      <span>Open in Periodical</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
