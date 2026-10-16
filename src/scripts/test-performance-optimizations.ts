@@ -77,6 +77,8 @@ async function main() {
     createServerTimingRecorder,
     parseServerTimingHeader,
     evaluateLatencyBudget,
+    computeWeakETag,
+    matchesIfNoneMatch,
   } = await import("../lib/perf/server-timing");
   const portalProxySrc = fs.readFileSync(path.join(root, "src/proxy.ts"), "utf8");
   assert.ok(
@@ -99,11 +101,25 @@ async function main() {
   });
   assert.equal(gate.passed, true);
 
-  console.log("[PASS] tsai-portal Wave 5 & Wave 6 performance optimization invariants verified.");
+  // 6. PORT-PERF-ETAG-005: Weak ETag & 304 Not Modified revalidation
+  const etag = computeWeakETag({ ok: true, service: "tsai-portal" });
+  assert.ok(etag.startsWith('W/"'), "computeWeakETag must return a W/ weak ETag");
+  assert.equal(matchesIfNoneMatch(etag, etag), true);
+  assert.equal(matchesIfNoneMatch(`W/"other", ${etag}`, etag), true);
+  assert.equal(matchesIfNoneMatch('W/"mismatch"', etag), false);
+  assert.ok(
+    telemSrc.includes("computeWeakETag") &&
+      telemSrc.includes("matchesIfNoneMatch") &&
+      telemSrc.includes("status: 304"),
+    "telemetry/event/route.ts must support weak ETag 304 Not Modified revalidation"
+  );
+
+  console.log("[PASS] tsai-portal Wave 5, Wave 6 & Wave 10 performance optimization invariants verified.");
 }
 
 main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
 

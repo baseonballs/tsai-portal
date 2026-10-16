@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { errorMessage } from "@/lib/errors";
-import { createServerTimingRecorder } from "@/lib/perf/server-timing";
+import {
+  computeWeakETag,
+  createServerTimingRecorder,
+  matchesIfNoneMatch,
+} from "@/lib/perf/server-timing";
 import { resolveServerAuthUrl } from "@/utils/supabase/resolve-server-auth-url";
 
 let cachedTelemetryAdminClient: SupabaseClient | null = null;
@@ -18,6 +22,25 @@ function getTelemetryAdminClient(): SupabaseClient {
     auth: { autoRefreshToken: false, persistSession: false },
   });
   return cachedTelemetryAdminClient;
+}
+
+export async function GET(req: NextRequest) {
+  const timing = createServerTimingRecorder();
+  const payload = {
+    ok: true,
+    service: "tsai-portal",
+    telemetryReady: true,
+  };
+  const etag = computeWeakETag(payload);
+  const headers = {
+    ETag: etag,
+    "Cache-Control": "private, max-age=15, stale-while-revalidate=60",
+    "Server-Timing": timing.toHeaderValue(),
+  };
+  if (matchesIfNoneMatch(req.headers.get("if-none-match"), etag)) {
+    return new NextResponse(null, { status: 304, headers });
+  }
+  return NextResponse.json(payload, { headers });
 }
 
 export async function POST(req: NextRequest) {

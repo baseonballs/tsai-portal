@@ -140,3 +140,42 @@ export class ServerTimingRecorder {
 export function createServerTimingRecorder(): ServerTimingRecorder {
   return new ServerTimingRecorder();
 }
+
+/**
+ * Computes a deterministic weak ETag (`W/"<fnv1a-hex>-<len>"`) from any JSON-serializable
+ * payload (`PORT-PERF-ETAG-005`). Safe in both Node and Edge runtimes.
+ */
+export function computeWeakETag(payload: unknown): string {
+  const serialized = typeof payload === "string" ? payload : JSON.stringify(payload ?? null);
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  for (let i = 0; i < serialized.length; i++) {
+    const ch = serialized.charCodeAt(i);
+    h1 ^= ch;
+    h1 = Math.imul(h1, 0x01000193);
+    h2 ^= ch ^ (i & 0xff);
+    h2 = Math.imul(h2, 0x811c9dc5);
+  }
+  const hex1 = (h1 >>> 0).toString(16).padStart(8, "0");
+  const hex2 = (h2 >>> 0).toString(16).padStart(8, "0");
+  return `W/"${hex1}${hex2}-${serialized.length.toString(16)}"`;
+}
+
+/**
+ * Returns true when an incoming `If-None-Match` request header matches `currentETag`
+ * under RFC 9110 weak comparison (`PORT-PERF-ETAG-005`).
+ */
+export function matchesIfNoneMatch(
+  ifNoneMatchHeader: string | null | undefined,
+  currentETag: string
+): boolean {
+  if (!ifNoneMatchHeader || !currentETag) return false;
+  const trimmed = ifNoneMatchHeader.trim();
+  if (trimmed === "*") return true;
+  const normalize = (tag: string) => tag.trim().replace(/^W\//i, "");
+  const target = normalize(currentETag);
+  return trimmed
+    .split(",")
+    .map((part) => normalize(part))
+    .some((candidate) => candidate === target);
+}
