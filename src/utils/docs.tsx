@@ -92,6 +92,21 @@ const components = {
   ),
 };
 
+const DOC_BUNDLE_CACHE_TTL_MS = 30_000;
+const DOC_BUNDLE_CACHE_MAX_ENTRIES = 128;
+const DOC_BUNDLE_CACHE = new Map<
+  string,
+  { bundle: DocBundle; mtimeMs: number; expiresAt: number }
+>();
+
+export function invalidateDocBundleCache(cacheKey?: string): void {
+  if (cacheKey) {
+    DOC_BUNDLE_CACHE.delete(cacheKey);
+    return;
+  }
+  DOC_BUNDLE_CACHE.clear();
+}
+
 export async function loadDoc(app: "spotlight" | "periodical" | "watson", slug: string): Promise<DocBundle | null> {
   let relativePath = slug;
 
@@ -120,7 +135,16 @@ export async function loadDoc(app: "spotlight" | "periodical" | "watson", slug: 
     return null;
   }
 
+  const cacheKey = `${app}:${targetFile}`;
+
   try {
+    const stat = await fs.stat(targetFile);
+    const now = Date.now();
+    const cached = DOC_BUNDLE_CACHE.get(cacheKey);
+    if (cached && cached.expiresAt > now && cached.mtimeMs === stat.mtimeMs) {
+      return cached.bundle;
+    }
+
     const source = await fs.readFile(targetFile, "utf8");
     const { content, frontmatter } = await compileMDX<DocMeta>({
       source,
@@ -133,7 +157,7 @@ export async function loadDoc(app: "spotlight" | "periodical" | "watson", slug: 
       components,
     });
 
-    return {
+    const bundle: DocBundle = {
       content,
       frontmatter: {
         title: frontmatter.title || path.basename(relativePath, extension),
@@ -141,6 +165,18 @@ export async function loadDoc(app: "spotlight" | "periodical" | "watson", slug: 
         lastUpdated: frontmatter.lastUpdated,
       },
     };
+
+    if (DOC_BUNDLE_CACHE.size >= DOC_BUNDLE_CACHE_MAX_ENTRIES) {
+      const oldestKey = DOC_BUNDLE_CACHE.keys().next().value;
+      if (oldestKey) DOC_BUNDLE_CACHE.delete(oldestKey);
+    }
+    DOC_BUNDLE_CACHE.set(cacheKey, {
+      bundle,
+      mtimeMs: stat.mtimeMs,
+      expiresAt: now + DOC_BUNDLE_CACHE_TTL_MS,
+    });
+
+    return bundle;
   } catch (e) {
     console.error(`Failed to load doc at ${targetFile}:`, e);
     return null;

@@ -1,8 +1,23 @@
 import { required } from "@/utils/require-env";
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import crypto from "crypto";
-import { errorMessage } from "@/lib/errors"
+import { errorMessage } from "@/lib/errors";
+import { resolveServerAuthUrl } from "@/utils/supabase/resolve-server-auth-url";
+
+let cachedTelemetryAdminClient: SupabaseClient | null = null;
+
+function getTelemetryAdminClient(): SupabaseClient {
+  if (cachedTelemetryAdminClient) {
+    return cachedTelemetryAdminClient;
+  }
+  const supabaseUrl = resolveServerAuthUrl();
+  const serviceKey = required(process.env.SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY");
+  cachedTelemetryAdminClient = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  return cachedTelemetryAdminClient;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,40 +42,38 @@ export async function POST(req: NextRequest) {
     const ipHash = crypto.createHash("sha256").update(rawIp).digest("hex").substring(0, 16);
     const userAgent = req.headers.get("user-agent") || "unknown";
 
-    // Supabase service role client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:5550";
-    const serviceKey = required(process.env.SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY");
-    const supabase = createClient(supabaseUrl, serviceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+    const supabase = getTelemetryAdminClient();
+    const nowIso = new Date().toISOString();
 
-    // 1. Insert Telemetry Event
-    const { error: eventErr } = await supabase.from("user_telemetry_events").insert([
-      {
-        visitor_id,
-        user_id,
-        lead_id,
-        event_type,
-        event_category,
-        page_path,
-        session_duration_sec,
-        event_properties,
-        ip_hash: ipHash,
-        user_agent: userAgent,
-      },
+    // PORT-PERF-TELEM-001: Execute telemetry event insert and session journey lookup in parallel
+    // instead of sequentially waiting for the insert before querying user_session_journeys.
+    const [eventRes, journeyRes] = await Promise.all([
+      supabase.from("user_telemetry_events").insert([
+        {
+          visitor_id,
+          user_id,
+          lead_id,
+          event_type,
+          event_category,
+          page_path,
+          session_duration_sec,
+          event_properties,
+          ip_hash: ipHash,
+          user_agent: userAgent,
+        },
+      ]),
+      supabase
+        .from("user_session_journeys")
+        .select("lead_id, user_id, total_pageviews, total_session_sec")
+        .eq("visitor_id", visitor_id)
+        .maybeSingle(),
     ]);
 
-    if (eventErr) {
-      console.error("[TelemetryAPI] Error inserting event:", eventErr.message);
+    if (eventRes.error) {
+      console.error("[TelemetryAPI] Error inserting event:", eventRes.error.message);
     }
 
-    // 2. Upsert User Session Journey
-    const nowIso = new Date().toISOString();
-    const { data: existingJourney } = await supabase
-      .from("user_session_journeys")
-      .select("*")
-      .eq("visitor_id", visitor_id)
-      .single();
+    const existingJourney = journeyRes.data;
 
     if (existingJourney) {
       await supabase

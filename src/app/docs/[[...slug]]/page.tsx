@@ -72,12 +72,49 @@ const WATSON_DOCS: DocItem[] = [
   { title: "Release v0.1.22", slug: "6-releases/RELEASE-WATSON-v0.1.22.alpha", category: "Releases" },
 ];
 
+const PORTAL_PROFILE_ROLE_CACHE_TTL_MS = 15_000;
+const PORTAL_PROFILE_ROLE_CACHE_MAX_ENTRIES = 256;
+const PORTAL_PROFILE_ROLE_CACHE = new Map<string, { role: string; expiresAt: number }>();
+
+async function resolvePortalUserRole(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<string> {
+  const now = Date.now();
+  const cached = PORTAL_PROFILE_ROLE_CACHE.get(userId);
+  if (cached && cached.expiresAt > now) {
+    return cached.role;
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_type")
+    .eq("id", userId)
+    .single();
+
+  const role = profile?.user_type?.toLowerCase() || "";
+  if (PORTAL_PROFILE_ROLE_CACHE.size >= PORTAL_PROFILE_ROLE_CACHE_MAX_ENTRIES) {
+    const oldestKey = PORTAL_PROFILE_ROLE_CACHE.keys().next().value;
+    if (oldestKey) PORTAL_PROFILE_ROLE_CACHE.delete(oldestKey);
+  }
+  PORTAL_PROFILE_ROLE_CACHE.set(userId, {
+    role,
+    expiresAt: now + PORTAL_PROFILE_ROLE_CACHE_TTL_MS,
+  });
+  return role;
+}
+
 export default async function DocsPage({ params }: Props) {
   const { slug } = await params;
   
-  // Authenticate user
+  // Authenticate user (fast cookie session check first, fallback to GoTrue getUser)
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
+  let user = session?.user ?? null;
+  if (!user) {
+    const { data: { user: fetchedUser } } = await supabase.auth.getUser();
+    user = fetchedUser;
+  }
 
   const currentPath = slug?.join("/") || "";
 
@@ -85,19 +122,17 @@ export default async function DocsPage({ params }: Props) {
     redirect(`/login?next=${encodeURIComponent("/docs/" + currentPath)}`);
   }
 
-  // Get user type from profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_type")
-    .eq("id", user.id)
-    .single();
-
-  const role = profile?.user_type?.toLowerCase() || "";
-  const isSuperadmin = role === "superadmin" || role === "superuser" || role === "devops";
-
   // Parse active app and doc from slug
   const app = (slug?.[0] as "spotlight" | "periodical" | "watson") || "spotlight";
   const docPath = slug?.slice(1).join("/") || "";
+
+  // PORT-PERF-DOCS-002: Parallelize profile role lookup (cached 15s) and MDX bundle resolution
+  // for non-Watson docs so filesystem/MDX work overlaps with the profile query.
+  const [role, preloadedBundle] = await Promise.all([
+    resolvePortalUserRole(supabase, user.id),
+    app !== "watson" ? loadDoc(app, docPath) : Promise.resolve(null),
+  ]);
+  const isSuperadmin = role === "superadmin" || role === "superuser" || role === "devops";
 
   // Get documents for active app
   let docItems: DocItem[] = SPOTLIGHT_DOCS;
@@ -111,13 +146,15 @@ export default async function DocsPage({ params }: Props) {
   }
 
   const isWatsonGated = app === "watson" && !isSuperadmin;
-  let docBundle = null;
+  let docBundle = preloadedBundle;
   let errorMsg = null;
 
   if (isWatsonGated) {
     errorMsg = "Access Denied: Superadmin / DevOps privileges required.";
   } else {
-    docBundle = await loadDoc(app, docPath);
+    if (app === "watson") {
+      docBundle = await loadDoc(app, docPath);
+    }
     if (!docBundle) {
       errorMsg = "Documentation page not found.";
     }

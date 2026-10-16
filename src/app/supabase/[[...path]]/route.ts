@@ -21,12 +21,45 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   return handleProxy(request, context);
 }
 
+function resolveProxyTargetBase(request: NextRequest): string {
+  const internalUrl = process.env.SUPABASE_INTERNAL_URL?.trim().replace(/\/$/, "");
+  if (internalUrl) return internalUrl;
+
+  const configured = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim().replace(/\/$/, "");
+  if (configured) {
+    try {
+      const parsed = new URL(configured);
+      const reqHost = request.nextUrl.hostname;
+      const reqPort = request.nextUrl.port || (request.nextUrl.protocol === "https:" ? "443" : "80");
+      const targetPort = parsed.port || (parsed.protocol === "https:" ? "443" : "80");
+      const isSelfOrigin =
+        (parsed.hostname === reqHost ||
+          (["localhost", "127.0.0.1"].includes(parsed.hostname) &&
+            ["localhost", "127.0.0.1"].includes(reqHost))) &&
+        targetPort === reqPort &&
+        parsed.pathname.startsWith("/supabase");
+      if (!isSelfOrigin) {
+        return configured;
+      }
+    } catch {
+      // ignore invalid URL and fall back below
+    }
+  }
+
+  if (process.env.TSAI_DEPLOY_TARGET === "cloudrun") {
+    const dgx = (process.env.TSAI_DGX_ORIGIN ?? "https://spark-62db.tail18f71b.ts.net:8443").trim().replace(/\/$/, "");
+    return `${dgx}/supabase`;
+  }
+
+  return "http://127.0.0.1:5550";
+}
+
 async function handleProxy(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
   const { path } = await context.params;
   const pathString = path ? path.join("/") : "";
   const search = request.nextUrl.search;
 
-  const targetBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://spark-62db.tail18f71b.ts.net:8443/supabase").replace(/\/$/, "");
+  const targetBase = resolveProxyTargetBase(request);
   const targetUrl = `${targetBase}/${pathString}${search}`;
 
   const reqHeaders = request.headers;
