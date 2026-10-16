@@ -11,6 +11,7 @@
 .vscode
 node_modules/
 .next/
+graphify-out/
 /conductor/
 /docs/
 /scripts/

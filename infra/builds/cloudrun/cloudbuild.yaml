@@ -50,10 +50,11 @@ steps:
         # We use 'update' instead of 'deploy' because the service topology 
         # is fully managed by Terraform in tsai-toolchain.
         gcloud run services update "${_SERVICE_NAME}" \
+          --quiet \
           --project="${PROJECT_ID}" \
           --region="${_RUN_REGION}" \
-          --image="$${IMAGE}" \
-          --quiet
+          --container="app" \
+          --image="$${IMAGE}"
         
         gcloud run services describe "${_SERVICE_NAME}" \
           --project="${PROJECT_ID}" \
@@ -62,4 +63,5 @@ steps:
 
 options:
   logging: GCS_ONLY
+  machineType: 'E2_HIGHCPU_32'
 logsBucket: "gs://tsai-cloudbuild-logs-${PROJECT_ID}"
