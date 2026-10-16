@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { errorMessage } from "@/lib/errors";
+import { createServerTimingRecorder } from "@/lib/perf/server-timing";
 import { resolveServerAuthUrl } from "@/utils/supabase/resolve-server-auth-url";
 
 let cachedTelemetryAdminClient: SupabaseClient | null = null;
@@ -20,6 +21,7 @@ function getTelemetryAdminClient(): SupabaseClient {
 }
 
 export async function POST(req: NextRequest) {
+  const timing = createServerTimingRecorder();
   try {
     const body = await req.json();
     const {
@@ -34,7 +36,10 @@ export async function POST(req: NextRequest) {
     } = body;
 
     if (!visitor_id || !event_type) {
-      return NextResponse.json({ error: "visitor_id and event_type are required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "visitor_id and event_type are required." },
+        { status: 400, headers: { "Server-Timing": timing.toHeaderValue() } },
+      );
     }
 
     // IP Anonymization (SHA-256 hash first 16 chars)
@@ -45,6 +50,7 @@ export async function POST(req: NextRequest) {
     const supabase = getTelemetryAdminClient();
     const nowIso = new Date().toISOString();
 
+    const dbStartedAt = performance.now();
     // PORT-PERF-TELEM-001: Execute telemetry event insert and session journey lookup in parallel
     // instead of sequentially waiting for the insert before querying user_session_journeys.
     const [eventRes, journeyRes] = await Promise.all([
@@ -104,10 +110,18 @@ export async function POST(req: NextRequest) {
         },
       ]);
     }
+    timing.record("db", performance.now() - dbStartedAt, "Telemetry persistence");
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true },
+      { headers: { "Server-Timing": timing.toHeaderValue() } },
+    );
   } catch (err) {
     console.error("[TelemetryAPI] Unexpected error:", err);
-    return NextResponse.json({ error: errorMessage(err) || "An unexpected error occurred." }, { status: 500 });
+    return NextResponse.json(
+      { error: errorMessage(err) || "An unexpected error occurred." },
+      { status: 500, headers: { "Server-Timing": timing.toHeaderValue() } },
+    );
   }
 }
+

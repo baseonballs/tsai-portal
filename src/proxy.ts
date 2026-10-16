@@ -24,7 +24,9 @@ export async function proxy(request: NextRequest) {
   const closed = await maintenanceResponse(request, "Transcend");
   if (closed) return closed;
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  res.headers.set("Server-Timing", 'proxy;dur=0.1;desc="portal-proxy"');
+  return res;
 }
 
 export const config = {

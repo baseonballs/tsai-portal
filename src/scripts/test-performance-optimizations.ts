@@ -72,10 +72,38 @@ async function main() {
     "supabase/[[...path]]/route.ts must guard against self-origin proxy loops"
   );
 
-  console.log("[PASS] tsai-portal Wave 5 performance optimization invariants verified.");
+  // 5. PORT-PERF-TIMING-004 & PLAT-PERF-CI-GATE-001: W3C Server-Timing & latency budget gate
+  const {
+    createServerTimingRecorder,
+    parseServerTimingHeader,
+    evaluateLatencyBudget,
+  } = await import("../lib/perf/server-timing");
+  const portalProxySrc = fs.readFileSync(path.join(root, "src/proxy.ts"), "utf8");
+  assert.ok(
+    portalProxySrc.includes("Server-Timing") && telemSrc.includes("Server-Timing"),
+    "src/proxy.ts and src/app/api/telemetry/event/route.ts must emit W3C Server-Timing headers"
+  );
+  const rec = createServerTimingRecorder();
+  rec.record("proxy", 0.1, "portal-proxy");
+  const hdr = rec.toHeaderValue();
+  const parsed = parseServerTimingHeader(hdr);
+  assert.equal(parsed[0]?.name, "proxy");
+  const gate = evaluateLatencyBudget({
+    endpoint: "GET /",
+    p50Ms: 33.3,
+    p95Ms: 44.0,
+    budgetP50Ms: 80.0,
+    budgetP95Ms: 160.0,
+    serverTimingHeader: hdr,
+    requiredMetrics: ["proxy", "total"],
+  });
+  assert.equal(gate.passed, true);
+
+  console.log("[PASS] tsai-portal Wave 5 & Wave 6 performance optimization invariants verified.");
 }
 
 main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
