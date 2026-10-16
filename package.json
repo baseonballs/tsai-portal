@@ -1,6 +1,6 @@
 {
   "name": "tsai-portal",
-  "version": "2.0.9",
+  "version": "2.0.15",
   "packageManager": "pnpm@10.34.5",
   "private": true,
   "scripts": {
