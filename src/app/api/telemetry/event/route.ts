@@ -65,6 +65,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const PORTAL_ALLOWED_EVENT_TYPES = new Set([
+      "page_view",
+      "section_view",
+      "button_click",
+      "form_focus",
+      "conversion_submit",
+      "feature_use",
+      "bounce",
+    ]);
+    const isAllowedEventType = PORTAL_ALLOWED_EVENT_TYPES.has(String(event_type));
+    const normalizedEventType = isAllowedEventType ? String(event_type) : "feature_use";
+    const normalizedEventProperties = isAllowedEventType
+      ? event_properties
+      : { custom_event_type: String(event_type), ...(event_properties || {}) };
+
     // IP Anonymization (SHA-256 hash first 16 chars)
     const rawIp = req.headers.get("x-forwarded-for")?.split(",")[0] || req.headers.get("x-real-ip") || "127.0.0.1";
     const ipHash = crypto.createHash("sha256").update(rawIp).digest("hex").substring(0, 16);
@@ -82,11 +97,11 @@ export async function POST(req: NextRequest) {
           visitor_id,
           user_id,
           lead_id,
-          event_type,
+          event_type: normalizedEventType,
           event_category,
           page_path,
           session_duration_sec,
-          event_properties,
+          event_properties: normalizedEventProperties,
           ip_hash: ipHash,
           user_agent: userAgent,
         },
@@ -99,7 +114,7 @@ export async function POST(req: NextRequest) {
     ]);
 
     if (eventRes.error) {
-      console.error("[TelemetryAPI] Error inserting event:", eventRes.error.message);
+      console.warn("[TelemetryAPI] Error inserting event:", eventRes.error.message);
     }
 
     const existingJourney = journeyRes.data;
@@ -123,7 +138,7 @@ export async function POST(req: NextRequest) {
           visitor_id,
           lead_id,
           user_id,
-          first_touch_source: event_properties?.referrer || "direct",
+          first_touch_source: normalizedEventProperties?.referrer || "direct",
           first_landing_page: page_path,
           total_pageviews: 1,
           total_session_sec: session_duration_sec,
@@ -140,7 +155,7 @@ export async function POST(req: NextRequest) {
       { headers: { "Server-Timing": timing.toHeaderValue() } },
     );
   } catch (err) {
-    console.error("[TelemetryAPI] Unexpected error:", err);
+    console.warn("[TelemetryAPI] Unexpected error:", err);
     return NextResponse.json(
       { error: errorMessage(err) || "An unexpected error occurred." },
       { status: 500, headers: { "Server-Timing": timing.toHeaderValue() } },

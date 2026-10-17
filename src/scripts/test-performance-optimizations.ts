@@ -114,7 +114,23 @@ async function main() {
     "telemetry/event/route.ts must support weak ETag 304 Not Modified revalidation"
   );
 
-  console.log("[PASS] tsai-portal Wave 5, Wave 6 & Wave 10 performance optimization invariants verified.");
+  // 7. PORT-PERF-TELEM-006: Visitor ID memoization, 2s duplicate-beacon coalescing, 5s timeout & event-type allowlist
+  const trackerSrc = fs.readFileSync(path.join(root, "src/lib/telemetry/tracker.ts"), "utf8");
+  assert.ok(
+    trackerSrc.includes("cachedVisitorId") &&
+      trackerSrc.includes("RECENT_BEACON_DEDUP_MS = 2_000") &&
+      trackerSrc.includes("PORTAL_ALLOWED_EVENT_TYPES") &&
+      trackerSrc.includes("AbortSignal.timeout(5_000)"),
+    "src/lib/telemetry/tracker.ts must memoize visitor ID, coalesce duplicate rapid beacons within 2s, normalize event types, and apply a 5s AbortSignal timeout"
+  );
+  assert.ok(
+    telemSrc.includes("PORTAL_ALLOWED_EVENT_TYPES") &&
+      telemSrc.includes("custom_event_type") &&
+      !telemSrc.includes("console.error("),
+    "telemetry/event/route.ts must normalize event types against PORTAL_ALLOWED_EVENT_TYPES and use console.warn instead of console.error"
+  );
+
+  console.log("[PASS] tsai-portal Wave 5, Wave 6, Wave 10 & Wave 11 (7/7) performance optimization invariants verified.");
 }
 
 main().catch((err) => {
