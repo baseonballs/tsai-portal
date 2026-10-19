@@ -137,8 +137,9 @@ async function testTailnetSidecarMeshArchitecture() {
       "tsai-portal-sa must be bound to tailscale-authkey as secretAccessor",
     );
     console.log("  ✓ Secret 'tailscale-authkey' exists with IAM binding for tsai-portal-sa.");
-  } catch (err: any) {
-    console.log("  ⚠ Offline / sandbox verification mode:", err?.message || err);
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.log("  ⚠ Offline / sandbox verification mode:", error?.message || String(err));
   }
 
   // 7. Verify Zero-Purple Palette Invariant
