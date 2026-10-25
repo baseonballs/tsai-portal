@@ -4,12 +4,12 @@
 #   docker build -f infra/builds/cloudrun/Dockerfile -t tsai-portal:local .
 
 ARG NODE_VERSION=22-bookworm
-ARG BUILDPLATFORM=linux/amd64
+ARG BUILDPLATFORM
 
 FROM --platform=$BUILDPLATFORM node:${NODE_VERSION} AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
@@ -17,7 +17,7 @@ FROM --platform=$BUILDPLATFORM node:${NODE_VERSION} AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV TSAI_DEPLOY_TARGET=cloudrun
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 

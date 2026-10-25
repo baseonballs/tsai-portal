@@ -68,13 +68,15 @@ gcloud services enable run.googleapis.com cloudbuild.googleapis.com >/dev/null
 if [[ "$DEPLOY_VIA" == "local" ]]; then
   IMAGE_REF="${REGION}-docker.pkg.dev/${PROJECT_ID}/tsai-frontends/${IMAGE_NAME}"
   
-  echo "→ Local docker build → $IMAGE_REF (linux/amd64 for Cloud Run)"
+  HOST_PLATFORM="linux/$(uname -m | sed 's/aarch64/arm64/;s/x86_64/amd64/')"
+  echo "→ Local docker build → $IMAGE_REF (builder: ${HOST_PLATFORM} → runner: linux/amd64 for Cloud Run)"
   
   gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet >/dev/null
   
   docker build \
     --platform linux/amd64 \
     -f infra/builds/cloudrun/Dockerfile \
+    --build-arg "BUILDPLATFORM=${HOST_PLATFORM}" \
     --build-arg "TSAI_DGX_ORIGIN=${TSAI_DGX_ORIGIN}" \
     --build-arg "NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}" \
     --build-arg "NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" \
