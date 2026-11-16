@@ -1,3 +1,54 @@
+## 🛑 LIVE SYSTEM — NO MOCK / FAKE DATA, NO FALLBACKS, PERIOD (OWNER RULE — ABSOLUTE)
+
+Transcend is a **live system with real users, including minors.** The owner has stated this rule repeatedly. It
+outranks convenience, demos, deadlines and "temporary" workarounds, and it applies to every agent (Claude, Gemini /
+Antigravity, Cursor, Codex) in every repo, app and platform: web, iOS, tvOS, CLI, scripts and pipelines.
+
+1. **No mock or fake data — period.** Do not add sample, demo, seed, placeholder, preview, "beta" or built-in
+   data of any kind to code that can run for a user. That includes built-in profiles, people, names, jerseys,
+   rosters, teams, series, games, scores, schedules, film, photos and identities. No default, no feature flag, no
+   "for now".
+2. **No fallback to mock or fake data — period.** If the real source is empty, unreachable or refuses the
+   request, show an honest empty state or an explicit error and fail loudly. Never substitute something that looks
+   like data, a cached copy of someone else's data, or a guess.
+3. **Core services come from the Transcend backend.** No app keeps its own copy of these, invents its own
+   identity, or decides access on its own:
+
+   | Core service | Comes from |
+   |---|---|
+   | Identity, sign-in and sessions | The platform's GoTrue: Google through the platform's OAuth edge, Apple through GoTrue's `id_token` exchange |
+   | People, teams, rosters, schedules, games and film | hockey-api (`hockey_db`) |
+   | Entitlement | The platform's licences and plans |
+   | Mail | tsai-notify |
+
+4. **If the backend endpoint you need does not exist, build it.** Build it in the backend, scope it to the
+   caller, check access on the server and test it, then call it. Do not work around a missing endpoint with:
+   - local data or a hard-coded list;
+   - a guess made on the client;
+   - a call to a route the caller is not authorised for.
+
+   If you cannot build it in the current task, stop and say so. Leave the feature visibly unavailable; never fake it.
+5. **Authentication is real or absent.** Every sign-in must end in a platform session that the backend verifies
+   (a GoTrue access token). All of these are fake authentication and forbidden:
+   - an identity kept only on the device;
+   - a raw Apple or Google token, or a provider user id, sent as a bearer;
+   - a role assigned by default;
+   - a "preview" or "demo" login;
+   - a built-in account picker.
+
+**Tests:** fixtures may live only inside test files. They must be neutral (no real names or contacts), never
+importable by app code, and never shipped in a build.
+
+**Why this rule exists (2026-11-16):** the Spotlight iOS app shipped all of these:
+- five built-in household profiles with real children's first names;
+- a "Load Beta Preview Profiles" button that attached two minors to *any* signed-in account;
+- a Sign in with Apple that never reached the platform (the identity stayed on the phone and the role defaulted
+  to guardian);
+- a catalogue of two hard-coded teams, answered by series built into the code with no login check.
+
+As a result, entitled users could not see their own team's tournament. The fix was to build what was missing in
+the backend: a caller-scoped season-index endpoint with a Teams-plan entitlement check, and real GoTrue sign-in.
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
