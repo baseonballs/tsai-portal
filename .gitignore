@@ -54,3 +54,6 @@ graphify-out/
 
 # Cloud Run rendered multi-container manifest
 infra/builds/cloudrun/service-sidecar.yaml
+
+# Agent worktrees (Claude Code desktop) are created inside the repo; never track or ship them.
+.claude/worktrees/
