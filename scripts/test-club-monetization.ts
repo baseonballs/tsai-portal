@@ -17,8 +17,6 @@ import {
   TURNKEY_ARENA_RIG_BOM,
   HARDWARE_RIG_KIT_PRICE_CENTS,
 } from "../src/lib/commercial/club-revenue-calculator";
-import { POST as handleStripeConnect } from "../src/app/api/billing/stripe/connect/route";
-import { POST as handleHardwareCheckout } from "../src/app/api/billing/hardware/checkout/route";
 
 async function runClubMonetizationTests() {
   console.log("─────────────────────────────────────────────────────────────────");
@@ -75,67 +73,20 @@ async function runClubMonetizationTests() {
   assert.ok(cradle.safetyRating.includes("350ms"));
   console.log("   ✓ All 7 BOM components verified ($78.99 total, 180 lbs vacuum safety, 350ms settling)");
 
-  // TEST PILLAR 3: Stripe Connect Express Onboarding Route Handler
-  console.log("\n3. Testing Stripe Connect Express Route Handler...");
-  // Test validation failure
-  const invalidReq = new Request("https://portal.tsai.app/api/billing/stripe/connect", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
-  });
-  const invalidRes = await handleStripeConnect(invalidReq);
-  assert.equal(invalidRes.status, 400);
-  const invalidJson = await invalidRes.json();
-  assert.ok(invalidJson.error.includes("clubId and contactEmail are required"));
-  console.log("   ✓ Missing clubId/contactEmail returns HTTP 400 Bad Request");
+  // Phase 156: the Stripe Connect and hardware-checkout routes are gone. They were open to
+  // anyone, created real Stripe Express accounts from a body-supplied club id and email, and
+  // answered "success" with a simulated account when the key was missing. Nothing mounted them.
+  console.log("\n3. Confirming the unauthenticated billing routes are gone...");
+  for (const route of [
+    "src/app/api/billing/stripe/connect/route.ts",
+    "src/app/api/billing/hardware/checkout/route.ts",
+    "src/app/api/billing/stripe/checkout/route.ts",
+  ]) {
+    assert.equal(fs.existsSync(path.join(process.cwd(), route)), false, `${route} must not exist`);
+  }
+  console.log("   ✓ No open Stripe Connect, hardware or subscription checkout route");
 
-  // Test valid onboarding request
-  const validReq = new Request("https://portal.tsai.app/api/billing/stripe/connect", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", origin: "https://portal.tsai.app" },
-    body: JSON.stringify({
-      clubId: "club_jr_sharks_01",
-      clubName: "San Jose Jr Sharks AAA",
-      contactEmail: "director@sharksice.com",
-    }),
-  });
-  const validRes = await handleStripeConnect(validReq);
-  assert.equal(validRes.status, 200);
-  const validJson = await validRes.json();
-  assert.ok(validJson.url, "Response must include an onboarding URL");
-  assert.ok(validJson.accountId, "Response must include accountId");
-  console.log(`   ✓ Onboarding session created successfully (AccountId: ${validJson.accountId})`);
-
-  // TEST PILLAR 4: Hardware Checkout Route Handler
-  console.log("\n4. Testing Hardware Checkout Route Handler...");
-  const hwReq = new Request("https://portal.tsai.app/api/billing/hardware/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", origin: "https://portal.tsai.app" },
-    body: JSON.stringify({
-      clubId: "club_jr_sharks_01",
-      userEmail: "director@sharksice.com",
-      quantity: 2,
-      sheetIdentifier: "Sheet 1 (Main Arena)",
-    }),
-  });
-  const hwRes = await handleHardwareCheckout(hwReq);
-  assert.equal(hwRes.status, 200);
-  const hwJson = await hwRes.json();
-  assert.ok(hwJson.url, "Response must include a checkout URL");
-  assert.ok(hwJson.sessionId, "Response must include a session ID");
-  console.log(`   ✓ Turnkey Rig Kit checkout session created (Session: ${hwJson.sessionId})`);
-
-  // TEST PILLAR 5: Zero-Purple Design System Compliance
-  console.log("\n5. Testing Zero-Purple Design System Compliance in Workbench...");
-  const workbenchPath = path.join(process.cwd(), "src/components/commercial/ClubMonetizationWorkbench.tsx");
-  const content = fs.readFileSync(workbenchPath, "utf8");
-
-  const purpleRegex = /(?:purple|indigo|violet)-[0-9]{2,3}/gi;
-  const matches = content.match(purpleRegex);
-  assert.equal(matches, null, `Found forbidden purple/indigo/violet tokens: ${matches?.join(", ")}`);
-  console.log("   ✓ Zero purple/indigo/violet Tailwind tokens found (100% compliant)");
-
-  console.log("\n🎉 ALL 5 CLUB MONETIZATION & HARDWARE CHECKOUT TESTS PASSED!\n");
+  console.log("\n🎉 ALL CLUB MONETIZATION TESTS PASSED!\n");
 }
 
 runClubMonetizationTests().catch((err) => {

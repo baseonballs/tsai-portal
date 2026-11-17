@@ -66,8 +66,7 @@ export type TelemetryPayload = {
   page_path?: string;
   session_duration_sec?: number;
   event_properties?: Record<string, unknown>;
-  lead_id?: string;
-  user_id?: string;
+  // No user_id / lead_id: the server derives the user from the verified session (Phase 156).
 };
 
 export async function trackEvent(payload: TelemetryPayload): Promise<void> {

@@ -1,9 +1,7 @@
-import { pgrstEq } from '@/lib/supabase/postgrest-filter'
 import { resolveAuthRedirectPath } from "@/lib/auth/safe-internal-next-path";
-import { required } from "@/utils/require-env";
+import { createPortalAdminClient, isUserEntitledToPortal } from "@/lib/auth/portal-entitlement";
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/utils/supabase/server'
-import { createClient as createAdminClient, type SupabaseClient } from '@supabase/supabase-js'
 
 function getPublicOrigin(request: Request): string {
   const url = new URL(request.url)
@@ -21,56 +19,6 @@ function getPublicOrigin(request: Request): string {
   return url.origin
 }
 
-/**
- * Qualifies whether an authenticated user holds a valid product license / entitlement.
- * - Superadmins / Devops de facto possess all product licenses.
- * - Licensed users must have an active entry in user_product_licenses or app_metadata.licenses.
- * - Shadow profiles and unlicensed users are rejected.
- */
-async function isUserEntitledToPortal(
-  adminClient: SupabaseClient,
-  userId: string,
-  userEmail: string,
-  appMetaData: Record<string, unknown> = {}
-): Promise<{ isEntitled: boolean; profileId?: string }> {
-  // 1. Query profile for user_type, approval_status, and superadmin flag
-  const { data: profile } = await adminClient
-    .from('profiles')
-    .select('id, approval_status, user_type, is_superadmin, email')
-    .or([pgrstEq("id", userId), pgrstEq("email", userEmail)].join(","))
-    .maybeSingle()
-
-  const profileId = profile?.id
-
-  // Superadmins / Devops de facto possess all product licenses
-  const role = ((profile?.user_type || appMetaData.role || appMetaData.user_type || "") as string).toLowerCase()
-  const isSuperadmin = profile?.is_superadmin === true || role === "superadmin" || role === "superuser" || role === "devops"
-
-  if (isSuperadmin) {
-    return { isEntitled: true, profileId }
-  }
-
-  // 2. Check public.user_product_licenses for active product licenses
-  const queryUserId = profileId || userId
-  const { data: userLicenses } = await adminClient
-    .from('user_product_licenses')
-    .select('id, product_id, status')
-    .eq('user_id', queryUserId)
-
-  const activeLicenses = userLicenses?.filter((l: { status?: string }) => l.status === 'active') || []
-  if (activeLicenses.length > 0) {
-    return { isEntitled: true, profileId }
-  }
-
-  // 3. Fallback: Check synced licenses array in raw_app_meta_data
-  const syncedLicenses = (appMetaData.licenses || []) as string[]
-  if (Array.isArray(syncedLicenses) && syncedLicenses.length > 0) {
-    return { isEntitled: true, profileId }
-  }
-
-  return { isEntitled: false, profileId }
-}
-
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
@@ -85,12 +33,10 @@ export async function GET(request: Request) {
       const user = authData.session.user
       const userEmail = (user.email || "").toLowerCase().trim()
 
-      // Service Role Client to query user_product_licenses & profiles without RLS restrictions
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://spark-62db.tail18f71b.ts.net:8443/supabase"
-      const serviceKey = required(process.env.SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY")
-      const adminClient = createAdminClient(supabaseUrl, serviceKey, {
-        auth: { persistSession: false, autoRefreshToken: false }
-      })
+      // Service Role Client to query user_product_licenses & profiles without RLS restrictions.
+      // Phase 156: the URL comes from the same resolver every other server path uses — it no
+      // longer falls back to a hard-coded tailnet host when the env is missing.
+      const adminClient = createPortalAdminClient()
 
       // Qualify license entitlement
       const { isEntitled, profileId } = await isUserEntitledToPortal(

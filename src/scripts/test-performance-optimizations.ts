@@ -48,10 +48,11 @@ async function main() {
   );
 
   const docsPageSrc = fs.readFileSync(path.join(root, "src/app/docs/[[...slug]]/page.tsx"), "utf8");
+  // Phase 156: the profile-role cache existed only to gate the Watson tab, which is gone. The
+  // page now verifies entitlement on the server before it loads any document.
   assert.ok(
-    docsPageSrc.includes("PORTAL_PROFILE_ROLE_CACHE") &&
-      docsPageSrc.includes("const [role, preloadedBundle] = await Promise.all(["),
-    "DocsPage must cache profile roles and parallelize role resolution with loadDoc"
+    docsPageSrc.includes("await getEntitledPortalUser()") && !docsPageSrc.includes("PORTAL_PROFILE_ROLE_CACHE"),
+    "DocsPage must resolve Portal entitlement on the server before loading a document"
   );
 
   // 3. PORT-PERF-TELEM-001: Verify /api/telemetry/event parallelizes insert & select

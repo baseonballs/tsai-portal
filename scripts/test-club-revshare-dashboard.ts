@@ -22,8 +22,6 @@ import {
   calculateClubRevenueShare,
   PRICING_CONSTANTS,
 } from "../src/lib/billing/club-rev-share";
-import { POST as handleStripeConnect } from "../src/app/api/billing/stripe/connect/route";
-import { POST as handleHardwareCheckout } from "../src/app/api/billing/hardware/checkout/route";
 
 async function runClubRevShareDashboardTests() {
   console.log("─────────────────────────────────────────────────────────────────");
@@ -69,50 +67,18 @@ async function runClubRevShareDashboardTests() {
   assert.ok(cradle.safetyRating.includes("350ms"));
   console.log("   ✓ All 7 BOM components verified ($78.99 total, 180 lbs vacuum safety, 350ms settling)");
 
-  // TEST 3: Stripe Connect Express Onboarding Sandbox
-  console.log("\n3. Testing Stripe Connect Express Route Handler...");
-  const invalidReq = new Request("https://portal.tsai.app/api/billing/stripe/connect", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
-  });
-  const invalidRes = await handleStripeConnect(invalidReq);
-  assert.equal(invalidRes.status, 400);
-
-  const validReq = new Request("https://portal.tsai.app/api/billing/stripe/connect", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", origin: "https://portal.tsai.app" },
-    body: JSON.stringify({
-      clubId: "club_jr_sharks_01",
-      clubName: "San Jose Jr Sharks AAA",
-      contactEmail: "director@sharksice.com",
-    }),
-  });
-  const validRes = await handleStripeConnect(validReq);
-  assert.equal(validRes.status, 200);
-  const validJson = await validRes.json();
-  assert.ok(validJson.url && (validJson.url.includes("connect") || validJson.url.includes("stripe")));
-  assert.ok(validJson.accountId.startsWith("acct_"));
-  console.log(`   ✓ Stripe Connect Express onboarding generated: ${validJson.accountId}`);
-
-  // TEST 4: Hardware Checkout Route Handler
-  console.log("\n4. Testing Hardware Checkout Route Handler...");
-  const hwReq = new Request("https://portal.tsai.app/api/billing/hardware/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", origin: "https://portal.tsai.app" },
-    body: JSON.stringify({
-      clubId: "club_jr_sharks_01",
-      userEmail: "director@sharksice.com",
-      quantity: 1,
-      sheetIdentifier: "Sheet 1 (Main Arena)",
-    }),
-  });
-  const hwRes = await handleHardwareCheckout(hwReq);
-  assert.equal(hwRes.status, 200);
-  const hwJson = await hwRes.json();
-  assert.ok(hwJson.url);
-  assert.ok(hwJson.sessionId.startsWith("cs_"));
-  console.log(`   ✓ Hardware checkout session created: ${hwJson.sessionId}`);
+  // Phase 156: the Stripe Connect and hardware-checkout routes are gone. They were open to
+  // anyone, created real Stripe Express accounts from a body-supplied club id and email, and
+  // answered "success" with a simulated account when the key was missing. Nothing mounted them.
+  console.log("\n3. Confirming the unauthenticated billing routes are gone...");
+  for (const route of [
+    "src/app/api/billing/stripe/connect/route.ts",
+    "src/app/api/billing/hardware/checkout/route.ts",
+    "src/app/api/billing/stripe/checkout/route.ts",
+  ]) {
+    assert.equal(fs.existsSync(path.join(process.cwd(), route)), false, `${route} must not exist`);
+  }
+  console.log("   ✓ No open Stripe Connect, hardware or subscription checkout route");
 
   // TEST 5: Canonical Annual Pass Fundraising ($987.50 / yr)
   console.log("\n5. Testing Canonical Team Fundraising Calculation ($987.50 / yr)...");
@@ -135,7 +101,7 @@ async function runClubRevShareDashboardTests() {
   assert.equal(forbiddenPurple, null, `Found forbidden purple tokens: ${forbiddenPurple?.join(", ")}`);
   console.log("   ✓ Zero unanchored purple tokens in ClubRevShareDashboard (100% compliant)");
 
-  console.log("\n🎉 ALL 6 CLUB REV-SHARE & DASHBOARD VERIFICATION TESTS PASSED!\n");
+  console.log("\n🎉 ALL CLUB REV-SHARE & DASHBOARD VERIFICATION TESTS PASSED!\n");
 }
 
 runClubRevShareDashboardTests().catch((err) => {

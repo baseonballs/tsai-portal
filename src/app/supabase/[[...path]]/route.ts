@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { errorMessage } from "@/lib/errors"
+import { required } from "@/utils/require-env";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
   return handleProxy(request, context);
@@ -47,7 +48,10 @@ function resolveProxyTargetBase(request: NextRequest): string {
   }
 
   if (process.env.TSAI_DEPLOY_TARGET === "cloudrun") {
-    const dgx = (process.env.TSAI_DGX_ORIGIN ?? "https://spark-62db.tail18f71b.ts.net:8443").trim().replace(/\/$/, "");
+    // Phase 156: no hard-coded tailnet host. The Cloud Run service sets TSAI_DGX_ORIGIN
+    // (infra/builds/cloudrun/service-sidecar.yaml.template); a deploy without it is broken and
+    // should say so rather than quietly route sign-ins to a host baked into the source.
+    const dgx = required(process.env.TSAI_DGX_ORIGIN, "TSAI_DGX_ORIGIN").trim().replace(/\/$/, "");
     return `${dgx}/supabase`;
   }
 
@@ -105,7 +109,8 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
       try {
         const locUrl = new URL(location, targetUrl);
         const isInternalHost =
-          locUrl.hostname === "spark-62db.tail18f71b.ts.net" ||
+          // The upstream this request was proxied to (from config, not a host baked into source).
+          locUrl.hostname === new URL(targetBase).hostname ||
           locUrl.hostname === "127.0.0.1" ||
           locUrl.hostname === "0.0.0.0" ||
           locUrl.hostname === "localhost";

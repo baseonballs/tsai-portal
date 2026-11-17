@@ -4,6 +4,7 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import React from "react";
+import { resolvePublishedSpotlightSlug } from "@/lib/docs/manifest";
 
 export type DocMeta = {
   title: string;
@@ -107,35 +108,28 @@ export function invalidateDocBundleCache(cacheKey?: string): void {
   DOC_BUNDLE_CACHE.clear();
 }
 
-export async function loadDoc(app: "spotlight" | "periodical" | "watson", slug: string): Promise<DocBundle | null> {
-  let relativePath = slug;
-
-  // Defaults for empty slug
+/**
+ * Load one published Spotlight manual page. Phase 156: the Portal serves Spotlight's customer
+ * manual ONLY, and only the slugs in src/lib/docs/manifest.ts — a file on disk that is not in the
+ * manifest is "not found". The Periodical and Watson trees (internal engineering docs) are no
+ * longer copied into the image or readable through this loader.
+ */
+export async function loadDoc(slug: string): Promise<DocBundle | null> {
+  const relativePath = resolvePublishedSpotlightSlug(slug);
   if (!relativePath) {
-    if (app === "spotlight") relativePath = "welcome";
-    else relativePath = "README";
-  }
-
-  // Format file extensions
-  let extension = ".mdx";
-  if (app === "periodical" || app === "watson") {
-    extension = ".md";
-  }
-
-  // Handle welcome edge case for Spotlight
-  if (app === "spotlight" && relativePath === "") {
-    relativePath = "welcome";
-  }
-
-  const baseDir = path.join(CONTENT_ROOT, app);
-  const targetFile = path.resolve(baseDir, relativePath.endsWith(extension) ? relativePath : `${relativePath}${extension}`);
-
-  // Security bounds check
-  if (!targetFile.startsWith(path.resolve(baseDir) + path.sep) && targetFile !== path.resolve(baseDir)) {
     return null;
   }
 
-  const cacheKey = `${app}:${targetFile}`;
+  const extension = ".mdx";
+  const baseDir = path.join(CONTENT_ROOT, "spotlight");
+  const targetFile = path.resolve(baseDir, `${relativePath}${extension}`);
+
+  // Defence in depth: the manifest already rules out traversal, but never read outside the tree.
+  if (!targetFile.startsWith(path.resolve(baseDir) + path.sep)) {
+    return null;
+  }
+
+  const cacheKey = targetFile;
 
   try {
     const stat = await fs.stat(targetFile);

@@ -171,7 +171,7 @@ export default function CoachsCornerPage() {
                     Superpower: {activeSP.name}
                   </span>
                 </div>
-                <div className="text-xs text-zinc-500 font-mono">Target: #26 Corinne L. (Center · LA Lions 14U)</div>
+                <div className="text-xs text-zinc-500 font-mono">Target: a 14U center</div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -189,7 +189,7 @@ export default function CoachsCornerPage() {
                     <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">Coach Voice Prompt (8s Voice Note Attached)</span>
                     <div className="flex items-center gap-3 bg-black/50 p-3 rounded-lg border border-white/10">
                       <Mic className="w-4 h-4 text-cyan-400 shrink-0" />
-                      <p className="text-xs text-zinc-300 italic flex-1">&quot;You&apos;re a shooter, Corinne. Trust it. The shot&apos;s there a full beat before the pass is.&quot;</p>
+                      <p className="text-xs text-zinc-300 italic flex-1">&quot;You&apos;re a shooter. Trust it. The shot&apos;s there a full beat before the pass is.&quot;</p>
                       <Volume2 className="w-4 h-4 text-zinc-500" />
                     </div>
                   </div>
@@ -278,17 +278,17 @@ export default function CoachsCornerPage() {
                 <div className="md:w-3/4">
                   <h3 className="text-2xl font-serif text-white mb-6"><span className="text-sky-500/50 mr-2">02 /</span> Send it. The Drop lands inside her day.</h3>
                   <p className="text-zinc-400 mb-8 leading-relaxed">
-                    One tap. The cut arrives in Corinne&apos;s Periodical Film Room as a <strong className="text-rose-400 font-medium">rose cinematic tile</strong> — not a text link to ignore, but a piece of film addressed to her by name and tied to her goal.
+                    One tap. The cut arrives in the athlete&apos;s Periodical Film Room as a <strong className="text-rose-400 font-medium">rose cinematic tile</strong> — not a text link to ignore, but a piece of film addressed to her by name and tied to her goal.
                   </p>
                   
                   {/* UI Mock */}
                   <div className="rounded-xl border border-rose-500/30 bg-black/40 backdrop-blur-md p-6 shadow-2xl mb-8 transform transition-transform hover:-translate-y-1">
                     <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-3 border-b border-white/5">
-                      <span className="text-sm font-semibold text-white">Film Room Drop · #26 Corinne L.</span>
+                      <span className="text-sm font-semibold text-white">Film Room Drop · the athlete</span>
                       <span className="rounded-full bg-rose-500/20 text-rose-300 text-xs px-3 py-1 font-mono font-bold">Be a Threat</span>
                     </div>
                     <div className="bg-zinc-900/60 p-4 rounded-lg border border-white/5 text-zinc-300 font-serif italic mb-4">
-                      &quot;New Drop from Coach Dave: &apos;Watch for this — you&apos;re a shooter. The shot&apos;s there a full beat before the pass is. Trust it.&apos;&quot;
+                      &quot;New Drop from your coach: &apos;Watch for this — you&apos;re a shooter. The shot&apos;s there a full beat before the pass is. Trust it.&apos;&quot;
                     </div>
                     <div className="text-xs text-zinc-400 flex items-center justify-between">
                       <span>Receipt: <strong className="text-emerald-400">Pushed 7:14 PM → Seen 7:31 PM</strong></span>
@@ -348,7 +348,7 @@ export default function CoachsCornerPage() {
                     Coffee in hand, you open the <strong className="text-zinc-200 font-medium">Telemetry Board</strong>. Every interaction with your cut is on it — not just who logged in, but loop counts, dwell time, and read-back completions.
                   </p>
                   <p className="text-zinc-400 mb-6 leading-relaxed">
-                    Corinne looped your 3-second teaching window <strong className="text-amber-400 font-medium">14 times</strong>. She spent two full minutes inside one mechanic. And your unit completion reads a clean, undeniable <strong className="text-white">100%</strong>.
+                    The athlete looped your 3-second teaching window <strong className="text-amber-400 font-medium">14 times</strong>. She spent two full minutes inside one mechanic. And your unit completion reads a clean, undeniable <strong className="text-white">100%</strong>.
                   </p>
                   <p className="text-xl text-white font-serif border-l-2 border-amber-500 pl-6 my-8 py-2">
                     You step onto the ice tonight coaching a team that already had the meeting. Practice starts at the drill, not the whiteboard.

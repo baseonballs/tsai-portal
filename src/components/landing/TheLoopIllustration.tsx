@@ -395,7 +395,7 @@ export function TheLoopIllustration() {
                   </div>
                   <div className="bg-black/60 p-3 rounded-lg border border-white/10 space-y-1.5 text-[11px]">
                     <div className="text-zinc-300 flex justify-between">
-                      <span>Shift #12 (Corinne L.)</span>
+                      <span>Shift #12 </span>
                       <span className="text-emerald-400 font-bold">D-Zone Exit</span>
                     </div>
                     <div className="text-zinc-500 text-[10px]">

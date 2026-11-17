@@ -125,7 +125,7 @@ export default function SpotlightAndPeriodicalPage() {
         <section id="sequel" className="px-6 py-24 lg:px-8 border-t border-white/5 bg-zinc-900/50">
           <div className="mx-auto max-w-5xl">
             <div className="text-center mb-20">
-              <span className="text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase">Case Study · #26 Corinne L. (14U Center)</span>
+              <span className="text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase">Case Study · a 14U center</span>
               <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">What the Cut Room started,<br />Periodical finishes.</h2>
               <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
                 Follow #26 across three weeks — from a 2.6 superpower trend baseline to 89% clean D-zone exits on game night.
@@ -141,7 +141,7 @@ export default function SpotlightAndPeriodicalPage() {
                 </div>
                 <div className="md:w-3/4 text-sm text-zinc-300 leading-relaxed space-y-3">
                   <h4 className="text-lg font-serif text-white">Fourteen loops later, the journal opens.</h4>
-                  <p className="text-zinc-400">Corinne finishes her Clipboard assignment and enters Periodical. One question about one read:</p>
+                  <p className="text-zinc-400">The athlete finishes her Clipboard assignment and enters Periodical. One question about one read:</p>
                   <p className="italic text-zinc-200 bg-zinc-900/80 p-4 rounded border border-white/5 font-serif">
                     &quot;I keep rimming it because I hear the forecheck coming before I even look. The pro waits an extra beat and checks her shoulder first. I panic early.&quot;
                   </p>
@@ -172,7 +172,7 @@ export default function SpotlightAndPeriodicalPage() {
                 </div>
                 <div className="md:w-3/4 text-sm text-zinc-300 leading-relaxed space-y-3">
                   <h4 className="text-lg font-serif text-white">Game night: 8-for-9 clean exits.</h4>
-                  <p className="text-zinc-400">Three weeks later, rival game under heavy forecheck. Corinne shoots first and leads 8-for-9 clean exits.</p>
+                  <p className="text-zinc-400">Three weeks later, rival game under heavy forecheck. The athlete shoots first and leads 8-for-9 clean exits.</p>
                   <p className="italic text-white bg-emerald-950/20 border border-emerald-500/30 p-4 rounded font-serif">
                     &quot;Looked first every time. Heard him coming and didn&apos;t panic. It felt slow, like I had an extra second nobody else had.&quot;
                   </p>

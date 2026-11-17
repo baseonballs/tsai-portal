@@ -34,8 +34,8 @@ async function runMilestoneToastTests() {
 
   const sampleMilestone: FamilyMilestoneItem = {
     id: "notif-001",
-    athleteId: "ath-corinne-26",
-    athleteName: "Corinne Lucas",
+    athleteId: "ath-a-26",
+    athleteName: "Athlete A",
     jerseyNumber: 26,
     gameId: "game-sheet-1",
     gameClock: "14:02 P2",

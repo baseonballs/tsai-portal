@@ -20,7 +20,7 @@ const refDate = new Date("2026-09-18T12:00:00Z");
 
 const verifiedScout = {
   scoutId: "scout-ushl-01",
-  scoutName: "Dan Sullivan",
+  scoutName: "Scout A",
   organization: "USHL Scouting Bureau",
   hasSignedNda: true,
   digitalSignatureVerified: true,
@@ -43,7 +43,7 @@ console.log("✅ calculateAthleteAge tests passed");
 // 2. Unverified scout gate (must block unconditionally)
 const minorChildUnder13 = {
   athleteId: "ath-minor-12",
-  fullName: "Corinne Lucas",
+  fullName: "Athlete A",
   birthDate: "2014-05-15", // Age 12
   jerseyNumber: 26,
   teamName: "Bay State Breakers 12U",
@@ -145,12 +145,12 @@ console.log("✅ Gate 4: Teen without VPC anonymized and private film access blo
 // 6. Adult (18+) athlete export
 const adultAthlete = {
   athleteId: "ath-adult-19",
-  fullName: "Marcus Vance",
+  fullName: "Athlete B",
   birthDate: "2007-04-10", // Age 19
   jerseyNumber: 9,
   teamName: "NCAA Division 1 Pioneers",
   position: "Forward",
-  personalEmail: "marcus@college.edu",
+  personalEmail: "scout@example.com",
   metrics: {
     burstSpeedMph: 23.4,
     releaseLatencyMs: 82,
@@ -168,7 +168,7 @@ assert.equal(adultGate.redactionLevel, "full_export");
 
 const adultExport = exportAthleteScoutingCard(adultAthlete, verifiedScout, refDate);
 assert.equal(adultExport.personalContactIncluded, true);
-assert.equal(adultExport.athleteDisplayName, "Marcus Vance");
+assert.equal(adultExport.athleteDisplayName, "Athlete B");
 assert.equal(adultExport.filmAccessAllowed, true);
 console.log("✅ Gate 5: Adult athlete full verified export authorized");
 

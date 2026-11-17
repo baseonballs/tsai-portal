@@ -229,7 +229,7 @@ export function DualLedgersScienceSection() {
                           <span className="text-cyan-400">DRIFT:</span> 0.000s
                         </div>
                         <div className="text-zinc-300">
-                          <span className="text-cyan-400">ACTOR:</span> #26 Corinne L.
+                          <span className="text-cyan-400">ACTOR:</span> the athlete
                         </div>
                         <div className="text-zinc-300 pl-6 sm:pl-10">
                           <span className="text-cyan-400">RECIPROCATOR:</span> #14 Skater
@@ -307,7 +307,7 @@ export function DualLedgersScienceSection() {
                           <span className="text-emerald-400">CONTROL_RADIUS:</span> 0.18m
                         </div>
                         <div className="text-zinc-300">
-                          <span className="text-emerald-400">PRIMARY_POSSESSOR:</span> #26 Corinne L.
+                          <span className="text-emerald-400">PRIMARY_POSSESSOR:</span> the athlete
                         </div>
                         <div className="text-zinc-300 pl-6 sm:pl-10">
                           <span className="text-emerald-400">PRESSURE_INDEX:</span> Heavy (2 Def)
