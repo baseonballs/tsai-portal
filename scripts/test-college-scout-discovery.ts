@@ -22,10 +22,10 @@ function runTests() {
   const sampleProspects: VerifiedProspectPassport[] = [
     {
       id: "prospect-01",
-      athleteName: "Cole Eiserman",
+      athleteName: "Prospect A",
       jerseyNumber: 19,
       position: "Forward",
-      currentClub: "USNTDP",
+      currentClub: "Example Development Program",
       league: "USHL",
       heightInches: 72,
       weightLbs: 195,
@@ -43,7 +43,7 @@ function runTests() {
           clipId: "clip-101",
           title: "Powerplay One-Timer Top Shelf",
           eventDateIso: "2024-02-15T19:30:00Z",
-          opponent: "Chicago Steel",
+          opponent: "Opponent A",
           certificateToken: "cert_p256_eise19_pp_goal",
           durationSeconds: 14,
         },
@@ -52,10 +52,10 @@ function runTests() {
     },
     {
       id: "prospect-02",
-      athleteName: "Zeev Buium",
+      athleteName: "Prospect B",
       jerseyNumber: 28,
       position: "Defense",
-      currentClub: "Univ. of Denver",
+      currentClub: "Example University",
       league: "NCAA",
       heightInches: 72,
       weightLbs: 185,
@@ -73,7 +73,7 @@ function runTests() {
           clipId: "clip-201",
           title: "Blue Line Transition & Escape",
           eventDateIso: "2024-03-01T20:00:00Z",
-          opponent: "North Dakota",
+          opponent: "Opponent B",
           certificateToken: "cert_p256_buium28_trans",
           durationSeconds: 18,
         },
@@ -116,18 +116,18 @@ function runTests() {
     return true;
   });
 
-  if (filtered.length !== 1 || filtered[0].athleteName !== "Zeev Buium") {
-    throw new Error("Filter failure: Expected only Zeev Buium to match defense combine criteria");
+  if (filtered.length !== 1 || filtered[0].athleteName !== "Prospect B") {
+    throw new Error("Filter failure: Expected only Prospect B to match defense combine criteria");
   }
   console.log("✔ Test 2: Combine telemetry filtering verified.");
 
   // 3. SafeSport Outreach Consent Record Validation
   const sampleInquiry: SafeSportInquiryRecord = {
     prospectId: "prospect-01",
-    athleteName: "Cole Eiserman",
-    scoutName: "Coach David Carle",
-    institution: "University of Denver",
-    scoutEmail: "dcarle@du.edu",
+    athleteName: "Prospect A",
+    scoutName: "Scout A",
+    institution: "Example University",
+    scoutEmail: "scout@example.com",
     message: "Inquiring about freshman prospective enrollment and combine verification.",
     parentConsentAcknowledged: true,
     dispatchedAtIso: new Date().toISOString(),

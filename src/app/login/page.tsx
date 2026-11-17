@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { googleOAuthQueryParams } from "@/utils/auth/google-oauth";
 import { useSearchParams } from "next/navigation";
+import { resolveAuthRedirectPath } from "@/lib/auth/safe-internal-next-path";
 import { Suspense } from "react";
 
 function LoginContent() {
@@ -33,9 +34,23 @@ function LoginContent() {
       if (error) {
         setErrorMsg(error.message);
         setIsLoading(false);
-      } else {
-        window.location.href = "/";
+        return;
       }
+
+      // Phase 156: a password sign-in must pass the same licence check as the OAuth callback.
+      // The server signs an unlicensed account out; we clear the local session as well.
+      const check = await fetch("/auth/entitlement", { method: "POST", cache: "no-store" });
+      if (!check.ok) {
+        await supabase.auth.signOut({ scope: "local" });
+        setErrorMsg(
+          check.status === 403
+            ? "This account does not have an active Transcend licence."
+            : "We could not confirm your licence. Please try again.",
+        );
+        setIsLoading(false);
+        return;
+      }
+      window.location.href = resolveAuthRedirectPath(searchParams?.get("next"), "/");
     } catch (err) {
       setErrorMsg("An unexpected error occurred");
       setIsLoading(false);
@@ -180,7 +195,7 @@ function LoginContent() {
             <input
               id="email"
               type="email"
-              placeholder="admin@tsai.com"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-2.5 text-sm text-zinc-100 shadow-inner transition-all focus-within:border-cyan-500/70 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"

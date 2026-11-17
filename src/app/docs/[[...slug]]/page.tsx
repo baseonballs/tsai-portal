@@ -1,164 +1,54 @@
 import React from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/utils/supabase/server";
 import { loadDoc } from "@/utils/docs";
+import { getEntitledPortalUser } from "@/lib/auth/portal-entitlement";
+import { SPOTLIGHT_DOCS, type DocItem } from "@/lib/docs/manifest";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { 
   Lock, 
   FileText, 
-  ChevronRight, 
   AlertTriangle, 
   BookOpen, 
-  ArrowLeft,
-  Search,
-  Activity,
   Layers,
-  Cpu,
-  Bookmark
 } from "lucide-react";
 
 type Props = { params: Promise<{ slug?: string[] }> };
 
-interface DocItem {
-  title: string;
-  slug: string;
-  category?: string;
-}
-
-const SPOTLIGHT_DOCS: DocItem[] = [
-  { title: "Orientation & Chrome", slug: "user-guide/orientation", category: "User Guide" },
-  { title: "Workspace & Media", slug: "user-guide/workspace", category: "User Guide" },
-  { title: "Players, Teams & Seasons", slug: "user-guide/players-seasons", category: "User Guide" },
-  { title: "Jobs, Tasks & Workflows", slug: "user-guide/jobs-workflows", category: "User Guide" },
-  { title: "Video Review — Intro", slug: "user-guide/video-review-intro", category: "User Guide" },
-  { title: "Video Review — Workflows", slug: "user-guide/video-review-workflows", category: "User Guide" },
-  { title: "Encore Legacy Bridge", slug: "user-guide/encore-legacy-bridge", category: "User Guide" },
-  { title: "Settings & Support", slug: "user-guide/settings-support", category: "User Guide" },
-  { title: "How-Tos", slug: "knowledge-base/how-tos", category: "Knowledge Base" },
-  { title: "FAQ", slug: "knowledge-base/faq", category: "Knowledge Base" },
-  { title: "Delivery Roadmap", slug: "roadmap", category: "Roadmap" },
-  { title: "EdgeIQ Application", slug: "applications/edgeiq", category: "Core Apps" },
-  { title: "Encore Application", slug: "applications/encore", category: "Core Apps" },
-  { title: "Stratus Application", slug: "applications/stratus", category: "Core Apps" },
-  { title: "Tempest Application", slug: "applications/tempest", category: "Core Apps" },
-];
-
-const PERIODICAL_DOCS: DocItem[] = [
-  { title: "Introduction", slug: "", category: "Getting Started" },
-  { title: "Integration & Architecture", slug: "1-architecture/TSAI-INTEGRATION-GAP-ANALYSIS", category: "Architecture" },
-  { title: "Verification Runbook", slug: "2-operations/VERIFICATION-RUNBOOK", category: "Operations" },
-  { title: "Releases Overview", slug: "6-releases/README", category: "Releases" },
-  { title: "Release v0.2.0 (Onboarding)", slug: "6-releases/RELEASE-v0.2.0.onboarding", category: "Releases" },
-  { title: "Release v0.2.1 (Internet Beta)", slug: "6-releases/RELEASE-v0.2.1.internet-beta", category: "Releases" },
-  { title: "Release v0.2.12 (Cloud Run)", slug: "6-releases/RELEASE-v0.2.12.cloudrun-onboarding", category: "Releases" },
-  { title: "Release v0.2.13 (Cross-Origin)", slug: "6-releases/RELEASE-v0.2.13.cross-origin-onboarding", category: "Releases" },
-  { title: "Release v0.2.14 (Hockey API)", slug: "6-releases/RELEASE-v0.2.14.cloudrun-hockey-api-path", category: "Releases" },
-  { title: "Release v0.2.3 (Provisioning)", slug: "6-releases/RELEASE-v0.2.3.provisioning-reconcile", category: "Releases" },
-  { title: "Release v0.2.4 (Navigation)", slug: "6-releases/RELEASE-v0.2.4.navigation-performance", category: "Releases" },
-];
-
-const WATSON_DOCS: DocItem[] = [
-  { title: "Developer Orientation", slug: "LOCAL-DEV", category: "Orientation" },
-  { title: "System Design Spec", slug: "design/prd-ux-system-design", category: "Design" },
-  { title: "Technology Stacks", slug: "devops/tech-stacks", category: "DevOps" },
-  { title: "Release v0.1.15", slug: "6-releases/RELEASE-WATSON-v0.1.15.alpha", category: "Releases" },
-  { title: "Release v0.1.16", slug: "6-releases/RELEASE-WATSON-v0.1.16.alpha", category: "Releases" },
-  { title: "Release v0.1.17", slug: "6-releases/RELEASE-WATSON-v0.1.17.alpha", category: "Releases" },
-  { title: "Release v0.1.18", slug: "6-releases/RELEASE-WATSON-v0.1.18.alpha", category: "Releases" },
-  { title: "Release v0.1.19", slug: "6-releases/RELEASE-WATSON-v0.1.19.alpha", category: "Releases" },
-  { title: "Release v0.1.20", slug: "6-releases/RELEASE-WATSON-v0.1.20.alpha", category: "Releases" },
-  { title: "Release v0.1.21", slug: "6-releases/RELEASE-WATSON-v0.1.21.alpha", category: "Releases" },
-  { title: "Release v0.1.22", slug: "6-releases/RELEASE-WATSON-v0.1.22.alpha", category: "Releases" },
-];
-
-const PORTAL_PROFILE_ROLE_CACHE_TTL_MS = 15_000;
-const PORTAL_PROFILE_ROLE_CACHE_MAX_ENTRIES = 256;
-const PORTAL_PROFILE_ROLE_CACHE = new Map<string, { role: string; expiresAt: number }>();
-
-async function resolvePortalUserRole(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string
-): Promise<string> {
-  const now = Date.now();
-  const cached = PORTAL_PROFILE_ROLE_CACHE.get(userId);
-  if (cached && cached.expiresAt > now) {
-    return cached.role;
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_type")
-    .eq("id", userId)
-    .single();
-
-  const role = profile?.user_type?.toLowerCase() || "";
-  if (PORTAL_PROFILE_ROLE_CACHE.size >= PORTAL_PROFILE_ROLE_CACHE_MAX_ENTRIES) {
-    const oldestKey = PORTAL_PROFILE_ROLE_CACHE.keys().next().value;
-    if (oldestKey) PORTAL_PROFILE_ROLE_CACHE.delete(oldestKey);
-  }
-  PORTAL_PROFILE_ROLE_CACHE.set(userId, {
-    role,
-    expiresAt: now + PORTAL_PROFILE_ROLE_CACHE_TTL_MS,
-  });
-  return role;
-}
-
+/**
+ * /docs — the Spotlight customer manual, for entitled Portal accounts.
+ *
+ * Phase 156: this page used to serve Spotlight, Periodical and Watson docs to ANY signed-in
+ * account (the password sign-in never checked a licence), and the Periodical/Watson trees were
+ * internal engineering material carrying real identities. It now serves only the pages in
+ * src/lib/docs/manifest.ts, and only to a caller the server has verified and found entitled.
+ * Old /docs/periodical/* and /docs/watson/* links resolve to "not found".
+ */
 export default async function DocsPage({ params }: Props) {
   const { slug } = await params;
-  
-  // Authenticate user (fast cookie session check first, fallback to GoTrue getUser)
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  let user = session?.user ?? null;
-  if (!user) {
-    const { data: { user: fetchedUser } } = await supabase.auth.getUser();
-    user = fetchedUser;
+  const segments = slug ?? [];
+  const currentPath = segments.join("/");
+
+  const access = await getEntitledPortalUser();
+  if (access.status === "signed-out") {
+    redirect(`/login?next=${encodeURIComponent("/docs" + (currentPath ? "/" + currentPath : ""))}`);
   }
+  const isEntitled = access.status === "entitled";
 
-  const currentPath = slug?.join("/") || "";
+  // /docs and /docs/spotlight/<page> are the manual; any other first segment is not published.
+  const isSpotlightPath = segments.length === 0 || segments[0] === "spotlight";
+  const docPath = isSpotlightPath ? segments.slice(1).join("/") : "";
+  const app = "spotlight";
+  const appName = "Spotlight";
+  // An account without a licence sees no index of the manual either.
+  const docItems: readonly DocItem[] = isEntitled ? SPOTLIGHT_DOCS : [];
 
-  if (!user) {
-    redirect(`/login?next=${encodeURIComponent("/docs/" + currentPath)}`);
-  }
-
-  // Parse active app and doc from slug
-  const app = (slug?.[0] as "spotlight" | "periodical" | "watson") || "spotlight";
-  const docPath = slug?.slice(1).join("/") || "";
-
-  // PORT-PERF-DOCS-002: Parallelize profile role lookup (cached 15s) and MDX bundle resolution
-  // for non-Watson docs so filesystem/MDX work overlaps with the profile query.
-  const [role, preloadedBundle] = await Promise.all([
-    resolvePortalUserRole(supabase, user.id),
-    app !== "watson" ? loadDoc(app, docPath) : Promise.resolve(null),
-  ]);
-  const isSuperadmin = role === "superadmin" || role === "superuser" || role === "devops";
-
-  // Get documents for active app
-  let docItems: DocItem[] = SPOTLIGHT_DOCS;
-  let appName = "Spotlight";
-  if (app === "periodical") {
-    docItems = PERIODICAL_DOCS;
-    appName = "Periodical";
-  } else if (app === "watson") {
-    docItems = WATSON_DOCS;
-    appName = "Watson Control Plane";
-  }
-
-  const isWatsonGated = app === "watson" && !isSuperadmin;
-  let docBundle = preloadedBundle;
-  let errorMsg = null;
-
-  if (isWatsonGated) {
-    errorMsg = "Access Denied: Superadmin / DevOps privileges required.";
-  } else {
-    if (app === "watson") {
-      docBundle = await loadDoc(app, docPath);
-    }
-    if (!docBundle) {
-      errorMsg = "Documentation page not found.";
-    }
-  }
+  const docBundle = isEntitled && isSpotlightPath ? await loadDoc(docPath) : null;
+  const errorMsg = !isEntitled
+    ? "An active Transcend licence is required to read the documentation."
+    : docBundle
+      ? null
+      : "Documentation page not found.";
 
   // Group by category
   const categories = docItems.reduce((acc: Record<string, DocItem[]>, item) => {
@@ -192,31 +82,6 @@ export default async function DocsPage({ params }: Props) {
               >
                 <span>Spotlight</span>
                 <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-500">Manual</span>
-              </Link>
-              <Link
-                href="/docs/periodical"
-                className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
-                  app === "periodical"
-                    ? "bg-cyan-950/30 border border-cyan-500/20 text-cyan-400 font-semibold"
-                    : "hover:bg-white/5 text-zinc-400"
-                }`}
-              >
-                <span>Periodical</span>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-500">Journal</span>
-              </Link>
-              <Link
-                href="/docs/watson"
-                className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
-                  app === "watson"
-                    ? "bg-cyan-950/30 border border-cyan-500/20 text-cyan-400 font-semibold"
-                    : "hover:bg-white/5 text-zinc-400"
-                }`}
-              >
-                <span className="flex items-center gap-1.5">
-                  <span>Watson</span>
-                  {!isSuperadmin && <Lock className="h-3 w-3 text-zinc-500" />}
-                </span>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-500">Admin</span>
               </Link>
             </div>
           </div>
@@ -265,41 +130,24 @@ export default async function DocsPage({ params }: Props) {
             >
               Spotlight
             </Link>
-            <Link
-              href="/docs/periodical"
-              className={`px-4 py-2 rounded-lg text-xs font-semibold ${
-                app === "periodical" ? "bg-cyan-600 text-white" : "bg-zinc-900 text-zinc-400 hover:text-white"
-              }`}
-            >
-              Periodical
-            </Link>
-            <Link
-              href="/docs/watson"
-              className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1 ${
-                app === "watson" ? "bg-cyan-600 text-white" : "bg-zinc-900 text-zinc-400 hover:text-white"
-              }`}
-            >
-              <span>Watson</span>
-              {!isSuperadmin && <Lock className="h-3 w-3" />}
-            </Link>
           </div>
         </div>
 
         {/* Content Area */}
         <main className="flex-1 max-w-3xl min-w-0">
           {errorMsg ? (
-            isWatsonGated ? (
+            !isEntitled ? (
               <div className="border border-red-500/20 bg-red-950/10 rounded-xl p-8 text-center flex flex-col items-center max-w-xl mx-auto my-12">
                 <Lock className="h-12 w-12 text-red-500 mb-4 animate-pulse" />
-                <h2 className="text-xl font-semibold text-white mb-2">Watson Access Denied</h2>
+                <h2 className="text-xl font-semibold text-white mb-2">Licence Required</h2>
                 <p className="text-zinc-400 text-sm leading-relaxed mb-6">
-                  Only users with verified Superadmin, Superuser, or DevOps roles are permitted to access the Watson Control Plane documentation.
+                  {errorMsg}
                 </p>
                 <Link
-                  href="/docs/spotlight"
+                  href="/"
                   className="rounded-lg bg-zinc-900 border border-white/10 px-4 py-2 text-xs font-semibold text-zinc-300 hover:text-white transition-all hover:bg-zinc-800"
                 >
-                  Return to Spotlight Manual
+                  Return Home
                 </Link>
               </div>
             ) : (
@@ -310,7 +158,7 @@ export default async function DocsPage({ params }: Props) {
                   The requested document path could not be resolved. It may have been moved or is currently not federated.
                 </p>
                 <Link
-                  href={`/docs/${app}`}
+                  href="/docs"
                   className="rounded-lg bg-cyan-600 px-4 py-2 text-xs font-semibold text-white hover:bg-cyan-500 transition-all"
                 >
                   Back to {appName} Overview

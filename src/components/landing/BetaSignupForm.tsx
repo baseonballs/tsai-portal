@@ -149,7 +149,7 @@ export function BetaSignupForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. coach@lions-hockey.org"
+              placeholder="e.g. coach@example.com"
               className="border-white/10 bg-zinc-950/60 text-white placeholder:text-zinc-600 focus:border-cyan-500"
             />
           </div>
@@ -162,7 +162,7 @@ export function BetaSignupForm() {
               type="text"
               value={organization}
               onChange={(e) => setOrganization(e.target.value)}
-              placeholder="e.g. LA Lions 14U AAA"
+              placeholder="e.g. Your club, 14U AAA"
               className="border-white/10 bg-zinc-950/60 text-white placeholder:text-zinc-600 focus:border-cyan-500"
             />
           </div>

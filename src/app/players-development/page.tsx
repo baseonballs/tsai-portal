@@ -140,7 +140,7 @@ export default function PlayersDevelopmentPage() {
                 <div className="space-y-6">
                   <div className="flex justify-between items-center pb-4 border-b border-white/10">
                     <span className="text-xs font-semibold uppercase tracking-wider text-rose-400">New Drop Arrived · 7:14 PM</span>
-                    <span className="text-xs font-mono text-zinc-400">From Coach Dave</span>
+                    <span className="text-xs font-mono text-zinc-400">From your coach</span>
                   </div>
                   <div className="bg-rose-950/20 border border-rose-500/30 rounded-xl p-6 relative overflow-hidden">
                     <div className="text-xs font-mono uppercase tracking-widest text-rose-400 mb-2">Be a Threat</div>

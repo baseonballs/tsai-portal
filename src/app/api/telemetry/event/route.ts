@@ -9,6 +9,7 @@ import {
   matchesIfNoneMatch,
 } from "@/lib/perf/server-timing";
 import { resolveServerAuthUrl } from "@/utils/supabase/resolve-server-auth-url";
+import { createClient as createSessionClient } from "@/utils/supabase/server";
 
 let cachedTelemetryAdminClient: SupabaseClient | null = null;
 
@@ -54,9 +55,17 @@ export async function POST(req: NextRequest) {
       page_path = "/",
       session_duration_sec = 0,
       event_properties = {},
-      lead_id = null,
-      user_id = null,
     } = body;
+
+    // Phase 156: `user_id` and `lead_id` used to be taken from the request body, so any
+    // anonymous caller could attach events and a visitor journey to any account or lead. The
+    // user is now the VERIFIED session's user (or none), and a lead is never client-supplied —
+    // nothing in the Portal hands a lead id to the browser.
+    const {
+      data: { user: sessionUser },
+    } = await (await createSessionClient()).auth.getUser();
+    const user_id: string | null = sessionUser?.id ?? null;
+    const lead_id: string | null = null;
 
     if (!visitor_id || !event_type) {
       return NextResponse.json(
@@ -108,45 +117,62 @@ export async function POST(req: NextRequest) {
       ]),
       supabase
         .from("user_session_journeys")
-        .select("lead_id, user_id, total_pageviews, total_session_sec")
+        .select("lead_id, user_id, total_duration_sec, current_lifecycle_stage")
         .eq("visitor_id", visitor_id)
         .maybeSingle(),
     ]);
 
     if (eventRes.error) {
-      console.warn("[TelemetryAPI] Error inserting event:", eventRes.error.message);
+      throw new Error(`telemetry event insert failed: ${eventRes.error.message}`);
+    }
+    if (journeyRes.error) {
+      throw new Error(`session journey lookup failed: ${journeyRes.error.message}`);
     }
 
+    // The journey row follows the LIVE schema (tsai-spotlight
+    // supabase/migrations/20260725160000_create_telemetry_and_retention.sql). Phase 156 found this
+    // block writing columns that do not exist (total_pageviews, total_session_sec, funnel_stage,
+    // first_touch_source, first_landing_page) and stage values outside the lifecycle_stage enum;
+    // every write failed and the errors were dropped, so no journey was ever recorded.
     const existingJourney = journeyRes.data;
+    const durationSec = Math.max(0, Math.floor(Number(session_duration_sec) || 0));
+    // Only the stages this route can actually observe. A stage set elsewhere (beta_applicant,
+    // power_user, …) is never downgraded by a page view.
+    const observedStage = user_id ? "activated_user" : "anonymous_visitor";
 
     if (existingJourney) {
-      await supabase
+      const { error: journeyUpdateError } = await supabase
         .from("user_session_journeys")
         .update({
-          lead_id: lead_id || existingJourney.lead_id,
           user_id: user_id || existingJourney.user_id,
-          total_pageviews: (existingJourney.total_pageviews || 0) + 1,
-          total_session_sec: (existingJourney.total_session_sec || 0) + session_duration_sec,
+          total_duration_sec: (existingJourney.total_duration_sec || 0) + durationSec,
           last_active_at: nowIso,
-          funnel_stage: user_id ? "active_user" : lead_id ? "lead_captured" : "anonymous_visitor",
+          current_lifecycle_stage:
+            existingJourney.current_lifecycle_stage === "anonymous_visitor" ? observedStage : existingJourney.current_lifecycle_stage,
           updated_at: nowIso,
         })
         .eq("visitor_id", visitor_id);
+      if (journeyUpdateError) {
+        throw new Error(`session journey update failed: ${journeyUpdateError.message}`);
+      }
     } else {
-      await supabase.from("user_session_journeys").insert([
+      const referrer = (normalizedEventProperties as Record<string, unknown> | null)?.referrer;
+      const { error: journeyInsertError } = await supabase.from("user_session_journeys").insert([
         {
           visitor_id,
           lead_id,
           user_id,
-          first_touch_source: normalizedEventProperties?.referrer || "direct",
-          first_landing_page: page_path,
-          total_pageviews: 1,
-          total_session_sec: session_duration_sec,
-          funnel_stage: user_id ? "active_user" : lead_id ? "lead_captured" : "anonymous_visitor",
+          acquisition_source: typeof referrer === "string" && referrer ? referrer : "direct",
+          total_sessions: 1,
+          total_duration_sec: durationSec,
+          current_lifecycle_stage: observedStage,
           first_seen_at: nowIso,
           last_active_at: nowIso,
         },
       ]);
+      if (journeyInsertError) {
+        throw new Error(`session journey insert failed: ${journeyInsertError.message}`);
+      }
     }
     timing.record("db", performance.now() - dbStartedAt, "Telemetry persistence");
 
@@ -155,9 +181,9 @@ export async function POST(req: NextRequest) {
       { headers: { "Server-Timing": timing.toHeaderValue() } },
     );
   } catch (err) {
-    console.warn("[TelemetryAPI] Unexpected error:", err);
+    console.warn("[TelemetryAPI] Failed:", errorMessage(err));
     return NextResponse.json(
-      { error: errorMessage(err) || "An unexpected error occurred." },
+      { error: "Telemetry could not be recorded." },
       { status: 500, headers: { "Server-Timing": timing.toHeaderValue() } },
     );
   }
