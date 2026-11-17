@@ -71,7 +71,7 @@ full rebuild or a release, nothing is left out: the DGX tier *and* the Cloud Run
 maintenance mode, which keeps everyone except the owner and designated testers out:
 
 1. `bifrost cloud maintenance on`, then `bifrost cloud verify` shows 503 on every public hostname.
-2. `sudo bifrost deploy`, stages 0 → 6 (stage 0 takes and verifies a backup first).
+2. `sudo bifrost deploy stage0` through `stage6`, in order (stage 0 takes and verifies a backup first).
 3. Each frontend's full suite and `pnpm build` pass locally on the exact commit being released, and its release
    notes exist in `docs/6-releases/RELEASE-<version>.md`.
 4. `bifrost release --dry-run`, then `bifrost release`: Cloud Build → Cloud Run. It keeps `MAINTENANCE_MODE`,
