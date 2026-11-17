@@ -59,6 +59,32 @@ the backend: a caller-scoped season-index endpoint with a Teams-plan entitlement
      managed block and was erased when the block regenerated, so the rule the owner asked
      to be permanent lasted until the next tool run. -->
 
+## 🚫 NO CLOUD BUILD OR CLOUD RUN DEPLOYS AFTER ITERATIONS — BINDING GOVERNANCE
+
+**Cloud Build and Cloud Run deploy directly to production.** Agents must NEVER run Cloud Build or deploy to
+Cloud Run (`./deploy.sh`, `gcloud builds submit`, `gcloud run deploy` / `services update`, `bifrost release`)
+during task iterations, UI tweaks, bug fixes or routine pair programming. Test that work locally (`pnpm dev`,
+`pnpm dev:lan`, `pnpm run daemon:restart`, local test suites, or the LAN/tailnet path to local ports).
+
+**A full rebuild is the exception, and it covers EVERY component (owner, 2026-11-17).** When the owner asks for a
+full rebuild or a release, nothing is left out: the DGX tier *and* the Cloud Run frontends. It runs behind
+maintenance mode, which keeps everyone except the owner and designated testers out:
+
+1. `bifrost cloud maintenance on`, then `bifrost cloud verify` shows 503 on every public hostname.
+2. `sudo bifrost deploy stage0` through `stage6`, in order (stage 0 takes and verifies a backup first).
+3. Each frontend's full suite and `pnpm build` pass locally on the exact commit being released, and its release
+   notes exist in `docs/6-releases/RELEASE-<version>.md`.
+4. `bifrost release --dry-run`, then `bifrost release`: Cloud Build → Cloud Run. It keeps `MAINTENANCE_MODE`,
+   counts the gate's 503 as healthy, and rolls back a revision that fails its health check. Never the per-repo
+   `deploy.sh`.
+5. Watson (the local admin plane): suite and build pass, then `systemctl --user restart tsai-watson.service`.
+6. The owner verifies through `bifrost cloud operator-pass`.
+7. **Go-live is `bifrost cloud maintenance off`, and only on the owner's explicit word.**
+
+Every gap the procedure hits is fixed in the procedure itself (bifrost, scripts, tests) and the run starts again,
+never worked around by hand. Maintenance gates the web frontends only: native apps sign in against GoTrue directly,
+which the gate does not cover (open gap). Runbook: `ops-maintenance-window-runbook.md` in tsai-sitedocs.
+
 ## 🚫 GITHUB ACTIONS IS NOT OUR CI — BINDING, NOT A PREFERENCE
 
 **There is no GitHub Enterprise licence and no Actions budget.** Tests do not run on GitHub, and
