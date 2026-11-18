@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { withoutProxyTrustHeaders } from "@/lib/auth/proxy-trust-headers";
 import { legacyHostRedirect } from "@/lib/legacy-host-redirect";
 import { maintenanceResponse } from "@/lib/maintenance";
 
@@ -30,10 +31,16 @@ export async function proxy(request: NextRequest) {
   // The gate must not depend on the backends it exists to shield users from; asking
   // Supabase to confirm Supabase is down fails exactly when it matters most. Nothing
   // but the fixed-table redirect above belongs in front of it.
+  //
+  // A non-null verdict ENDS the request (a 503, or the 302 that strips a redeemed pass from the
+  // URL). A valid operator pass is `null` — "no objection" — and continues below like any other
+  // request: the pass opens the gate and is never a session.
   const closed = await maintenanceResponse(request, "Transcend");
   if (closed) return closed;
 
-  const res = NextResponse.next();
+  // Forwarded with an explicit header list (`x-middleware-override-headers`), so a trust header the
+  // caller sent never reaches a route or a server component.
+  const res = NextResponse.next({ request: { headers: withoutProxyTrustHeaders(request.headers) } });
   res.headers.set("Server-Timing", 'proxy;dur=0.1;desc="portal-proxy"');
   return res;
 }

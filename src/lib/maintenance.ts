@@ -170,6 +170,11 @@ function passCookieMaxAge(payload: OperatorPass): number {
   return Math.max(0, Math.min(remaining, 60 * 60 * 4));
 }
 
+/**
+ * The maintenance gate's verdict: a response that ENDS the request (503, or the 302 that strips a
+ * redeemed pass from the URL), or `null` when maintenance has no objection. `null` is never "this
+ * caller is authenticated" — the caller must still run every session check after it.
+ */
 export async function maintenanceResponse(request: NextRequest, appName: string): Promise<NextResponse | null> {
   if (!maintenanceEnabled()) return null;
   if (isAlwaysAllowed(request.nextUrl.pathname)) return null;
@@ -242,7 +247,14 @@ export async function maintenanceResponse(request: NextRequest, appName: string)
     const fromCookie = request.cookies.get(PASS_COOKIE)?.value;
     if (fromCookie) {
       const payload = await verifyOperatorPass(fromCookie, passSecret);
-      if (payload) return NextResponse.next();
+      // A valid pass OPENS THE GATE and decides nothing else: `null` means "maintenance has no
+      // objection", so the proxy goes on exactly as it would with the window closed — and every
+      // page or route that needs a session still verifies one itself (`getEntitledPortalUser`). It
+      // used to return `NextResponse.next()`, which the proxy took as its FINAL answer and so
+      // skipped everything after the gate, the trust-header strip included (found in Spotlight
+      // 2026-11-18, v0.1.23.beta; the same line was here). The pass is not an identity, a user, a
+      // role, a plan or a session.
+      if (payload) return null;
       // Expired or revoked-by-rotation: clear it rather than letting a dead cookie
       // be re-checked on every request for the rest of the window.
       // RECORDED, then applied to whichever 503 we actually return below. The previous
