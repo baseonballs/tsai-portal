@@ -66,19 +66,26 @@ function isHealthPath(pathname: string): boolean {
 }
 
 /**
- * The 308 for a legacy-host request, or null. Checks the Host header and, when
- * a proxy set one, X-Forwarded-Host — either naming the old domain is enough.
+ * The 308 for a legacy-host request, or null.
+ *
+ * Decided on the Host header ONLY. Cloud Run domain mappings set Host to the mapped
+ * hostname; X-Forwarded-Host is client-controllable here, and honouring it would let a
+ * request to an official host carrying a legacy X-Forwarded-Host earn a 308 back to
+ * itself — a loop, and a cacheable one for an official URL. So an official (or any
+ * non-legacy) Host is never redirected, whatever else the request says.
+ *
+ * The 308 is `Cache-Control: private, no-store` so no shared cache keeps it.
  */
 export function legacyHostRedirect(request: NextRequest): NextResponse | null {
   if (isHealthPath(request.nextUrl.pathname)) return null;
-  const target =
-    officialHostFor(request.headers.get("host")) ??
-    officialHostFor(request.headers.get("x-forwarded-host"));
+  const target = officialHostFor(request.headers.get("host"));
   if (!target) return null;
   // Built field by field, never by resolving the path against a base: a path such as
   // "//evil.example/x" resolves to another host, but assigned to .pathname it stays a path.
   const location = new URL(`https://${target}/`);
   location.pathname = request.nextUrl.pathname;
   location.search = request.nextUrl.search;
-  return NextResponse.redirect(location, 308);
+  const res = NextResponse.redirect(location, 308);
+  res.headers.set("Cache-Control", "private, no-store");
+  return res;
 }

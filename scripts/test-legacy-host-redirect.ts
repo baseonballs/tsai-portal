@@ -64,13 +64,35 @@ for (const [from, to] of MAP) {
   assert.equal(res.headers.get("location"), `https://${to}/pricing?plan=teams&ref=email`, from);
 }
 {
-  const r = new NextRequest("https://tsai-portal-usioswhvqq-uw.a.run.app/login", {
-    headers: { host: "tsai-portal-usioswhvqq-uw.a.run.app", "x-forwarded-host": "www.tsai-spotlight.com" },
+  // Decided on Host only: an official Host with a legacy X-Forwarded-Host is NOT redirected
+  // (that would be a self-redirect loop, cacheable for an official URL).
+  const r = new NextRequest("https://hub.transcendental-sports.ai/login", {
+    headers: { host: "hub.transcendental-sports.ai", "x-forwarded-host": "www.tsai-spotlight.com" },
   });
-  assert.equal(legacyHostRedirect(r)?.headers.get("location"), "https://www.transcendental-sports.ai/login");
+  assert.equal(legacyHostRedirect(r), null, "official Host + legacy X-Forwarded-Host → no redirect");
+}
+{
+  const r = new NextRequest("https://run-app.example/login", {
+    headers: { host: "run-app.example", "x-forwarded-host": "www.tsai-spotlight.com" },
+  });
+  assert.equal(legacyHostRedirect(r), null, "a legacy X-Forwarded-Host alone never redirects");
+}
+{
+  const res = legacyHostRedirect(req("https://www.tsai-spotlight.com/x"));
+  assert.equal(res?.status, 308);
+  assert.equal(res?.headers.get("cache-control"), "private, no-store", "the 308 is never cached");
+}
+{
+  // The target never derives from a request header value.
+  const r = new NextRequest("https://www.tsai-spotlight.com/a?b=1", {
+    headers: { host: "www.tsai-spotlight.com", "x-forwarded-host": "evil.example", forwarded: "host=evil.example" },
+  });
+  const loc = new URL(legacyHostRedirect(r)!.headers.get("location")!);
+  assert.notEqual(loc.host, "evil.example");
+  assert.equal(`${loc.pathname}${loc.search}`, "/a?b=1");
 }
 assert.equal(legacyHostRedirect(req("https://hub.tsai-spotlight.com/api/beta-requests", {}, "POST"))?.status, 308);
-console.log("  ✓ path, query and method preserved; X-Forwarded-Host honoured.");
+console.log("  ✓ path, query and method preserved; decided on Host only, never cached.");
 
 console.log("▶ [3/5] No open redirect...");
 for (const path of ["//evil.example/x", "/\\evil.example", "/%2F%2Fevil.example", "/@evil.example"]) {
