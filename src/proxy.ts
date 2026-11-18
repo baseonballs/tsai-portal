@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { legacyHostRedirect } from "@/lib/legacy-host-redirect";
 import { maintenanceResponse } from "@/lib/maintenance";
 
 /**
@@ -18,9 +19,17 @@ import { maintenanceResponse } from "@/lib/maintenance";
  * exactly as it did before unless the gate is explicitly closed.
  */
 export async function proxy(request: NextRequest) {
-  // FIRST and ONLY. The gate must not depend on the backends it exists to shield
-  // users from; asking Supabase to confirm Supabase is down fails exactly when it
-  // matters most. Nothing else belongs in front of it.
+  // The old domain never serves a page (owner rule 2026-11-18): a request on it is
+  // sent to the same path on the official host before anything else runs. It is a
+  // fixed-table 308 that needs no backend and leaves health paths alone, so it is the
+  // one thing safe ahead of the maintenance gate — the official host then answers
+  // 503 itself while a window is open.
+  const moved = legacyHostRedirect(request);
+  if (moved) return moved;
+
+  // The gate must not depend on the backends it exists to shield users from; asking
+  // Supabase to confirm Supabase is down fails exactly when it matters most. Nothing
+  // but the fixed-table redirect above belongs in front of it.
   const closed = await maintenanceResponse(request, "Transcend");
   if (closed) return closed;
 

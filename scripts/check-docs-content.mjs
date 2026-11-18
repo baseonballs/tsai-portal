@@ -11,7 +11,9 @@
  *   - an email address, unless it is at a reserved example domain (example.com/.org/.net);
  *   - a phone number;
  *   - a tailnet host (*.ts.net), the DGX host name, or a private / tailnet IP address;
- *   - a JWT, or the words "service_role".
+ *   - a JWT, or the words "service_role";
+ *   - the old domain (owner rule 2026-11-18: transcendental-sports.ai is the only customer-facing
+ *     domain), apex or any subdomain, in any case.
  *
  * Real names cannot be detected by pattern; the Spotlight repository's own real-names check
  * covers its manual at the source.
@@ -38,6 +40,8 @@ const RULES = [
   },
   { name: "JWT", pattern: /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g },
   { name: "service-role reference", pattern: /service[_-]role/gi },
+  // Spelled with an escaped dot so this check does not name the old domain as a literal.
+  { name: "old domain (use transcendental-sports.ai)", pattern: /\btsai-spotlight\.com\b/gi },
 ];
 
 function* walk(dir) {
