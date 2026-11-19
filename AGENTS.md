@@ -91,8 +91,10 @@ The LIVE SYSTEM rule above says what must never ship. This rule says what must s
    one of the committed teams. That verification goes in the epic's `status.md`. Record it with counts, status codes and role words, never a
    minor's name or contact details.
 7. **Everything is audited, from now on.** Each change follows the Conductor SDLC: canonical spec, then epic
-   track, then build, then verification, then sign-off. It gets an independent review (Gemini / agy, read-only),
-   and its audit entry goes in the epic. When an agent finds a removed or fake-backed capability, it records the
+   track, then build, then verification, then sign-off. Every canonical spec, design doc and gap analysis is drafted
+   with EGM (`/egm:egm-draft`) and passes an EGM Goldfish review (`/egm:egm-review`: fresh-context reviewers that
+   never inherit the author's framing) before sign-off. Every change also gets a read-only Gemini / agy review.
+   Conductor statuses are checked against the code with `/egm:egm-drift-report`. The audit entry goes in the epic. When an agent finds a removed or fake-backed capability, it records the
    gap in the epic's gap register. It never quietly works around the gap.
 
 **Why this rule exists (2026-11-18):** the fake-data cleanup deleted features instead of rebuilding them on live
@@ -100,6 +102,8 @@ data. Periodical lost its Season & Game Series view, and the linked athlete's re
 audit then showed the platform had been growing on a demo foundation: features were measured by module and tranche
 counts and fed by built-in data, while the backend tables they needed had no writer. The roadmap that rebases the
 foundation on the two committed seasons is `PLAT-DATA-EPIC-REAL-DATA-FOUNDATION`, and its gap analysis is GA-030.
+
+EGM artifact directory: ../tsai-sitedocs/conductor/egm
 
 ## 🚫 NO CLOUD BUILD OR CLOUD RUN DEPLOYS AFTER ITERATIONS — BINDING GOVERNANCE
 
