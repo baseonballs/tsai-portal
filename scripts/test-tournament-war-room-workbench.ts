@@ -9,10 +9,21 @@
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
-import {
-  DEFAULT_ALERTS,
-  DEFAULT_SHEETS,
-} from "../src/components/review/TournamentWarRoomWorkbench";
+import type { SheetMonitoringView, WarRoomAlertUI } from "../src/types/tournament-war-room-portal-types";
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const DEFAULT_SHEETS: SheetMonitoringView[] = [
+  { sheetId: "sheet-1", sheetName: "Rink 1 - North Arena", homeTeam: "Fixture Club A", awayTeam: "Fixture Club B", score: "3 - 2", periodClock: "P3 14:00", cameraCount: 4, hasCriticalAlert: true, status: "live" },
+  { sheetId: "sheet-2", sheetName: "Rink 2 - South Arena", homeTeam: "Fixture Club C", awayTeam: "Fixture Club D", score: "1 - 1", periodClock: "P2 07:00", cameraCount: 4, hasCriticalAlert: false, status: "live" },
+  { sheetId: "sheet-3", sheetName: "Rink 3 - East Studio", homeTeam: "Fixture Club E", awayTeam: "Fixture Club F", score: "4 - 0", periodClock: "INT 2", cameraCount: 3, hasCriticalAlert: false, status: "intermission" },
+];
+
+const DEFAULT_ALERTS: WarRoomAlertUI[] = [
+  { id: "alt-1", sheetId: "sheet-1", sheetName: "Rink 1 - North", timestamp: "10s ago", type: "concussion", severity: "critical", title: "Concussion Risk Alert (52.4g, 610 N·s)", details: "High-G collision at center-ice red line. SCAT6 sideline triage recommended.", telemetryValue: "52.4g / 610 N·s", resolved: false },
+  { id: "alt-2", sheetId: "sheet-2", sheetName: "Rink 2 - South", timestamp: "3m ago", type: "review", severity: "medium", title: "Goal Line Review Requested", details: "Crossbar rebound deflection; referee tablet scrubbing initiated.", resolved: true },
+];
+
 
 console.log("================================================================================");
 console.log("🏒 RUNNING TOURNAMENT WAR ROOM WORKBENCH TESTS (PATENT P398)");

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   Cpu, 
   Brain, 
@@ -16,15 +16,8 @@ import {
 
 export function TranscendEngineSubstrate() {
   const [activeTab, setActiveTab] = useState<number>(0);
-  const [pulseCount, setPulseCount] = useState<number>(1422);
-
-  // Simulating live engine telemetry counter increments
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPulseCount((prev) => prev + Math.floor(Math.random() * 3) + 1);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  // GA-030 O-03 (T0.4): there is no live engine-throughput feed yet, so the badge shows no number.
+  // It said "<n> events/sec" with n invented by a random generator. Rebuilt on a real metric in T8.1, or retired.
 
   const pillars = [
     {
@@ -111,7 +104,7 @@ export function TranscendEngineSubstrate() {
             Transcend AI Substrate
           </span>
           <span className="text-cyan-400 font-bold text-[11px] bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded">
-            {pulseCount} events/sec
+            <span data-testid="engine-throughput-unavailable">Live throughput: not yet available</span>
           </span>
         </div>
 
@@ -150,15 +143,15 @@ export function TranscendEngineSubstrate() {
           <div className="bg-black/80 border border-white/15 p-4 rounded-2xl font-mono text-xs space-y-2 shrink-0 shadow-inner">
             <div className="flex items-center justify-between gap-4">
               <span className="text-zinc-400 text-[11px]">PLATFORM STATUS</span>
-              <span className="text-emerald-400 font-bold flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> ONLINE
+              <span data-testid="platform-status-unavailable" className="text-zinc-400 font-bold flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-zinc-600" /> Live status: not yet available
               </span>
             </div>
             <div className="text-zinc-200 font-semibold text-[11px] flex items-center gap-1.5">
               <Database className="w-3.5 h-3.5 text-cyan-400" /> MASCE Neural Core v2.4
             </div>
             <div className="text-[10px] text-zinc-500">
-              Latency: 41s ingest · Sync: Realtime
+              No live engine metrics are connected
             </div>
           </div>
         </div>
@@ -260,13 +253,13 @@ export function TranscendEngineSubstrate() {
                   )}
                 </p>
 
-                {/* SIMULATED HIGH-TECH AI TERMINAL METRICS */}
+                {/* ENGINE ARCHITECTURE SUMMARY (descriptive; no live status) */}
                 <div className="mt-6 p-4 rounded-xl bg-zinc-950 border border-white/10 font-mono text-xs space-y-2">
                   <div className="flex items-center justify-between text-zinc-400 border-b border-white/5 pb-2 text-[11px]">
                     <span className="flex items-center gap-1.5 text-cyan-400">
-                      <Terminal className="w-3.5 h-3.5" /> Engine Telemetry Stream
+                      <Terminal className="w-3.5 h-3.5" /> Engine Architecture
                     </span>
-                    <span className="text-emerald-400">SYNC OK</span>
+                    <span className="text-zinc-500">Live sync: not yet available</span>
                   </div>
                   <div className="text-[11px] text-zinc-300 space-y-1">
                     <div className="flex justify-between">

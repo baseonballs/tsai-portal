@@ -113,7 +113,7 @@ const teenNoVpc = {
   fullName: "Alex Mercer",
   birthDate: "2010-03-20", // Age 16
   jerseyNumber: 17,
-  teamName: "Boston Jr Eagles 16U AAA",
+  teamName: "Fixture Club H 16U AAA",
   position: "Defense",
   personalEmail: "alex@example.com",
   metrics: {

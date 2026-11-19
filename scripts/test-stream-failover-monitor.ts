@@ -12,12 +12,29 @@
 import fs from 'fs';
 import path from 'path';
 import {
-  DEFAULT_HEALTH_METRICS,
   DEFAULT_FAILOVER_THRESHOLDS,
   evaluatePipelineHealth,
   determineFailoverRoute,
   StreamHealthMetrics,
 } from '../src/components/broadcast/stream-failover-types';
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const DEFAULT_HEALTH_METRICS: StreamHealthMetrics = {
+  streamId: 'stream-live-rink-a-main',
+  timestampMs: Date.now(),
+  bitrateKbps: 4500,
+  targetBitrateKbps: 5000,
+  frameDropRatePct: 0.12,
+  jitterMs: 14.5,
+  roundTripTimeMs: 38.0,
+  activeRoute: 'PRIMARY_YOUTUBE',
+  healthStatus: 'HEALTHY',
+  failoverLatencyMs: 0,
+  totalBytesTransferred: 1420500000,
+  edgeMeshPeerCount: 12,
+};
+
 
 function assert(condition: boolean, message: string) {
   if (!condition) {

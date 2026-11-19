@@ -7,26 +7,23 @@ import {
   PowerplaySequenceMetrics,
   PowerplayUmbrellaCanvasProps,
 } from "../../types/powerplay-umbrella-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const DEFAULT_131_NODES: PowerplaySkaterNode[] = [
-  { role: "highPoint", label: "High Point", x: 260, y: 70, jerseyNumber: "8" },
-  { role: "leftFlank", label: "Left Flank", x: 90, y: 200, jerseyNumber: "19" },
-  { role: "rightFlank", label: "Right Flank", x: 430, y: 200, jerseyNumber: "88" },
-  { role: "bumperSlot", label: "Bumper", x: 260, y: 220, jerseyNumber: "97" },
-  { role: "netFront", label: "Net Front", x: 260, y: 350, jerseyNumber: "11" },
-];
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function PowerplayUmbrellaCanvas(props: PowerplayUmbrellaCanvasProps) {
+  if (!props.nodes || props.nodes.length === 0 || !props.activeSequence) {
+    return <NotYetAvailable feature="Powerplay formation review" detail="No tracked powerplay is connected." className={props.className ?? ""} />;
+  }
+  return <PowerplayUmbrellaCanvasView {...props} nodes={props.nodes} activeSequence={props.activeSequence} />;
+}
 
-export function PowerplayUmbrellaCanvas({
-  activeSequence = {
-    passDistanceM: 10.5,
-    releaseSpeedMps: 22.4,
-    catchToReleaseLatencyS: 0.22,
-    isRoyalRoadCrossed: true,
-    shotTier: "highDangerSnapShot",
-  },
+function PowerplayUmbrellaCanvasView({
+  nodes,
+  activeSequence,
   onRoleSelect,
   className = "",
-}: PowerplayUmbrellaCanvasProps) {
+}: PowerplayUmbrellaCanvasProps & Required<Pick<PowerplayUmbrellaCanvasProps, "nodes" | "activeSequence">>) {
   const [selectedRole, setSelectedRole] = useState<PowerplayPositionRole>("rightFlank");
 
   const handleSelect = (role: PowerplayPositionRole) => {
@@ -108,7 +105,7 @@ export function PowerplayUmbrellaCanvas({
           />
 
           {/* Skater Nodes */}
-          {DEFAULT_131_NODES.map((node) => {
+          {nodes.map((node) => {
             const isSelected = selectedRole === node.role;
             return (
               <g

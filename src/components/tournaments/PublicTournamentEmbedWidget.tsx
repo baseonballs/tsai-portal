@@ -6,93 +6,20 @@ import {
   TournamentTickerMatch,
   BracketRound,
 } from "./public-tournament-embed-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-const DEFAULT_MATCHES: TournamentTickerMatch[] = [
-  {
-    matchId: "m-qf1",
-    round: "QUARTERFINALS",
-    matchLabel: "Quarterfinal 1",
-    sheetId: "sheet-1",
-    rinkName: "Rink 1 (Main)",
-    homeTeam: { name: "Jr. Sharks AAA", seed: 1, score: 4 },
-    awayTeam: { name: "Chicago Mission", seed: 8, score: 2 },
-    status: "FINAL",
-    winnerTeamName: "Jr. Sharks AAA",
-    nextMatchId: "m-sf1",
-  },
-  {
-    matchId: "m-qf2",
-    round: "QUARTERFINALS",
-    matchLabel: "Quarterfinal 2",
-    sheetId: "sheet-2",
-    rinkName: "Rink 2 (South)",
-    homeTeam: { name: "Toronto Marlboros", seed: 4, score: 3 },
-    awayTeam: { name: "Detroit HoneyBaked", seed: 5, score: 2 },
-    status: "LIVE",
-    period: 3,
-    timeRemaining: "02:14",
-    nextMatchId: "m-sf1",
-  },
-  {
-    matchId: "m-qf3",
-    round: "QUARTERFINALS",
-    matchLabel: "Quarterfinal 3",
-    sheetId: "sheet-3",
-    rinkName: "Rink 3 (East)",
-    homeTeam: { name: "Shattuck St. Mary's", seed: 2, score: 5 },
-    awayTeam: { name: "Boston Jr. Eagles", seed: 7, score: 1 },
-    status: "FINAL",
-    winnerTeamName: "Shattuck St. Mary's",
-    nextMatchId: "m-sf2",
-  },
-  {
-    matchId: "m-qf4",
-    round: "QUARTERFINALS",
-    matchLabel: "Quarterfinal 4",
-    sheetId: "sheet-4",
-    rinkName: "Rink 4 (West)",
-    homeTeam: { name: "Minnesota Blades", seed: 3, score: 1 },
-    awayTeam: { name: "Mid Fairfield Blues", seed: 6, score: 0 },
-    status: "LIVE",
-    period: 2,
-    timeRemaining: "07:30",
-    nextMatchId: "m-sf2",
-  },
-  {
-    matchId: "m-sf1",
-    round: "SEMIFINALS",
-    matchLabel: "Semifinal 1",
-    sheetId: "sheet-1",
-    rinkName: "Rink 1 (Main)",
-    homeTeam: { name: "Jr. Sharks AAA", seed: 1, score: 0 },
-    awayTeam: { name: "TBD", seed: 4, score: 0 },
-    status: "UPCOMING",
-  },
-  {
-    matchId: "m-sf2",
-    round: "SEMIFINALS",
-    matchLabel: "Semifinal 2",
-    sheetId: "sheet-2",
-    rinkName: "Rink 2 (South)",
-    homeTeam: { name: "Shattuck St. Mary's", seed: 2, score: 0 },
-    awayTeam: { name: "TBD", seed: 3, score: 0 },
-    status: "UPCOMING",
-  },
-  {
-    matchId: "m-final",
-    round: "CHAMPIONSHIP",
-    matchLabel: "Championship Final",
-    sheetId: "sheet-1",
-    rinkName: "Main Center Arena",
-    homeTeam: { name: "TBD", seed: 1, score: 0 },
-    awayTeam: { name: "TBD", seed: 2, score: 0 },
-    status: "UPCOMING",
-  },
-];
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const PublicTournamentEmbedWidget: React.FC<PublicTournamentEmbedWidgetProps> = (props) => {
+  if (!props.initialMatches || props.initialMatches.length === 0) {
+    return <NotYetAvailable feature="Tournament scores" detail="No tournament is connected." />;
+  }
+  return <PublicTournamentEmbedWidgetView {...props} />;
+};
 
-export const PublicTournamentEmbedWidget: React.FC<PublicTournamentEmbedWidgetProps> = ({
+const PublicTournamentEmbedWidgetView: React.FC<PublicTournamentEmbedWidgetProps> = ({
   config,
-  initialMatches = DEFAULT_MATCHES,
+  initialMatches = [],
   championTeamName,
   onSelectMatchSheet,
 }) => {
@@ -101,7 +28,7 @@ export const PublicTournamentEmbedWidget: React.FC<PublicTournamentEmbedWidgetPr
   const [copied, setCopied] = useState(false);
 
   const tournamentId = config?.tournamentId || "tourn-silver-stick-01";
-  const tournamentName = config?.tournamentName || "Silver Stick AAA Championship";
+  const tournamentName = config?.tournamentName || "Tournament";
 
   const sheets = Array.from(new Set(initialMatches.map((m) => m.sheetId)));
   const filteredMatches = selectedSheet === "ALL"

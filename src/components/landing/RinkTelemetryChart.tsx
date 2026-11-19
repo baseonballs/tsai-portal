@@ -4,13 +4,32 @@ import React, { useEffect, useRef, useState } from "react";
 
 import * as d3 from "d3";
 
-import { PlayerTelemetry, PLAYERS_DATA } from "@/data/players-telemetry";
+export interface PlayerTelemetry {
+  id: string;
+  name: string;
+  number: string;
+  role: string;
+  speed: number;
+  heartRate: number;
+  flex: number;
+  color: string;
+  glowColor: string;
+  path: [number, number][];
+}
 
 interface RinkTelemetryChartProps {
+  /**
+   * Tracked skaters from a real tracking session. GA-030 O-02 (T0.4): there is no public tracking
+   * feed yet, so nothing passes this and the chart shows the empty rink with a "not yet available"
+   * marker. The built-in list of named players and invented speeds/heart rates was deleted.
+   */
+  players?: PlayerTelemetry[];
   onHoverPlayer?: (player: PlayerTelemetry | null) => void;
 }
 
-export function RinkTelemetryChart({ onHoverPlayer = () => {} }: RinkTelemetryChartProps) {
+const NO_PLAYERS: PlayerTelemetry[] = [];
+
+export function RinkTelemetryChart({ players = NO_PLAYERS, onHoverPlayer = () => {} }: RinkTelemetryChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerTelemetry | null>(null);
 
@@ -131,7 +150,7 @@ export function RinkTelemetryChart({ onHoverPlayer = () => {} }: RinkTelemetryCh
       .attr("stroke-width", 1.5);
 
     // 6. Draw Player Trails & Nodes
-    PLAYERS_DATA.forEach((player) => {
+    players.forEach((player) => {
       // Create a smooth line generator
       const lineGenerator = d3
         .line()
@@ -235,14 +254,14 @@ export function RinkTelemetryChart({ onHoverPlayer = () => {} }: RinkTelemetryCh
           onHoverPlayer(null);
         });
     });
-  }, [onHoverPlayer]);
+  }, [players, onHoverPlayer]);
 
   return (
     <div className="relative flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-zinc-900/10 p-4 backdrop-blur-xl">
       <div className="absolute top-4 left-6 flex items-center gap-2">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
+        <span className={`h-2 w-2 rounded-full ${players.length > 0 ? "animate-pulse bg-cyan-400" : "bg-zinc-600"}`} />
         <span className="font-mono text-[10px] tracking-widest text-zinc-400 uppercase">
-          Live Arena Telemetry (MASCE Tracking)
+          Arena Telemetry (MASCE Tracking)
         </span>
       </div>
 
@@ -272,9 +291,13 @@ export function RinkTelemetryChart({ onHoverPlayer = () => {} }: RinkTelemetryCh
               Stick Flex: <strong className="text-white">{selectedPlayer.flex}%</strong>
             </span>
           </div>
+        ) : players.length === 0 ? (
+          <span data-testid="rink-telemetry-unavailable" className="font-mono text-[10px] text-zinc-500">
+            Live tracking: not yet available. No tracking session is connected.
+          </span>
         ) : (
-          <span className="animate-pulse font-mono text-[10px] text-zinc-500">
-            Hover over skater nodes to inspect real-time physics vectors
+          <span className="font-mono text-[10px] text-zinc-500">
+            Hover over skater nodes to inspect tracked movement
           </span>
         )}
       </div>

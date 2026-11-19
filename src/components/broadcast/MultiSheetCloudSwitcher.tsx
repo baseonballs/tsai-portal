@@ -5,16 +5,26 @@ import {
   PortalSheetChannel,
   BroadcastCameraAngle,
   PortalReplayItem,
-  INITIAL_CHANNELS,
   formatStreamTime,
 } from './broadcast-cloud-switcher-types';
 import { Radio, Video, RefreshCw, Play, Film, Layers } from 'lucide-react';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export function MultiSheetCloudSwitcher() {
-  const [channels, setChannels] = useState<PortalSheetChannel[]>(INITIAL_CHANNELS);
-  const [selectedSheetId, setSelectedSheetId] = useState<string>('sheet-1');
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function MultiSheetCloudSwitcher({ initialChannels }: { initialChannels?: PortalSheetChannel[] }) {
+  if (!initialChannels || initialChannels.length === 0) {
+    return <NotYetAvailable feature="Multi-sheet broadcast switcher" detail="No broadcast channel is connected." />;
+  }
+  return <MultiSheetCloudSwitcherView initialChannels={initialChannels} />;
+}
+
+function MultiSheetCloudSwitcherView({ initialChannels }: { initialChannels: PortalSheetChannel[] }) {
+  const [channels, setChannels] = useState<PortalSheetChannel[]>(initialChannels);
+  const [selectedSheetId, setSelectedSheetId] = useState<string>(initialChannels[0].sheetId);
   const [replays, setReplays] = useState<PortalReplayItem[]>([]);
-  const [lastCutMs, setLastCutMs] = useState<number>(45);
+  // No measured cut latency exists yet (it was random); nothing is shown until one does.
+  const lastCutMs: number | null = null;
 
   const activeChannel = channels.find((c) => c.sheetId === selectedSheetId) || channels[0];
 
@@ -34,7 +44,6 @@ export function MultiSheetCloudSwitcher() {
           : c
       )
     );
-    setLastCutMs(Math.floor(40 + Math.random() * 15));
   };
 
   const handleTriggerReplay = (sec: number, type: PortalReplayItem['eventType']) => {
@@ -113,7 +122,7 @@ export function MultiSheetCloudSwitcher() {
             </div>
           </div>
           <div className="text-[11px] text-slate-500 flex justify-between pt-4 border-t border-slate-800">
-            <span>Latency: {lastCutMs} ms</span>
+            <span>Latency: {lastCutMs === null ? "not measured" : `${lastCutMs} ms`}</span>
             <span className="text-emerald-400 font-mono">BROADCAST SECURE</span>
           </div>
         </div>

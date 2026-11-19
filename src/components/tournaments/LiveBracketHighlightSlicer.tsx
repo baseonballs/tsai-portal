@@ -10,12 +10,21 @@ import React, { useState } from 'react';
 import {
   PortalTournamentMatch,
   PortalHighlightClip,
-  INITIAL_PORTAL_MATCHES,
   formatMatchClock,
 } from './bracket-highlight-slicer-types';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export function LiveBracketHighlightSlicer() {
-  const [matches, setMatches] = useState<PortalTournamentMatch[]>(INITIAL_PORTAL_MATCHES);
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function LiveBracketHighlightSlicer({ initialMatches }: { initialMatches?: PortalTournamentMatch[] }) {
+  if (!initialMatches || initialMatches.length === 0) {
+    return <NotYetAvailable feature="Bracket highlights" detail="No tournament match is connected." />;
+  }
+  return <LiveBracketHighlightSlicerView initialMatches={initialMatches} />;
+}
+
+function LiveBracketHighlightSlicerView({ initialMatches }: { initialMatches: PortalTournamentMatch[] }) {
+  const [matches, setMatches] = useState<PortalTournamentMatch[]>(initialMatches);
   const [selectedMatchId, setSelectedMatchId] = useState<string>(matches[0]?.matchId || '');
   const [activeClip, setActiveClip] = useState<PortalHighlightClip | null>(null);
 

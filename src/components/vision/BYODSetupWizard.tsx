@@ -28,6 +28,13 @@ interface StepConfig {
   icon: React.ElementType;
 }
 
+/**
+ * GA-030 O-09 (T0.4): no device has been paired, mounted, measured or calibrated — there is no
+ * device-pairing or calibration backend yet (rebuilt in T6.3). Every reading on this wizard used to
+ * be hard-coded as passed ("LOCKED", "Passed", "NOMINAL", "CONNECTED", "BenchHub iPad Paired",
+ * "Capture pod is fully calibrated"). The steps stay as a setup checklist; each reading now says
+ * "Not yet available" and finishing the checklist claims nothing.
+ */
 const STEPS: StepConfig[] = [
   { id: 1, title: "Hardware Device & Sensor Audit", shortTitle: "Device", icon: Camera },
   { id: 2, title: "Glass Mount & Vibration Diagnostic", shortTitle: "Mounting", icon: Shield },
@@ -36,16 +43,13 @@ const STEPS: StepConfig[] = [
   { id: 5, title: "Stream Key & Arena Mesh Pairing", shortTitle: "Broadcast", icon: Radio },
 ];
 
+const NOT_YET = "Not yet available";
+
 export function BYODSetupWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [deviceModel, setDeviceModel] = useState("iphone-16-pro");
   const [glassType, setGlassType] = useState<"tempered" | "acrylic">("tempered");
-  const [isPerpendicular, setIsPerpendicular] = useState(true);
-  const [peltierConnected, setPeltierConnected] = useState(true);
-  const [temperatureCelsius, setTemperatureCelsius] = useState(24.8);
-  const [acousticShieldCalibrated, setAcousticShieldCalibrated] = useState(true);
-  const [streamKey, setStreamKey] = useState("live_yt_8849204_tsai_broadcast");
-  const [meshConnected, setMeshConnected] = useState(true);
+  const [streamKey, setStreamKey] = useState("");
   const [isComplete, setIsComplete] = useState(false);
 
   const nextStep = () => {
@@ -119,8 +123,8 @@ export function BYODSetupWizard() {
                 <h3 className="text-lg font-medium text-white">Step 1: Optical Hardware &amp; Sensor Calibration</h3>
                 <p className="text-sm text-zinc-400">Verifying Apple Silicon Neural Engine &amp; LiDAR dToF scanner capabilities.</p>
               </div>
-              <span className="text-xs font-mono px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                A18 Pro / M4 Ready
+              <span className="text-xs font-mono px-2.5 py-1 rounded-md bg-zinc-800/60 text-zinc-400 border border-white/10">
+                Device check: not yet available
               </span>
             </div>
 
@@ -183,10 +187,10 @@ export function BYODSetupWizard() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/10 p-4 flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            <div className="rounded-xl border border-white/10 bg-zinc-950/40 p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-zinc-500 shrink-0 mt-0.5" />
               <div className="text-xs text-zinc-300">
-                <span className="font-semibold text-white">Optical Sensor Pass:</span> All required VisionEdge™ CoreML models (ByteTrack, jersey OCR, ballistic Kalman puck tracker) are pre-compiled and acceleration verified.
+                <span className="font-semibold text-white">Optical sensor check:</span> {NOT_YET}. No device has been checked.
               </div>
             </div>
           </div>
@@ -227,8 +231,8 @@ export function BYODSetupWizard() {
                 </div>
                 <p className="text-[11px] text-zinc-500 mt-2">
                   {glassType === "tempered"
-                    ? "Optimal high-transparency tempered glass. Anti-glare polarizing filter active."
-                    : "Flexible acrylic boards. Applying IMU vibration damping filter (350ms decay ceiling)."}
+                    ? "Optimal high-transparency tempered glass. Use an anti-glare polarizing filter."
+                    : "Flexible acrylic boards need vibration damping (350ms decay ceiling)."}
                 </p>
               </div>
 
@@ -236,15 +240,9 @@ export function BYODSetupWizard() {
                 <label className="text-xs font-mono font-semibold uppercase text-zinc-400 block mb-2">Optical Perpendicularity</label>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl font-mono font-bold text-cyan-400">0.24°</span>
+                    <span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span>
                     <span className="text-xs text-zinc-400">(Target: ≤ 0.50°)</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-mono font-bold">
-                    LOCKED
-                  </span>
-                </div>
-                <div className="w-full bg-zinc-800 rounded-full h-1.5 mt-3 overflow-hidden">
-                  <div className="bg-cyan-400 h-full w-[94%]" />
                 </div>
               </div>
             </div>
@@ -253,7 +251,7 @@ export function BYODSetupWizard() {
               <h4 className="text-xs font-mono font-bold text-zinc-300 uppercase mb-2">Suction Force Diagnostic</h4>
               <div className="flex items-center justify-between text-xs text-zinc-400">
                 <span>Dual-Vacuum Pump Engagement</span>
-                <span className="text-emerald-400 font-mono font-bold">65.2 lbs / 65.0 lbs target (Passed)</span>
+                <span className="font-mono"><span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span> (target 65.0 lbs)</span>
               </div>
             </div>
           </div>
@@ -271,43 +269,32 @@ export function BYODSetupWizard() {
               <div className="rounded-2xl border border-white/10 bg-zinc-950/40 p-5">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-mono uppercase text-zinc-400">Internal Die Temp</span>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">
-                    NOMINAL
-                  </span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-mono font-bold text-white">{temperatureCelsius.toFixed(1)}°C</span>
+                  <span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span>
                   <span className="text-xs text-zinc-400">Max threshold: 32.0°C</span>
-                </div>
-                <div className="w-full bg-zinc-800 rounded-full h-2 mt-4 overflow-hidden">
-                  <div className="bg-emerald-400 h-full w-[45%]" />
                 </div>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-zinc-950/40 p-5">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-mono uppercase text-zinc-400">MagSafe Qi2 15W Cold Plate</span>
-                  <span className="text-xs font-mono text-cyan-400 font-bold">ACTIVE</span>
                 </div>
                 <div className="space-y-2 text-xs text-zinc-300">
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Peltier State:</span>
-                    <span className="text-white font-mono">Thermoelectric Chilled</span>
+                    <span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Power Delivery:</span>
-                    <span className="text-white font-mono">15W Qi2 Inductive</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-zinc-400">Cable Rating:</span>
-                    <span className="text-emerald-400 font-mono">-40°C Cold-Resistant</span>
+                    <span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/10 p-4 text-xs text-zinc-300">
-              💡 <strong className="text-cyan-400">Thermal Guard Active:</strong> Transcend Vision will never throttle down to 30 FPS or dim the display. Continuous 4K60 HDR capture is guaranteed indefinitely.
+              <strong className="text-cyan-400">Thermal guard:</strong> {NOT_YET}. No device temperature is being read.
             </div>
           </div>
         )}
@@ -326,34 +313,34 @@ export function BYODSetupWizard() {
                   <h4 className="font-semibold text-white text-sm">Acoustic Shield Frequency Filtering</h4>
                   <p className="text-xs text-zinc-400">Dual cardioid mic array beamforming tuned to rink ice surface.</p>
                 </div>
-                <span className="text-xs font-mono px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 font-bold">
-                  28.4 dB Attenuation
-                </span>
+                <span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span>
               </div>
 
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-400">PA System Copyright Music Shield:</span>
-                  <span className="text-emerald-400 font-mono font-bold">Active (Zero YouTube Strikes)</span>
+                  <span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-400">Whistle Recognition Passband (2.8 - 3.8 kHz):</span>
-                  <span className="text-cyan-400 font-mono font-bold">Armed (99.4% Precision)</span>
+                  <span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-400">Scorebug Clock Auto-Pause Sync:</span>
-                  <span className="text-white font-mono">Bound to BenchHub &lt; 50ms</span>
+                  <span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span>
                 </div>
               </div>
             </div>
 
             <div className="rounded-xl border border-white/10 bg-zinc-950/40 p-4 flex items-center justify-between">
-              <span className="text-xs text-zinc-400">Simulate Referee Whistle Test</span>
+              <span className="text-xs text-zinc-400">Referee whistle test</span>
               <button
-                onClick={() => setAcousticShieldCalibrated(true)}
-                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-semibold text-white font-mono cursor-pointer"
+                type="button"
+                disabled
+                title="Not yet available"
+                className="px-3 py-1.5 rounded-lg bg-white/5 text-xs font-semibold text-zinc-500 font-mono cursor-not-allowed"
               >
-                Trigger 3.2 kHz Tone
+                Trigger 3.2 kHz Tone (not yet available)
               </button>
             </div>
           </div>
@@ -380,8 +367,13 @@ export function BYODSetupWizard() {
                     className="flex-1 bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
                     placeholder="Enter YouTube Stream Key..."
                   />
-                  <button className="px-4 py-2 rounded-xl bg-cyan-500 text-zinc-950 font-bold text-xs hover:bg-cyan-400 transition-all cursor-pointer">
-                    Verify
+                  <button
+                    type="button"
+                    disabled
+                    title="Not yet available"
+                    className="px-4 py-2 rounded-xl bg-white/5 text-zinc-500 font-bold text-xs cursor-not-allowed"
+                  >
+                    Verify (not yet available)
                   </button>
                 </div>
                 <p className="text-[11px] text-zinc-500">
@@ -395,8 +387,8 @@ export function BYODSetupWizard() {
                   <p className="text-xs text-zinc-400">Bonjour service: <code className="text-cyan-400">_tsai-mesh._tcp</code></p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-mono font-bold text-emerald-400">CONNECTED (14.2ms)</span>
-                  <p className="text-[11px] text-zinc-500">BenchHub iPad Paired</p>
+                  <span data-testid="byod-not-measured" className="text-zinc-500 font-mono">Not yet available</span>
+                  <p className="text-[11px] text-zinc-500">No device is paired</p>
                 </div>
               </div>
             </div>
@@ -406,12 +398,12 @@ export function BYODSetupWizard() {
         {/* COMPLETION BANNER */}
         {isComplete && (
           <div className="text-center py-8 space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-8 h-8" />
+            <div className="w-16 h-16 rounded-full bg-zinc-800/60 border border-white/10 text-zinc-400 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-8 h-8" />
             </div>
-            <h3 className="text-2xl font-serif text-white">Transcend Vision Pod Online &amp; Armed</h3>
+            <h3 className="text-2xl font-serif text-white" data-testid="byod-pairing-unavailable">Setup checklist reviewed</h3>
             <p className="text-sm text-zinc-400 max-w-md mx-auto">
-              Capture pod is fully calibrated. 4K60 video will broadcast to YouTube, while local mesh feeds BenchHub with sub-180ms latency.
+              Device pairing and calibration are not yet available. Nothing was paired, measured or calibrated.
             </p>
             <div className="pt-4 flex items-center justify-center gap-3">
               <Link
@@ -443,7 +435,7 @@ export function BYODSetupWizard() {
               onClick={nextStep}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 text-white font-bold text-xs shadow-lg shadow-cyan-950/40 hover:opacity-95 transition-all cursor-pointer"
             >
-              {currentStep === STEPS.length ? "Complete Setup" : "Next Step"}
+              {currentStep === STEPS.length ? "Finish Checklist" : "Next Step"}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

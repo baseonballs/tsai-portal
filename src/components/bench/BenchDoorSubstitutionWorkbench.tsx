@@ -8,6 +8,7 @@
  */
 
 import React, { useState } from 'react';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
 export interface SubstitutionFeedItem {
   teamId: string;
@@ -35,43 +36,21 @@ interface BenchDoorSubstitutionWorkbenchProps {
   onAuditTrigger?: () => void;
 }
 
-export const BenchDoorSubstitutionWorkbench: React.FC<BenchDoorSubstitutionWorkbenchProps> = ({
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const BenchDoorSubstitutionWorkbench: React.FC<BenchDoorSubstitutionWorkbenchProps> = (props) => {
+  if (!props.initialState) {
+    return <NotYetAvailable feature="Bench-door substitution review" detail="No live game event is connected." />;
+  }
+  return <BenchDoorSubstitutionWorkbenchView {...props} initialState={props.initialState} />;
+};
+
+const BenchDoorSubstitutionWorkbenchView: React.FC<BenchDoorSubstitutionWorkbenchProps & { initialState: BenchSubstitutionState }> = ({
   initialState,
   onAuditTrigger,
 }) => {
   const [state] = useState<BenchSubstitutionState>(
-    initialState || {
-      sheetId: 'sheet-east-02',
-      activeGameClockSec: 614.25,
-      isGameRunning: true,
-      hallSensorDebounceMs: 12.0,
-      substitutions: [
-        {
-          teamId: 'BOS',
-          departingPlayerId: 'PLY-63',
-          enteringPlayerId: 'PLY-18',
-          eventTimestampSec: 614.25,
-          departingDistanceToBenchM: 0.85,
-          departingApproachVelocityMps: 3.2,
-          doorLatchStatus: 'GATE_UNLATCHED',
-          isPuckInSubstitutionZone: false,
-          arbitrationVerdict: 'RULE_74_LEGAL_LINE_CHANGE',
-          rule74ComplianceMarginM: 0.674,
-        },
-        {
-          teamId: 'TOR',
-          departingPlayerId: 'PLY-34',
-          enteringPlayerId: 'PLY-16',
-          eventTimestampSec: 612.8,
-          departingDistanceToBenchM: 3.85,
-          departingApproachVelocityMps: 4.1,
-          doorLatchStatus: 'LEAP_OVER_BOARDS',
-          isPuckInSubstitutionZone: false,
-          arbitrationVerdict: 'TOO_MANY_MEN_PREMATURE_ENTRY',
-          rule74ComplianceMarginM: -2.326,
-        },
-      ],
-    }
+    initialState
   );
 
   const hasInfraction = state.substitutions.some(

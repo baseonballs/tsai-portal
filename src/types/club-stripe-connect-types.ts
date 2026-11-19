@@ -22,17 +22,3 @@ export interface ClubStripeConnectProfile {
   monthlyPerFamilyFeeUsd: number;
 }
 
-export const DEFAULT_CLUB_STRIPE_PROFILE: ClubStripeConnectProfile = {
-  clubId: 'club_plymouth_wildcats',
-  clubName: 'Plymouth Wildcats Youth Hockey',
-  einOrTaxId: 'XX-XXX4192',
-  accountType: 'NON_PROFIT_501C3',
-  kycStatus: 'VERIFIED',
-  stripeConnectAccountId: 'acct_1TSAI_PLYMOUTH_01',
-  bankRoutingNumberMasked: '*****0214',
-  bankAccountNumberMasked: '*****8841',
-  revenueShareRatio: 0.50,
-  payoutFrequency: 'MONTHLY',
-  estimatedEnrolledFamilies: 350,
-  monthlyPerFamilyFeeUsd: 15.00,
-};

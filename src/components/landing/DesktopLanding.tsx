@@ -101,7 +101,7 @@ export function DesktopLanding() {
         <section className="px-6 py-24 lg:px-8 border-t border-white/5 bg-zinc-900/40">
           <div className="mx-auto max-w-5xl">
             <div className="text-center mb-12">
-              <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Live Telemetry Visualization</span>
+              <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Telemetry Visualization</span>
               <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">Rink Telemetry and Spatial Intelligence</h2>
               <p className="mt-4 text-base text-zinc-400 max-w-2xl mx-auto">
                 Real-time spatial tracking mapping shift events across the rink surface.

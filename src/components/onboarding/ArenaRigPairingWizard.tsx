@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
 import {
   DiscoveredPodDevice,
-  INITIAL_DISCOVERED_PODS,
   PairingStep,
 } from '../../types/arena-pairing-types';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const ArenaRigPairingWizard: React.FC = () => {
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const ArenaRigPairingWizard: React.FC<{ discoveredPods?: DiscoveredPodDevice[] }> = ({ discoveredPods }) => {
+  if (!discoveredPods || discoveredPods.length === 0) {
+    return <NotYetAvailable feature="Arena rig pairing" detail="No capture pod has been discovered or paired." />;
+  }
+  return <ArenaRigPairingWizardView discoveredPods={discoveredPods} />;
+};
+
+const ArenaRigPairingWizardView: React.FC<{ discoveredPods: DiscoveredPodDevice[] }> = ({ discoveredPods }) => {
   const [currentStep, setCurrentStep] = useState<PairingStep>('DISCOVERY');
-  const [pods, setPods] = useState<DiscoveredPodDevice[]>(INITIAL_DISCOVERED_PODS);
+  const [pods, setPods] = useState<DiscoveredPodDevice[]>(discoveredPods);
   const [selectedSheet, setSelectedSheet] = useState<string>('Rink 1 (Main Arena)');
-  const [selectedPodIds, setSelectedPodIds] = useState<string[]>([
-    'POD-A-CENTER',
-    'POD-B-ENDZONE',
-  ]);
+  const [selectedPodIds, setSelectedPodIds] = useState<string[]>([]);
   const [isCommissioning, setIsCommissioning] = useState<boolean>(false);
 
   const togglePodSelection = (podId: string) => {

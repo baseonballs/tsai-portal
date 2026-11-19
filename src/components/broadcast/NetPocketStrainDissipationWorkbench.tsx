@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
 export interface NetPocketImpactData {
   incomingVelocityMps: number;
@@ -20,22 +21,17 @@ interface NetPocketStrainDissipationWorkbenchProps {
   initialData?: NetPocketImpactData;
 }
 
-export const NetPocketStrainDissipationWorkbench: React.FC<NetPocketStrainDissipationWorkbenchProps> = ({
-  initialData = {
-    incomingVelocityMps: 40.0,
-    impactCoordinateX: 0.82,
-    impactCoordinateY: 1.15,
-    meshDeflectionDepthM: 0.28,
-    peakCordTensionN: 420.0,
-    incomingKineticEnergyJ: 136.0,
-    dissipatedStrainEnergyJ: 124.8,
-    residualKineticEnergyJ: 11.2,
-    reboundVelocityMps: 11.47,
-    coefficientOfRestitution: 0.287,
-    isCornerPocketZone: true,
-    entrapmentStatus: "POCKET_ENTRAPMENT",
-    goalLinePenetrationVerified: true,
-  },
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const NetPocketStrainDissipationWorkbench: React.FC<NetPocketStrainDissipationWorkbenchProps> = (props) => {
+  if (!props.initialData) {
+    return <NotYetAvailable feature="Net-pocket impact review" detail="No tracked shot is connected." />;
+  }
+  return <NetPocketStrainDissipationWorkbenchView initialData={props.initialData} />;
+};
+
+const NetPocketStrainDissipationWorkbenchView: React.FC<{ initialData: NetPocketImpactData }> = ({
+  initialData,
 }) => {
   const [data] = useState<NetPocketImpactData>(initialData);
 
