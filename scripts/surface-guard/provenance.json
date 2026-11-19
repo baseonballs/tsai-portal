@@ -5,25 +5,29 @@
       "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses (the entitlement gate; the manual pages ship in the build)",
       "table": "supabase:public.user_product_licenses",
       "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
-      "evidence": "src/lib/auth/portal-entitlement.ts:53"
+      "evidence": "src/lib/auth/portal-entitlement.ts:53",
+      "writerSource": "tsai-periodical:src/app/licensing/actions.ts:53"
     },
     "route:/": {
       "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
       "table": "supabase:public.lead_submissions",
       "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
-      "evidence": "src/app/api/beta-requests/route.ts:63"
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/api/beta-requests": {
       "endpoint": "platform PostgREST POST /rest/v1/lead_submissions",
       "table": "supabase:public.lead_submissions",
       "writer": "user-action: the beta sign-up form (BetaSignupForm) posting to this route",
-      "evidence": "src/app/api/beta-requests/route.ts:63"
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/api/telemetry/event": {
       "endpoint": "platform PostgREST POST /rest/v1/user_telemetry_events (+ user_session_journeys)",
       "table": "supabase:public.user_telemetry_events",
       "writer": "user-action: the signed-in browser posting its own events to this route",
-      "evidence": "src/app/api/telemetry/event/route.ts:104"
+      "evidence": "src/app/api/telemetry/event/route.ts:104",
+      "writerSource": "self:src/app/api/telemetry/event/route.ts:104"
     },
     "route:/auth/callback": {
       "endpoint": "platform GoTrue POST /auth/v1/token (exchangeCodeForSession)",
@@ -35,13 +39,15 @@
       "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses (the entitlement gate; the manual pages ship in the build)",
       "table": "supabase:public.user_product_licenses",
       "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
-      "evidence": "src/app/auth/entitlement/route.ts (getEntitledPortalUser, src/lib/auth/portal-entitlement.ts:53)"
+      "evidence": "src/app/auth/entitlement/route.ts (getEntitledPortalUser, src/lib/auth/portal-entitlement.ts:53)",
+      "writerSource": "tsai-periodical:src/app/licensing/actions.ts:53"
     },
     "route:/beta": {
       "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
       "table": "supabase:public.lead_submissions",
       "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
-      "evidence": "src/app/api/beta-requests/route.ts:63"
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/byod-setup": {
       "register": "O-09",
@@ -57,13 +63,15 @@
       "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
       "table": "supabase:public.lead_submissions",
       "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
-      "evidence": "src/app/api/beta-requests/route.ts:63"
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/docs/*?": {
       "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses (the entitlement gate; the manual pages ship in the build)",
       "table": "supabase:public.user_product_licenses",
       "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
-      "evidence": "src/lib/auth/portal-entitlement.ts:53"
+      "evidence": "src/lib/auth/portal-entitlement.ts:53",
+      "writerSource": "tsai-periodical:src/app/licensing/actions.ts:53"
     },
     "route:/legal/privacy": {
       "endpoint": "platform GoTrue session (supabase.auth.getSession in the shared LandingHeader; the page reads no domain data)",
@@ -81,7 +89,8 @@
       "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
       "table": "supabase:public.lead_submissions",
       "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
-      "evidence": "src/app/api/beta-requests/route.ts:63"
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/login": {
       "endpoint": "platform GoTrue POST /auth/v1/token (signInWithPassword) and /auth/v1/authorize (signInWithOAuth)",
@@ -93,7 +102,8 @@
       "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
       "table": "supabase:public.lead_submissions",
       "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
-      "evidence": "src/app/api/beta-requests/route.ts:63"
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/pricing": {
       "register": "O-05",

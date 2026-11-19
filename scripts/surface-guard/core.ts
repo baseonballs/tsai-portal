@@ -1099,7 +1099,9 @@ export function formatReport(r: CheckResult, app: string): string {
 //   { endpoint, table, writer }  the backend endpoint it reads, the table behind it, and the REAL writer that fills
 //                                that table: `user-action: …`, `importer: …` or `sync: …`. Seed scripts, migrations,
 //                                fixtures, and GET / HEAD / OPTIONS / DELETE endpoints never count; an audit table is
-//                                never the backing table.
+//                                never the backing table. `writerSource` (<repo>:<path>:<line>) cites the handler, and
+//                                the check reads it (sibling repos from TSAI_WORKSPACE_DIR) and refuses one that does
+//                                not INSERT / UPSERT into the named table. auth.users is written by GoTrue only.
 //   { register: "<row id>" }     an OPEN (or AWAITING OWNER) gap-register row of THIS app that explains why there is
 //                                no live source yet. A row whose status is CLOSED-… or RETIRED never does.
 //   { static: "<why>" }          a ROUTE that renders no domain data (legal text, a redirect). A tripwire walks its local
@@ -1231,7 +1233,7 @@ const NON_WRITER_METHOD = /\b(GET|HEAD|OPTIONS|DELETE)\s+\//;
 /** Audit / log tables record that something happened; they are never the domain table a surface reads. */
 const AUDIT_TABLE = /audit/i;
 const ENTRY_KEYS: Record<"endpoint" | "register" | "static", string[]> = {
-  endpoint: ["endpoint", "table", "writer", "evidence", "note"],
+  endpoint: ["endpoint", "table", "writer", "writerSource", "evidence", "note"],
   register: ["register", "via", "evidence", "note"],
   static: ["static", "note"],
 };
@@ -1240,6 +1242,8 @@ export interface ProvenanceEntry {
   endpoint?: string;
   table?: string;
   writer?: string;
+  /** `<repo>:<path>:<line>` of the writer's handler (`self` = this app). Required unless the table is auth.users. */
+  writerSource?: string;
   register?: string;
   static?: string;
   evidence?: string;
@@ -1281,13 +1285,127 @@ export function loadProvenance(repoRoot: string): ProvenanceSidecar {
 
 const filled = (v: unknown): v is string => typeof v === "string" && v.trim() !== "" && !/^(unknown|tbd|todo|—|-)$/i.test(v.trim());
 
+/** Reads files of sibling repos (the writer of a table may live in hockey-api or another app). */
+export interface WorkspaceReader {
+  /** Where it reads from, for messages. */
+  readonly origin: string;
+  read(repo: string, path: string): string | null;
+  /** Every file under `dir` of `repo` (repo-relative paths). */
+  files(repo: string, dir: string): string[];
+}
+
+/** The workspace holding the sibling repos: `TSAI_WORKSPACE_DIR`, default the parent of this repo's main checkout. */
+export function fsWorkspace(repoRoot: string, env: Record<string, string | undefined> = process.env): WorkspaceReader {
+  const dir = env.TSAI_WORKSPACE_DIR ? resolve(env.TSAI_WORKSPACE_DIR) : resolve(repoRoot, "..");
+  const safe = (repo: string) => /^tsai-[a-z0-9-]+$/.test(repo);
+  return {
+    origin: dir,
+    read(repo, path) {
+      if (!safe(repo) || path.includes("..")) return null;
+      const full = join(dir, repo, path);
+      return existsSync(full) && statSync(full).isFile() ? readFileSync(full, "utf8") : null;
+    },
+    files(repo, sub) {
+      if (!safe(repo) || sub.includes("..")) return [];
+      const root = join(dir, repo, sub);
+      if (!existsSync(root)) return [];
+      const out: string[] = [];
+      const walk = (d: string) => {
+        for (const e of readdirSync(d)) {
+          if (SKIP_DIRS.has(e) || e === "__pycache__" || e === "tests") continue;
+          const f = join(d, e);
+          if (statSync(f).isDirectory()) walk(f);
+          else out.push(relative(join(dir, repo), f).split(sep).join("/"));
+        }
+      };
+      walk(root);
+      return out;
+    },
+  };
+}
+
+const escRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** The handler at `line` (1-based): a Python endpoint to the next top-level decorator/def, or a TS window around it. */
+function handlerBody(src: string, line: number, py: boolean): string {
+  const lines = src.split("\n");
+  const i = Math.max(0, line - 1);
+  if (!py) return lines.slice(Math.max(0, i - 40), i + 60).join("\n");
+  // The cited line may be inside the body: back up to the handler's first decorator (or its def).
+  let a = i;
+  while (a > 0 && !/^(@|(async\s+)?def )/.test(lines[a])) a--;
+  while (a > 0 && /^(async\s+)?def /.test(lines[a]) && /^@/.test(lines[a - 1])) a--;
+  while (a > 0 && /^@/.test(lines[a - 1])) a--;
+  let d = a;
+  while (d < lines.length && !/^(async\s+)?def /.test(lines[d])) d++;
+  let j = d + 1;
+  while (j < lines.length && !/^(@|(async\s+)?def |class )/.test(lines[j])) j++;
+  return lines.slice(a, j).join("\n");
+}
+
+/** The ORM classes of hockey-api whose `__tablename__` is `table`. */
+function modelsFor(ws: WorkspaceReader, repo: string, root: string, table: string, cache: Map<string, string[]>): string[] {
+  const key = `${repo}:${root}`;
+  if (!cache.has(key)) {
+    const pairs: string[] = [];
+    for (const f of ws.files(repo, root)) {
+      if (!f.endsWith(".py")) continue;
+      const src = ws.read(repo, f) ?? "";
+      for (const m of allMatches(/^class\s+(\w+)\b[\s\S]*?__tablename__\s*=\s*["']([a-z0-9_]+)["']/gm, src)) pairs.push(`${m[2]}=${m[1]}`);
+    }
+    cache.set(key, pairs);
+  }
+  return (cache.get(key) ?? []).filter((p) => p.startsWith(`${table}=`)).map((p) => p.slice(table.length + 1));
+}
+
+/**
+ * Null when the handler cited by `writerSource` visibly INSERTs / UPSERTs into `table`; otherwise why not.
+ * TS: `.from("<table>")` followed by `.insert(` / `.upsert(`. Python: `INSERT INTO <table>`, or a model of that table
+ * constructed and added (`db.add(`, `add_all(`, `insert(<Model>`, `pg_insert(<Model>`, `bulk_save`, `.merge(`).
+ * A SELECT, an UPDATE or a cookie stamp is not a writer.
+ */
+export function writerProblem(
+  writerSource: string,
+  table: string,
+  tree: SourceTree,
+  ws: WorkspaceReader,
+  cache: Map<string, string[]>,
+): string | null {
+  const m = /^([a-z0-9-]+):(.+?):(\d+)$/.exec(writerSource.trim());
+  if (!m) return `writerSource must be "<repo>:<path>:<line>" (repo "self" for this app), not ${JSON.stringify(writerSource)}`;
+  const [, repo, path, ln] = m;
+  const src = repo === "self" ? tree.read(path) : ws.read(repo, path);
+  if (src === null) return `the writer's handler ${repo}:${path} cannot be read (workspace ${ws.origin}), so it cannot be verified`;
+  const bare = table.replace(/^(hockey_db|supabase:public|public)\./, "");
+  if (bare === table && !/^[a-z0-9_]+$/.test(bare)) return `the table ${JSON.stringify(table)} names no schema-qualified table`;
+  const py = path.endsWith(".py");
+  const body = handlerBody(src, Number(ln), py);
+  if (!py) {
+    const re = new RegExp(`\\.from\\(\\s*["'\`]${escRe(bare)}["'\`]\\s*\\)[\\s\\S]{0,400}?\\.(?:insert|upsert)\\s*\\(`);
+    return re.test(body) ? null : `${repo}:${path}:${ln} does not .insert()/.upsert() into ${bare} (a select, an update or a stamp is not a writer)`;
+  }
+  if (new RegExp(`\\bINSERT\\s+INTO\\s+["']?${escRe(bare)}\\b`, "i").test(body)) return null;
+  const rootDir = path.includes("/app/") ? path.slice(0, path.indexOf("/app/") + 5) : path.split("/").slice(0, -1).join("/");
+  const models = modelsFor(ws, repo, rootDir, bare, cache);
+  if (!models.length) return `no ORM model with __tablename__ "${bare}" under ${repo}:${rootDir}`;
+  for (const mod of models) {
+    const M = escRe(mod);
+    const built = new RegExp(`\\b${M}\\s*\\(`).test(body) && /\.(?:add|add_all|merge)\s*\(|bulk_save/.test(body);
+    const stmt = new RegExp(`\\b(?:pg_insert|insert|sqlite_insert)\\s*\\(\\s*${M}\\b`).test(body);
+    if (built || stmt) return null;
+  }
+  return `${repo}:${path}:${ln} does not insert a ${models.join("/")} row into ${bare} in its own body (a select, an update, or an insert hidden in a helper is not verified)`;
+}
+
 export function judgeProvenance(
   head: Manifest,
   tree: SourceTree,
   sidecar: ProvenanceSidecar,
   rows: Map<string, RegisterRow>,
   config: Pick<GuardConfig, "app" | "rowPrefixes">,
+  ws: WorkspaceReader,
 ): ProvenanceVerdict {
+  const modelCache = new Map<string, string[]>();
   const surfaces = head.entries.filter((e) => PROVENANCE_KINDS.includes(e.kind) && e.polarity === "present");
   const v: ProvenanceVerdict = { surfaces, endpoint: [], register: [], static: [], unresolved: [], invalid: [] };
   if (!surfaces.length) {
@@ -1342,6 +1460,22 @@ export function judgeProvenance(
       if (NOT_A_WRITER.test(writer)) {
         v.invalid.push({ id: e.id, why: `seed scripts, migrations and fixtures never count as a writer: ${JSON.stringify(writer)}` });
         continue;
+      }
+      if ((p.table as string).trim() === "auth.users") {
+        if (!/GoTrue/.test(writer) || p.writerSource) {
+          v.invalid.push({ id: e.id, why: "auth.users is written only by GoTrue sign-up / sign-in: the writer must say so and cite no app handler" });
+          continue;
+        }
+      } else {
+        if (!filled(p.writerSource)) {
+          v.invalid.push({ id: e.id, why: "an endpoint entry must cite its writer's handler as writerSource (<repo>:<path>:<line>)" });
+          continue;
+        }
+        const wp = writerProblem(p.writerSource as string, p.table as string, tree, ws, modelCache);
+        if (wp) {
+          v.invalid.push({ id: e.id, why: `the cited writer does not fill the table: ${wp}` });
+          continue;
+        }
       }
       v.endpoint.push(e.id);
     } else if (shape === "register") {
@@ -1399,12 +1533,14 @@ export function runProvenanceCheck(opts: {
   tree?: SourceTree;
   sidecar?: ProvenanceSidecar;
   registerSource?: RegisterSource;
+  workspace?: WorkspaceReader;
 }): ProvenanceResult {
   const tree = opts.tree ?? fsTree(opts.repoRoot);
   const head = extractSurface(tree, opts.config, { head: true });
   const sidecar = opts.sidecar ?? loadProvenance(opts.repoRoot);
   const src = opts.registerSource ?? loadRegisterSource(opts.repoRoot);
-  const verdict = judgeProvenance(head, tree, sidecar, parseRegister(src.register), opts.config);
+  const ws = opts.workspace ?? fsWorkspace(opts.repoRoot);
+  const verdict = judgeProvenance(head, tree, sidecar, parseRegister(src.register), opts.config, ws);
   const valid = verdict.invalid.length === 0;
   return { verdict, registerOrigin: src.origin, valid, complete: valid && verdict.unresolved.length === 0 };
 }

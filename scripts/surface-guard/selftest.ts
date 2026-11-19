@@ -39,6 +39,7 @@ import {
   type GuardConfig,
   type Manifest,
   type ProvenanceSidecar,
+  type WorkspaceReader,
   type RegisterMap,
   type SourceTree,
   type SurfaceEntry,
@@ -266,8 +267,30 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
   const surfaces = head.entries.filter((e) => PROVENANCE_KINDS.includes(e.kind) && e.polarity === "present");
   assert.ok(surfaces.length > 0, "provenance self-test: no route or tab at HEAD");
   const all = (): ProvenanceSidecar => ({ surfaces: Object.fromEntries(surfaces.map((e) => [e.id, { register: `${prefix}901` }])) });
+  // A neutral workspace: one sibling repo holding a hockey-api-style model and handlers, and a TS writer.
+  const probeRepo: Record<string, string> = {
+    "svc/app/models.py": 'class ProbeItem(Base):\n    __tablename__ = "probe_items"\n',
+    "svc/app/endpoints.py": [
+      '@router.post("/probe-items")',
+      "async def create_probe(db):",
+      "    db.add(ProbeItem(x=1))",
+      '@router.get("/probe-items")',
+      "async def list_probe(db):",
+      "    return db.query(ProbeItem).all()",
+      '@router.post("/probe-items/hidden")',
+      "async def hidden(db):",
+      "    return create_probe_item(db)",
+      "",
+    ].join("\n"),
+    "web/route.ts": 'export async function POST() {\n  await db.from("probe_rows").insert({ a: 1 });\n}\nexport async function GET() {\n  return db.from("probe_reads").select("*");\n}\n',
+  };
+  const ws: WorkspaceReader = {
+    origin: "neutral",
+    read: (repo, path) => (repo === "tsai-probe" ? probeRepo[path] ?? null : null),
+    files: (repo, dir) => (repo === "tsai-probe" ? Object.keys(probeRepo).filter((f) => f.startsWith(dir)) : []),
+  };
   const judgeOn = (sc: ProvenanceSidecar, tree: SourceTree = base) =>
-    judgeProvenance(extractSurface(tree, config, { head: true }), tree, sc, rows, config);
+    judgeProvenance(extractSurface(tree, config, { head: true }), tree, sc, rows, config, ws);
   const invalidFor = (sc: ProvenanceSidecar, id: string, why: RegExp, what: string) => {
     const v = judgeOn(sc);
     assert.ok(v.invalid.some((i) => i.id === id && why.test(i.why)), `${what}: must be invalid (${why}); got ${JSON.stringify(v.invalid.slice(0, 3))}`);
@@ -307,9 +330,25 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
   checks += 2;
 
   // ── 3. endpoint entries: table and a real writer are required ──
-  const ok3 = judgeOn(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "hockey_db.probe", writer: "user-action: POST /api/v1/probe" }));
-  assert.ok(ok3.endpoint.includes(target.id) && !ok3.invalid.length, "a complete endpoint entry is valid");
+  const ok3 = judgeOn(withEntry({ endpoint: "hockey-api GET /api/v1/probe-items", table: "hockey_db.probe_items", writer: "user-action: POST /api/v1/probe-items", writerSource: "tsai-probe:svc/app/endpoints.py:1" }));
+  assert.ok(ok3.endpoint.includes(target.id) && !ok3.invalid.length, `a complete endpoint entry whose handler inserts is valid: ${JSON.stringify(ok3.invalid)}`);
+  const ok3b = judgeOn(withEntry({ endpoint: "x", table: "supabase:public.probe_rows", writer: "user-action: POST web/route", writerSource: "tsai-probe:web/route.ts:2" }));
+  assert.ok(ok3b.endpoint.includes(target.id) && !ok3b.invalid.length, `a TS handler that .insert()s is a writer: ${JSON.stringify(ok3b.invalid)}`);
+  const okAuth = judgeOn(withEntry({ endpoint: "GoTrue", table: "auth.users", writer: "user-action: GoTrue sign-up / sign-in" }));
+  assert.ok(okAuth.endpoint.includes(target.id), "auth.users written by GoTrue is valid without a handler");
+  checks += 3;
+  // The cited handler must INSERT into the named table: a select, a helper call, another table or no citation fail.
+  invalidFor(withEntry({ endpoint: "x", table: "hockey_db.probe_items", writer: "user-action: POST /api/v1/probe-items" }), target.id, /writerSource/, "no writerSource");
+  const mid = judgeOn(withEntry({ endpoint: "x", table: "hockey_db.probe_items", writer: "user-action: POST /api/v1/probe-items", writerSource: "tsai-probe:svc/app/endpoints.py:3" }));
+  assert.ok(mid.endpoint.includes(target.id), "a citation inside the handler body resolves to that handler");
   checks++;
+  invalidFor(withEntry({ endpoint: "x", table: "hockey_db.probe_items", writer: "user-action: POST /x", writerSource: "tsai-probe:svc/app/endpoints.py:6" }), target.id, /does not insert/, "a handler that only selects (cited inside its body)");
+  invalidFor(withEntry({ endpoint: "x", table: "hockey_db.probe_items", writer: "user-action: POST /x", writerSource: "tsai-probe:svc/app/endpoints.py:7" }), target.id, /does not insert/, "an insert hidden in a helper");
+  invalidFor(withEntry({ endpoint: "x", table: "hockey_db.other_items", writer: "user-action: POST /x", writerSource: "tsai-probe:svc/app/endpoints.py:1" }), target.id, /no ORM model/, "a handler that inserts another table");
+  invalidFor(withEntry({ endpoint: "x", table: "supabase:public.probe_reads", writer: "user-action: GET web/route", writerSource: "tsai-probe:web/route.ts:5" }), target.id, /does not .insert/, "a TS handler that only selects");
+  invalidFor(withEntry({ endpoint: "x", table: "supabase:public.probe_rows", writer: "user-action: x", writerSource: "tsai-nope:web/route.ts:2" }), target.id, /cannot be read/, "an unreadable handler");
+  invalidFor(withEntry({ endpoint: "x", table: "supabase:public.probe_rows", writer: "user-action: x", writerSource: "web/route.ts" }), target.id, /must be "<repo>/, "a malformed writerSource");
+  invalidFor(withEntry({ endpoint: "x", table: "auth.users", writer: "user-action: some app route" }), target.id, /GoTrue/, "auth.users with a non-GoTrue writer");
   invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", writer: "user-action: POST /api/v1/probe" }), target.id, /must name table/, "an endpoint with no table");
   invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "hockey_db.probe" }), target.id, /must name writer/, "an endpoint with no writer");
   invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "unknown", writer: "user-action: x" }), target.id, /must name table/, "an `unknown` table");
@@ -386,7 +425,7 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
   assert.throws(() => loadProvenance(join(tmpdir(), "surface-guard-no-such-app")), /missing/, "a missing sidecar must fail, never pass");
   assert.throws(() => parseProvenance("{", "probe"), /not valid JSON/, "a broken sidecar must fail");
   assert.throws(() => parseProvenance("{}", "probe"), /no "surfaces"/, "a sidecar with no surfaces object must fail");
-  const none = judgeProvenance({ ...head, entries: head.entries.filter((e) => !PROVENANCE_KINDS.includes(e.kind)) }, base, all(), rows, config);
+  const none = judgeProvenance({ ...head, entries: head.entries.filter((e) => !PROVENANCE_KINDS.includes(e.kind)) }, base, all(), rows, config, ws);
   assert.ok(none.invalid.length > 0, "an extractor that finds no routed surface must fail, never pass");
   checks += 4;
 
