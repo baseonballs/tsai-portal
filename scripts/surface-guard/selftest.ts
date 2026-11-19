@@ -22,14 +22,20 @@ import {
   extractSurface,
   fsTree,
   judge,
+  judgeProvenance,
+  loadProvenance,
   loadRegisterSource,
   manifestJson,
   overlayTree,
   parseLedger,
+  parseProvenance,
   parseRegister,
+  PROVENANCE_KINDS,
   runCheck,
+  runProvenanceCheck,
   type GuardConfig,
   type Manifest,
+  type ProvenanceSidecar,
   type RegisterMap,
   type SourceTree,
   type SurfaceEntry,
@@ -239,5 +245,111 @@ export function runSelfTest(o: SelfTestOptions): number {
   assert.throws(check([committed, forged]), /not an ancestor|not in/, "a release manifest from a commit outside HEAD's history is refused");
   checks += 3;
 
+  return checks;
+}
+
+/**
+ * The provenance half's own gate (T2.1 / T2.2), identical in the four apps. Every case runs against this tree (or an
+ * overlay of it) and the neutral register above, and must come out as stated: a check that cannot fail is not a check.
+ */
+export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }): number {
+  const { root, config } = o;
+  const prefix = config.rowPrefixes[0];
+  const base = fsTree(root);
+  const head = extractSurface(base, config, { head: true });
+  const { register, ledger } = neutralRegister(config.app, prefix);
+  const rows = parseRegister(register);
+  const surfaces = head.entries.filter((e) => PROVENANCE_KINDS.includes(e.kind) && e.polarity === "present");
+  assert.ok(surfaces.length > 0, "provenance self-test: no route or tab at HEAD");
+  const all = (): ProvenanceSidecar => ({ surfaces: Object.fromEntries(surfaces.map((e) => [e.id, { register: `${prefix}901` }])) });
+  const judgeOn = (sc: ProvenanceSidecar, tree: SourceTree = base) =>
+    judgeProvenance(extractSurface(tree, config, { head: true }), tree, sc, rows, config);
+  const invalidFor = (sc: ProvenanceSidecar, id: string, why: RegExp, what: string) => {
+    const v = judgeOn(sc);
+    assert.ok(v.invalid.some((i) => i.id === id && why.test(i.why)), `${what}: must be invalid (${why}); got ${JSON.stringify(v.invalid.slice(0, 3))}`);
+    checks++;
+  };
+  let checks = 0;
+  const target = surfaces[0];
+  const withEntry = (entry: unknown): ProvenanceSidecar => {
+    const sc = all();
+    (sc.surfaces as Record<string, unknown>)[target.id] = entry;
+    return sc;
+  };
+
+  // ── 1. every surface mapped to an open row of this app: complete ──
+  const full = judgeOn(all());
+  assert.equal(full.invalid.length, 0, `a fully mapped sidecar must be valid: ${JSON.stringify(full.invalid.slice(0, 3))}`);
+  assert.equal(full.unresolved.length, 0, "a fully mapped sidecar leaves nothing unresolved");
+  checks++;
+
+  // ── 2. a surface with no entry is UNRESOLVED; a NEW route with no entry is UNRESOLVED ──
+  const missing = all();
+  delete missing.surfaces[target.id];
+  assert.deepEqual(judgeOn(missing).unresolved.map((u) => u.id), [target.id], "a surface with no entry must be unresolved");
+  checks++;
+  const dir = config.appDirs[0];
+  const probe = `${dir}/surface-guard-provenance-probe/page.tsx`;
+  const added = judgeOn(all(), overlayTree(base, { [probe]: "export default function Probe() { return null; }\n" }));
+  assert.deepEqual(added.unresolved.map((u) => u.id), ["route:/surface-guard-provenance-probe"], "a new route with no entry must be unresolved");
+  const strictNew = runProvenanceCheck({
+    repoRoot: root,
+    config,
+    tree: overlayTree(base, { [probe]: "export default function Probe() { return null; }\n" }),
+    sidecar: all(),
+    registerSource: { origin: "neutral", register, ledger },
+  });
+  assert.ok(strictNew.valid && !strictNew.complete, "strict mode must refuse a new route with no provenance; report mode must not");
+  checks += 2;
+
+  // ── 3. endpoint entries: table and a real writer are required ──
+  const ok3 = judgeOn(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "hockey_db.probe", writer: "user-action: POST /api/v1/probe" }));
+  assert.ok(ok3.endpoint.includes(target.id) && !ok3.invalid.length, "a complete endpoint entry is valid");
+  checks++;
+  invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", writer: "user-action: POST /api/v1/probe" }), target.id, /must name table/, "an endpoint with no table");
+  invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "hockey_db.probe" }), target.id, /must name writer/, "an endpoint with no writer");
+  invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "unknown", writer: "user-action: x" }), target.id, /must name table/, "an `unknown` table");
+  invalidFor(withEntry({ endpoint: "x", table: "t", writer: "importer: scripts/seed_probe.py" }), target.id, /never count/, "a seed script as the writer");
+  invalidFor(withEntry({ endpoint: "x", table: "t", writer: "importer: alembic migration 0042" }), target.id, /never count/, "a migration as the writer");
+  invalidFor(withEntry({ endpoint: "x", table: "t", writer: "seed.sql" }), target.id, /must be "user-action/, "a writer with no real kind");
+
+  // ── 4. register entries: an OPEN row of this app only ──
+  assert.ok(judgeOn(withEntry({ register: `${prefix}901` })).register.includes(target.id), "an open row of this app is valid");
+  checks++;
+  invalidFor(withEntry({ register: `${prefix}902` }), target.id, /only an OPEN/, "a CLOSED row");
+  invalidFor(withEntry({ register: `${prefix}905` }), target.id, /only an OPEN/, "a row in an unknown state");
+  invalidFor(withEntry({ register: `${prefix}999` }), target.id, /not in gap-register/, "a missing row");
+  invalidFor(withEntry({ register: "ZZ-903" }), target.id, /belongs to/, "another app's row");
+
+  // ── 5. shape ──
+  invalidFor(withEntry({ register: `${prefix}901`, static: "x" }), target.id, /exactly one/, "two shapes at once");
+  invalidFor(withEntry({}), target.id, /exactly one/, "an empty entry");
+  invalidFor(withEntry({ register: `${prefix}901`, writer: "user-action: x" }), target.id, /may not carry/, "a stray field");
+  const stale = all();
+  stale.surfaces["route:/surface-guard-no-such-route"] = { register: `${prefix}901` };
+  invalidFor(stale, "route:/surface-guard-no-such-route", /stale/, "an entry for a surface that does not exist");
+
+  // ── 6. static: the tripwire refuses a static surface whose module reads data ──
+  const page = surfaces.find((e) => e.kind === "route" && e.label === "page" && base.read(e.source) !== null);
+  assert.ok(page, "provenance self-test: no page module at HEAD");
+  const st: ProvenanceSidecar = { surfaces: { ...all().surfaces, [page.id]: { static: "probe" } } };
+  const fetching = overlayTree(base, { [page.source]: `${base.read(page.source)}\nexport async function probe() { return fetch("/api/probe"); }\n` });
+  const sv = judgeOn(st, fetching);
+  assert.ok(sv.invalid.some((i) => i.id === page.id && /reads data/.test(i.why)), "a static surface that fetches must be invalid");
+  const empty: ProvenanceSidecar = { surfaces: { ...all().surfaces, [page.id]: { static: "" } } };
+  assert.ok(judgeOn(empty).invalid.some((i) => i.id === page.id), "a static entry with no reason is invalid");
+  checks += 2;
+
+  // ── 7. fail loudly ──
+  assert.throws(() => loadProvenance(join(tmpdir(), "surface-guard-no-such-app")), /missing/, "a missing sidecar must fail, never pass");
+  assert.throws(() => parseProvenance("{", "probe"), /not valid JSON/, "a broken sidecar must fail");
+  assert.throws(() => parseProvenance("{}", "probe"), /no "surfaces"/, "a sidecar with no surfaces object must fail");
+  const none = judgeProvenance({ ...head, entries: head.entries.filter((e) => !PROVENANCE_KINDS.includes(e.kind)) }, base, all(), rows, config);
+  assert.ok(none.invalid.length > 0, "an extractor that finds no routed surface must fail, never pass");
+  checks += 4;
+
+  // ── 8. the committed sidecar is the one the suite reads ──
+  loadProvenance(root);
+  checks++;
   return checks;
 }

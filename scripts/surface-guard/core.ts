@@ -1,5 +1,6 @@
 /**
- * surface-guard — the REMOVAL half (T0.7, GA-029 §7.1–7.6).
+ * surface-guard — the REMOVAL half (T0.7, GA-029 §7.1–7.6) and the PROVENANCE half (T2.1 / T2.2; see the end of
+ * this file and `provenance.json`).
  *
  * The same file lives in Periodical, Spotlight, Portal and Watson (`scripts/surface-guard/core.ts`). Only
  * `config.ts` and `register-map.json` differ per app. Keep the four copies identical: a fix here is a fix in all four.
@@ -1084,6 +1085,223 @@ export function formatReport(r: CheckResult, app: string): string {
         "hide a future removal), or this is a mapping for a marker not yet on this branch (it resolves when that branch merges):",
     );
     for (const s of v.stale) lines.push(`  ${s}`);
+  }
+  return lines.join("\n");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+// The PROVENANCE half (T2.1 / T2.2, GOV-REAL-DATA-001 rule 5)
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+//
+// `scripts/surface-guard/provenance.json` says, for each routed surface the extractor finds (every `route` and
+// every in-page `tab`), where its data comes from. Keys are the extracted surface ids — never a hand-kept route list —
+// so a new route or tab shows up as UNRESOLVED until someone states its source. An entry is exactly one of:
+//   { endpoint, table, writer }  the backend endpoint it reads, the table behind it, and the REAL writer that fills
+//                                that table: `user-action: …`, `importer: …` or `sync: …`. Seed scripts, migrations
+//                                and fixtures never count.
+//   { register: "<row id>" }     an OPEN (or AWAITING OWNER) gap-register row of THIS app that explains why there is
+//                                no live source yet.
+//   { static: "<why>" }          the surface renders no domain data (legal text, a redirect, a sign-in form). Its own
+//                                module may not fetch: a tripwire refuses a `static` surface whose source reads data.
+// The check fails on an invalid entry (always) and on an unresolved surface (strict mode: `check:provenance`, which
+// the bifrost release preflight runs). Report mode (`pnpm test`) prints the unresolved count and fails only on
+// invalid entries, a missing sidecar or an unreadable register.
+
+export const PROVENANCE_FILE = "scripts/surface-guard/provenance.json";
+/** The surface kinds that carry data and so need provenance. Menu entries, aliases and role destinations point at them. */
+export const PROVENANCE_KINDS: readonly string[] = ["route", "tab"];
+export const WRITER_KINDS: readonly string[] = ["user-action", "importer", "sync"];
+/** A word starting with one of these (so `seed_teams.py`, `migrations/`, `fixtures` all match) is not a writer. */
+const NOT_A_WRITER = /(?<![A-Za-z])(seed|migrat|alembic|fixture|sample|mock|demo)/i;
+const OPEN_STATE = /^(OPEN|AWAITING OWNER)\b/;
+/** Reading data from a module that claims to be `static`. Applied to the comment-stripped source of the surface. */
+const READS_DATA = /\bfetch\s*\(|\.from\s*\(\s*["'`]|\.rpc\s*\(|\bcreateHockeyClient\s*\(|\bhockeyApi(?:Fetch)?\s*\(|\buseSWR\s*\(|\buseQuery\s*\(/;
+const ENTRY_KEYS: Record<"endpoint" | "register" | "static", string[]> = {
+  endpoint: ["endpoint", "table", "writer", "evidence", "note"],
+  register: ["register", "via", "evidence", "note"],
+  static: ["static", "note"],
+};
+
+export interface ProvenanceEntry {
+  endpoint?: string;
+  table?: string;
+  writer?: string;
+  register?: string;
+  static?: string;
+  evidence?: string;
+  via?: string;
+  note?: string;
+}
+
+export interface ProvenanceSidecar {
+  surfaces: Record<string, ProvenanceEntry>;
+}
+
+export interface ProvenanceVerdict {
+  /** Every surface of a provenance kind at HEAD. */
+  surfaces: SurfaceEntry[];
+  endpoint: string[];
+  register: string[];
+  static: string[];
+  unresolved: SurfaceEntry[];
+  invalid: { id: string; why: string }[];
+}
+
+export function parseProvenance(raw: string, from: string): ProvenanceSidecar {
+  let data: unknown;
+  try {
+    data = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`surface-guard: ${from} is not valid JSON: ${err instanceof Error ? err.message : err}`);
+  }
+  const s = (data as { surfaces?: unknown } | null)?.surfaces;
+  if (!s || typeof s !== "object" || Array.isArray(s)) throw new Error(`surface-guard: ${from} has no "surfaces" object`);
+  return data as ProvenanceSidecar;
+}
+
+export function loadProvenance(repoRoot: string): ProvenanceSidecar {
+  const full = join(repoRoot, PROVENANCE_FILE);
+  if (!existsSync(full)) throw new Error(`surface-guard: ${PROVENANCE_FILE} is missing — every routed surface must state its provenance`);
+  return parseProvenance(readFileSync(full, "utf8"), PROVENANCE_FILE);
+}
+
+const filled = (v: unknown): v is string => typeof v === "string" && v.trim() !== "" && !/^(unknown|tbd|todo|—|-)$/i.test(v.trim());
+
+export function judgeProvenance(
+  head: Manifest,
+  tree: SourceTree,
+  sidecar: ProvenanceSidecar,
+  rows: Map<string, RegisterRow>,
+  config: Pick<GuardConfig, "app" | "rowPrefixes">,
+): ProvenanceVerdict {
+  const surfaces = head.entries.filter((e) => PROVENANCE_KINDS.includes(e.kind) && e.polarity === "present");
+  const v: ProvenanceVerdict = { surfaces, endpoint: [], register: [], static: [], unresolved: [], invalid: [] };
+  if (!surfaces.length) {
+    v.invalid.push({ id: "(all)", why: "the extractor found no route or tab at HEAD — it is out of date, which is never a pass" });
+    return v;
+  }
+  const byId = new Map(surfaces.map((e) => [e.id, e]));
+  for (const id of Object.keys(sidecar.surfaces).sort()) {
+    if (!byId.has(id)) v.invalid.push({ id, why: "stale: no such route or tab at HEAD (delete the entry, so it cannot describe a future surface)" });
+  }
+  for (const e of surfaces) {
+    const p = sidecar.surfaces[e.id];
+    if (p === undefined) {
+      v.unresolved.push(e);
+      continue;
+    }
+    if (!p || typeof p !== "object" || Array.isArray(p)) {
+      v.invalid.push({ id: e.id, why: "the entry is not an object" });
+      continue;
+    }
+    const shapes = (["endpoint", "register", "static"] as const).filter((k) => k in p);
+    if (shapes.length !== 1) {
+      v.invalid.push({ id: e.id, why: `an entry is exactly one of {endpoint, table, writer}, {register} or {static}; this one has ${shapes.length ? shapes.join(" + ") : "none"}` });
+      continue;
+    }
+    const shape = shapes[0];
+    const extra = Object.keys(p).filter((k) => !ENTRY_KEYS[shape].includes(k));
+    if (extra.length) {
+      v.invalid.push({ id: e.id, why: `a ${shape} entry may not carry ${extra.join(", ")}` });
+      continue;
+    }
+    if (shape === "endpoint") {
+      const missing = (["endpoint", "table", "writer"] as const).filter((k) => !filled(p[k]));
+      if (missing.length) {
+        v.invalid.push({ id: e.id, why: `an entry with an endpoint must name ${missing.join(", ")}` });
+        continue;
+      }
+      const writer = p.writer as string;
+      const kind = writer.split(":")[0].trim();
+      if (!WRITER_KINDS.includes(kind) || !filled(writer.slice(writer.indexOf(":") + 1))) {
+        v.invalid.push({ id: e.id, why: `the writer must be "user-action: …", "importer: …" or "sync: …", not ${JSON.stringify(writer)}` });
+        continue;
+      }
+      if (NOT_A_WRITER.test(writer)) {
+        v.invalid.push({ id: e.id, why: `seed scripts, migrations and fixtures never count as a writer: ${JSON.stringify(writer)}` });
+        continue;
+      }
+      v.endpoint.push(e.id);
+    } else if (shape === "register") {
+      const id = String(p.register ?? "").trim();
+      const row = rows.get(id);
+      if (!row) {
+        v.invalid.push({ id: e.id, why: `register row ${JSON.stringify(id)} is not in gap-register.md` });
+        continue;
+      }
+      if (row.surface !== config.app || !config.rowPrefixes.some((x) => row.id.startsWith(x))) {
+        v.invalid.push({ id: e.id, why: `row ${row.id} belongs to ${row.surface}, not ${config.app}` });
+        continue;
+      }
+      if (!OPEN_STATE.test(row.state.trim().toUpperCase())) {
+        v.invalid.push({ id: e.id, why: `row ${row.id} is "${row.state}": only an OPEN (or AWAITING OWNER) row explains a missing live source` });
+        continue;
+      }
+      v.register.push(e.id);
+    } else {
+      if (!filled(p.static)) {
+        v.invalid.push({ id: e.id, why: "a static entry must say why the surface renders no domain data" });
+        continue;
+      }
+      const src = tree.read(e.source);
+      if (src === null) {
+        v.invalid.push({ id: e.id, why: `its source ${e.source} cannot be read, so "static" cannot be checked` });
+        continue;
+      }
+      const hit = READS_DATA.exec(stripComments(src));
+      if (hit) {
+        v.invalid.push({ id: e.id, why: `marked static, but ${e.source} reads data (${JSON.stringify(hit[0])}): state its endpoint, table and writer` });
+        continue;
+      }
+      v.static.push(e.id);
+    }
+  }
+  return v;
+}
+
+export interface ProvenanceResult {
+  verdict: ProvenanceVerdict;
+  registerOrigin: string;
+  /** No invalid entry (report mode passes). */
+  valid: boolean;
+  /** Valid AND nothing unresolved (strict mode: the release check). */
+  complete: boolean;
+}
+
+export function runProvenanceCheck(opts: {
+  repoRoot: string;
+  config: GuardConfig;
+  tree?: SourceTree;
+  sidecar?: ProvenanceSidecar;
+  registerSource?: RegisterSource;
+}): ProvenanceResult {
+  const tree = opts.tree ?? fsTree(opts.repoRoot);
+  const head = extractSurface(tree, opts.config, { head: true });
+  const sidecar = opts.sidecar ?? loadProvenance(opts.repoRoot);
+  const src = opts.registerSource ?? loadRegisterSource(opts.repoRoot);
+  const verdict = judgeProvenance(head, tree, sidecar, parseRegister(src.register), opts.config);
+  const valid = verdict.invalid.length === 0;
+  return { verdict, registerOrigin: src.origin, valid, complete: valid && verdict.unresolved.length === 0 };
+}
+
+export function formatProvenanceReport(r: ProvenanceResult, app: string, strict: boolean): string {
+  const v = r.verdict;
+  const lines = [
+    `surface-guard provenance (${app}, ${strict ? "strict" : "report mode"}): ${v.surfaces.length} routed surfaces; ` +
+      `${v.endpoint.length} mapped to an endpoint, ${v.register.length} to an open register row, ${v.static.length} static, ` +
+      `${v.unresolved.length} UNRESOLVED, ${v.invalid.length} invalid.`,
+    `register: ${r.registerOrigin}`,
+  ];
+  if (v.invalid.length) {
+    lines.push("", "INVALID provenance entries:");
+    for (const i of v.invalid) lines.push(`  ${i.id}: ${i.why}`);
+  }
+  if (v.unresolved.length) {
+    lines.push(
+      "",
+      `UNRESOLVED — no entry in ${PROVENANCE_FILE} (state its endpoint, table and real writer, or the open register row that explains the gap):`,
+    );
+    for (const u of v.unresolved) lines.push(`  ${u.id}  (${u.source})`);
   }
   return lines.join("\n");
 }
