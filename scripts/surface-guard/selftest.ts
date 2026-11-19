@@ -283,16 +283,54 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
       "",
     ].join("\n"),
     "web/route.ts": 'export async function POST() {\n  await db.from("probe_rows").insert({ a: 1 });\n}\nexport async function GET() {\n  return db.from("probe_reads").select("*");\n}\n',
+    // Symbol citations: a method, a multi-line signature, a name defined twice.
+    "svc/app/service.py": [
+      "class ProbeService:",
+      "    async def save(self, db):",
+      "        db.add(ProbeItem(x=1))",
+      "",
+      "    async def read(self, db):",
+      "        return db.query(ProbeItem).all()",
+      "",
+      "async def create_multi(",
+      "    db,",
+      ") -> None:",
+      "    # a comment's apostrophe isn't a quote",
+      "    db.add(ProbeItem(x=1))",
+      "",
+      "def twice(db):",
+      "    db.add(ProbeItem(x=1))",
+      "",
+      "def twice(db):",
+      "    db.add(ProbeItem(x=2))",
+      "",
+    ].join("\n"),
+    "web/service.ts": [
+      "// a comment's apostrophe isn't a quote",
+      "export class ProbeStore {",
+      "  async save(): Promise<{ ok: boolean }> {",
+      '    await db.from("probe_rows").insert({ a: 1 });',
+      "    return { ok: true };",
+      "  }",
+      "  async read() {",
+      '    return db.from("probe_rows").select("*");',
+      "  }",
+      "}",
+      "export const saveArrow = async () => {",
+      '  await db.from("probe_rows").upsert({ a: 1 });',
+      "};",
+      "",
+    ].join("\n"),
   };
   const ws: WorkspaceReader = {
     origin: "neutral",
     read: (repo, path) => (repo === "tsai-probe" ? probeRepo[path] ?? null : null),
     files: (repo, dir) => (repo === "tsai-probe" ? Object.keys(probeRepo).filter((f) => f.startsWith(dir)) : []),
   };
-  const judgeOn = (sc: ProvenanceSidecar, tree: SourceTree = base) =>
-    judgeProvenance(extractSurface(tree, config, { head: true }), tree, sc, rows, config, ws);
-  const invalidFor = (sc: ProvenanceSidecar, id: string, why: RegExp, what: string) => {
-    const v = judgeOn(sc);
+  const judgeOn = (sc: ProvenanceSidecar, tree: SourceTree = base, strict = false) =>
+    judgeProvenance(extractSurface(tree, config, { head: true }), tree, sc, rows, config, ws, { strict });
+  const invalidFor = (sc: ProvenanceSidecar, id: string, why: RegExp, what: string, strict = false) => {
+    const v = judgeOn(sc, base, strict);
     assert.ok(v.invalid.some((i) => i.id === id && why.test(i.why)), `${what}: must be invalid (${why}); got ${JSON.stringify(v.invalid.slice(0, 3))}`);
     checks++;
   };
@@ -349,6 +387,44 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
   invalidFor(withEntry({ endpoint: "x", table: "supabase:public.probe_rows", writer: "user-action: x", writerSource: "tsai-nope:web/route.ts:2" }), target.id, /cannot be read/, "an unreadable handler");
   invalidFor(withEntry({ endpoint: "x", table: "supabase:public.probe_rows", writer: "user-action: x", writerSource: "web/route.ts" }), target.id, /must be "<repo>/, "a malformed writerSource");
   invalidFor(withEntry({ endpoint: "x", table: "auth.users", writer: "user-action: some app route" }), target.id, /GoTrue/, "auth.users with a non-GoTrue writer");
+
+  // ── 3b. symbol citations (<repo>:<path>#<function>): resolved by parsing, never by line, and fail closed ──
+  const hp = (ws: string, table = "hockey_db.probe_items") => withEntry({ endpoint: "x", table, writer: "user-action: POST /api/v1/probe-items", writerSource: ws });
+  for (const [cite, table, what] of [
+    ["tsai-probe:svc/app/endpoints.py#create_probe", "hockey_db.probe_items", "a Python function that inserts"],
+    ["tsai-probe:svc/app/service.py#ProbeService.save", "hockey_db.probe_items", "a Python Class.method that inserts"],
+    ["tsai-probe:svc/app/service.py#create_multi", "hockey_db.probe_items", "a Python function with a multi-line signature"],
+    ["tsai-probe:web/route.ts#POST", "supabase:public.probe_rows", "a TS route handler that .insert()s"],
+    ["tsai-probe:web/service.ts#ProbeStore.save", "supabase:public.probe_rows", "a TS Class.method that .insert()s"],
+    ["tsai-probe:web/service.ts#saveArrow", "supabase:public.probe_rows", "a TS const arrow that .upsert()s"],
+  ] as const) {
+    for (const strict of [false, true]) {
+      const v = judgeOn(hp(cite, table), base, strict);
+      assert.ok(v.endpoint.includes(target.id) && !v.invalid.length, `${what} (${cite}, strict=${strict}) is a writer: ${JSON.stringify(v.invalid)}`);
+      checks++;
+    }
+  }
+  invalidFor(hp("tsai-probe:svc/app/endpoints.py#no_such_fn"), target.id, /defines no function no_such_fn/, "a symbol that is not defined");
+  invalidFor(hp("tsai-probe:svc/app/service.py#NoSuchClass.save"), target.id, /defines no class NoSuchClass/, "a method of a class that is not defined");
+  invalidFor(hp("tsai-probe:svc/app/service.py#ProbeService.gone"), target.id, /defines no function ProbeService.gone/, "a method that is not defined");
+  invalidFor(hp("tsai-probe:svc/app/service.py#twice"), target.id, /twice 2 times \(ambiguous\)/, "a symbol defined twice");
+  invalidFor(hp("tsai-probe:svc/app/endpoints.py#list_probe"), target.id, /does not insert/, "a Python symbol that only selects");
+  invalidFor(hp("tsai-probe:svc/app/endpoints.py#hidden"), target.id, /does not insert/, "a Python symbol whose insert is hidden in a helper");
+  invalidFor(hp("tsai-probe:svc/app/service.py#ProbeService.read"), target.id, /does not insert/, "a Python method that only selects (its sibling inserts)");
+  invalidFor(hp("tsai-probe:web/route.ts#GET", "supabase:public.probe_rows"), target.id, /does not .insert/, "a TS symbol that only selects (its sibling inserts)");
+  invalidFor(hp("tsai-probe:web/service.ts#ProbeStore.read", "supabase:public.probe_rows"), target.id, /does not .insert/, "a TS method that only selects");
+  invalidFor(hp("tsai-probe:web/service.ts#ProbeStore.gone", "supabase:public.probe_rows"), target.id, /defines no method/, "a TS method that is not defined");
+  invalidFor(hp("tsai-probe:svc/app/endpoints.py#not a name"), target.id, /must be "<repo>/, "a symbol that is not a function name");
+  // A `:line` citation into ANOTHER repo drifts on its unrelated edits: strict refuses it; a `self` line stays allowed.
+  invalidFor(hp("tsai-probe:svc/app/endpoints.py:1"), target.id, /cites a line in another repo/, "a cross-repo line citation in strict mode", true);
+  const selfWriter = "scripts/surface-guard-probe-writer.ts";
+  const selfTree = overlayTree(base, { [selfWriter]: 'export async function POST() {\n  await db.from("probe_rows").insert({ a: 1 });\n}\n' });
+  const selfLine = judgeOn(withEntry({ endpoint: "x", table: "supabase:public.probe_rows", writer: "user-action: POST x", writerSource: `self:${selfWriter}:2` }), selfTree, true);
+  assert.ok(selfLine.endpoint.includes(target.id) && !selfLine.invalid.length, `a self line citation is still allowed in strict mode: ${JSON.stringify(selfLine.invalid)}`);
+  const strictLine = runProvenanceCheck({ repoRoot: root, config, sidecar: hp("tsai-probe:svc/app/endpoints.py:1"), registerSource: { origin: "neutral", register, ledger }, workspace: ws, strict: true });
+  const reportLine = runProvenanceCheck({ repoRoot: root, config, sidecar: hp("tsai-probe:svc/app/endpoints.py:1"), registerSource: { origin: "neutral", register, ledger }, workspace: ws });
+  assert.ok(!strictLine.valid && reportLine.valid, "the release check (strict) refuses a cross-repo line citation; report mode still accepts it");
+  checks += 2;
   invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", writer: "user-action: POST /api/v1/probe" }), target.id, /must name table/, "an endpoint with no table");
   invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "hockey_db.probe" }), target.id, /must name writer/, "an endpoint with no writer");
   invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "unknown", writer: "user-action: x" }), target.id, /must name table/, "an `unknown` table");

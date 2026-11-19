@@ -1099,7 +1099,8 @@ export function formatReport(r: CheckResult, app: string): string {
 //   { endpoint, table, writer }  the backend endpoint it reads, the table behind it, and the REAL writer that fills
 //                                that table: `user-action: …`, `importer: …` or `sync: …`. Seed scripts, migrations,
 //                                fixtures, and GET / HEAD / OPTIONS / DELETE endpoints never count; an audit table is
-//                                never the backing table. `writerSource` (<repo>:<path>:<line>) cites the handler, and
+//                                never the backing table. `writerSource` cites the handler as <repo>:<path>#<function>
+//                                (or `Class.method`; a `self` citation may still be <path>:<line>), and
 //                                the check reads it (sibling repos from TSAI_WORKSPACE_DIR) and refuses one that does
 //                                not INSERT / UPSERT into the named table. auth.users is written by GoTrue only.
 //   { register: "<row id>" }     an OPEN (or AWAITING OWNER) gap-register row of THIS app that explains why there is
@@ -1242,7 +1243,7 @@ export interface ProvenanceEntry {
   endpoint?: string;
   table?: string;
   writer?: string;
-  /** `<repo>:<path>:<line>` of the writer's handler (`self` = this app). Required unless the table is auth.users. */
+  /** `<repo>:<path>#<function>` of the writer's handler (`self` = this app; a `self` one may be `:<line>`). Required unless the table is auth.users. */
   writerSource?: string;
   register?: string;
   static?: string;
@@ -1326,6 +1327,174 @@ export function fsWorkspace(repoRoot: string, env: Record<string, string | undef
 
 const escRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/** A function symbol a writerSource may cite: `name` or `Class.method`. */
+const SYMBOL = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?$/;
+
+/** A parsed writerSource: `<repo>:<path>:<line>` (drifts on unrelated edits) or `<repo>:<path>#<symbol>` (does not). */
+export type WriterCitation = { repo: string; path: string; line: number } | { repo: string; path: string; symbol: string };
+
+export function parseWriterSource(writerSource: string): WriterCitation | null {
+  const s = writerSource.trim();
+  const sym = /^([a-z0-9-]+):([^#:]+)#([^#]+)$/.exec(s);
+  if (sym) return SYMBOL.test(sym[3]) ? { repo: sym[1], path: sym[2], symbol: sym[3] } : null;
+  const ln = /^([a-z0-9-]+):([^#]+?):(\d+)$/.exec(s);
+  return ln ? { repo: ln[1], path: ln[2], line: Number(ln[3]) } : null;
+}
+
+const indentOf = (l: string) => l.length - l.trimStart().length;
+
+/** The Python block whose header (`def` / `class`) is line `d`: past a multi-line signature, to the first line indented no deeper. */
+function pyBlockEnd(lines: string[], d: number): number {
+  const ind = indentOf(lines[d]);
+  let depth = 0;
+  let k = d;
+  for (; k < lines.length; k++) {
+    for (const c of lines[k].replace(/#.*$/, "")) {
+      if ("([{".includes(c)) depth++;
+      else if (")]}".includes(c)) depth--;
+    }
+    if (depth <= 0 && /:\s*(#.*)?$/.test(lines[k])) break;
+  }
+  let j = k + 1;
+  let last = k;
+  for (; j < lines.length; j++) {
+    const t = lines[j].trim();
+    if (t === "" || t.startsWith("#")) continue;
+    if (indentOf(lines[j]) <= ind) break;
+    last = j;
+  }
+  return last + 1;
+}
+
+/** The text of Python function `symbol` (`name` at module level, or `Class.method`), decorators included; or why not. */
+function pySymbolBody(src: string, symbol: string): { body: string } | { problem: string } {
+  const lines = src.split("\n");
+  const [a, b] = symbol.split(".");
+  let from = 0;
+  let to = lines.length;
+  let ind = "";
+  let name = a;
+  if (b !== undefined) {
+    const classes = lines.flatMap((l, i) => (new RegExp(`^class\\s+${escRe(a)}\\b`).test(l) ? [i] : []));
+    if (classes.length !== 1) return { problem: classes.length ? `defines class ${a} ${classes.length} times (ambiguous)` : `defines no class ${a}` };
+    from = classes[0] + 1;
+    to = pyBlockEnd(lines, classes[0]);
+    const first = lines.slice(from, to).find((l) => l.trim() !== "" && !l.trim().startsWith("#"));
+    ind = first ? first.slice(0, indentOf(first)) : "    ";
+    name = b;
+  }
+  const re = new RegExp(`^${escRe(ind)}(?:async\\s+)?def\\s+${escRe(name)}\\s*\\(`);
+  const defs: number[] = [];
+  for (let i = from; i < to; i++) if (re.test(lines[i])) defs.push(i);
+  if (defs.length !== 1) return { problem: defs.length ? `defines ${symbol} ${defs.length} times (ambiguous)` : `defines no function ${symbol}` };
+  let s = defs[0];
+  while (s > from && new RegExp(`^${escRe(ind)}@`).test(lines[s - 1])) s--;
+  return { body: lines.slice(s, pyBlockEnd(lines, defs[0])).join("\n") };
+}
+
+/** `src` with its line and block comments blanked (same length, string-aware), so an apostrophe in a comment is no quote. */
+export function blankComments(src: string): string {
+  const out = src.split("");
+  let quote: string | null = null;
+  for (let j = 0; j < src.length; j++) {
+    const c = src[j];
+    if (quote) {
+      if (c === "\\") j++;
+      else if (c === quote) quote = null;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") quote = c;
+    else if (c === "/" && src[j + 1] === "/") {
+      while (j < src.length && src[j] !== "\n") out[j++] = " ";
+      j--;
+    } else if (c === "/" && src[j + 1] === "*") {
+      const e = src.indexOf("*/", j + 2);
+      const stop = e === -1 ? src.length : e + 2;
+      for (; j < stop; j++) if (src[j] !== "\n") out[j] = " ";
+      j--;
+    }
+  }
+  return out.join("");
+}
+
+/** Index of what closes the quote or bracket at `i` (-1 if nothing does). */
+function closeOf(src: string, i: number): number {
+  const q = src[i];
+  if (q === '"' || q === "'" || q === "`") {
+    for (let j = i + 1; j < src.length; j++) {
+      if (src[j] === "\\") j++;
+      else if (src[j] === q) return j;
+    }
+    return -1;
+  }
+  return matchBracket(src, i);
+}
+
+const OPENER = /["'`[({]/;
+
+/** Index just past the TS declaration starting at `i`: a method ends with its body; a module-level one at `;` or a new top-level line. */
+function tsDeclEnd(src: string, i: number, method: boolean): number {
+  let sawParams = false;
+  let prev = "";
+  for (let j = i; j < src.length; j++) {
+    const c = src[j];
+    if (OPENER.test(c)) {
+      // A `{` after the parameters that does not follow `:` `<` `|` `&` `,` `(` `=` is the body (not a type literal).
+      const isBody = c === "{" && sawParams && !":<|&,(=".includes(prev);
+      if (c === "(") sawParams = true;
+      const k = closeOf(src, j);
+      if (k === -1) return src.length;
+      if (isBody && method) return k + 1;
+      j = k;
+      prev = src[k];
+      continue;
+    }
+    if (c === ";" && !method) return j + 1;
+    if (c === "\n" && !method && j + 1 < src.length && /[^\s.)\]}?:|&+]/.test(src[j + 1])) return j;
+    if (!/\s/.test(c)) prev = c;
+  }
+  return src.length;
+}
+
+/** The text of TS/JS function `symbol` (a function declaration, a `const` / `let` binding, or `Class.method`); or why not. */
+function tsSymbolBody(raw: string, symbol: string): { body: string } | { problem: string } {
+  const src = blankComments(raw);
+  const [a, b] = symbol.split(".");
+  if (b === undefined) {
+    const A = escRe(a);
+    const re = new RegExp(`(?:^|[\\s;{}()])(?:function\\s*\\*?\\s*${A}\\s*[<(]|(?:const|let|var)\\s+${A}\\s*(?::[^=;]*)?=(?![=>]))`, "gm");
+    const hits = allMatches(re, src);
+    if (hits.length !== 1) return { problem: hits.length ? `defines ${symbol} ${hits.length} times (ambiguous)` : `defines no function ${symbol}` };
+    const start = hits[0].index + (/^[\s;{}()]/.test(hits[0][0]) ? 1 : 0);
+    return { body: src.slice(start, tsDeclEnd(src, start, false)) };
+  }
+  const classes = allMatches(new RegExp(`\\bclass\\s+${escRe(a)}\\b[^{]*\\{`, "g"), src);
+  if (classes.length !== 1) return { problem: classes.length ? `defines class ${a} ${classes.length} times (ambiguous)` : `defines no class ${a}` };
+  const open = classes[0].index + classes[0][0].length - 1;
+  const close = matchBracket(src, open);
+  if (close === -1) return { problem: `class ${a} has no closing brace` };
+  // Only the class's own members: nested bodies and strings are blanked (positions kept), so a call inside a method is no match.
+  const top = src.slice(open + 1, close).split("");
+  for (let k = 0; k < top.length; k++) {
+    if (!OPENER.test(top[k])) continue;
+    const e = closeOf(src, open + 1 + k) - (open + 1);
+    const end = e < 0 ? top.length - 1 : e;
+    for (let x = k + 1; x < end; x++) if (top[x] !== "\n") top[x] = " ";
+    k = end;
+  }
+  const re = new RegExp(`(?:^|[;}\\n])[^\\S\\n]*(?:(?:public|private|protected|static|async|override|readonly|get|set)\\s+)*\\*?\\s*${escRe(b)}\\s*[<(]`, "g");
+  const hits = allMatches(re, top.join(""));
+  if (hits.length !== 1) return { problem: hits.length ? `defines ${symbol} ${hits.length} times (ambiguous)` : `defines no method ${symbol}` };
+  const start = open + 1 + hits[0].index + (/^[;}\n]/.test(hits[0][0]) ? 1 : 0);
+  return { body: src.slice(start, tsDeclEnd(src, start, true)) };
+}
+
+/** The body of the function `symbol` in `src`, resolved by parsing (never by line number); or why it cannot be. */
+export function symbolBody(src: string, symbol: string, py: boolean): { body: string } | { problem: string } {
+  if (!SYMBOL.test(symbol)) return { problem: `${JSON.stringify(symbol)} is not a function name (name or Class.method)` };
+  return py ? pySymbolBody(src, symbol) : tsSymbolBody(src, symbol);
+}
+
 /** The handler at `line` (1-based): a Python endpoint to the next top-level decorator/def, or a TS window around it. */
 function handlerBody(src: string, line: number, py: boolean): string {
   const lines = src.split("\n");
@@ -1360,6 +1529,9 @@ function modelsFor(ws: WorkspaceReader, repo: string, root: string, table: strin
 
 /**
  * Null when the handler cited by `writerSource` visibly INSERTs / UPSERTs into `table`; otherwise why not.
+ * `<repo>:<path>#<symbol>` names the function (`name` or `Class.method`), resolved by parsing the file: a symbol that is
+ * missing or defined twice fails, and only its own body counts. `<repo>:<path>:<line>` cites a line; a line into
+ * ANOTHER repo drifts on that repo's unrelated edits, so strict mode refuses it (a `self` line is still accepted).
  * TS: `.from("<table>")` followed by `.insert(` / `.upsert(`. Python: `INSERT INTO <table>`, or a model of that table
  * constructed and added (`db.add(`, `add_all(`, `insert(<Model>`, `pg_insert(<Model>`, `bulk_save`, `.merge(`).
  * A SELECT, an UPDATE or a cookie stamp is not a writer.
@@ -1370,19 +1542,30 @@ export function writerProblem(
   tree: SourceTree,
   ws: WorkspaceReader,
   cache: Map<string, string[]>,
+  opts: { strict?: boolean } = {},
 ): string | null {
-  const m = /^([a-z0-9-]+):(.+?):(\d+)$/.exec(writerSource.trim());
-  if (!m) return `writerSource must be "<repo>:<path>:<line>" (repo "self" for this app), not ${JSON.stringify(writerSource)}`;
-  const [, repo, path, ln] = m;
+  const c = parseWriterSource(writerSource);
+  if (!c) return `writerSource must be "<repo>:<path>#<function>" or "<repo>:<path>:<line>" (repo "self" for this app), not ${JSON.stringify(writerSource)}`;
+  const { repo, path } = c;
+  if ("line" in c && repo !== "self" && opts.strict) {
+    return `${writerSource} cites a line in another repo, which drifts on its unrelated edits: cite the function as ${repo}:${path}#<function>`;
+  }
+  const at = "line" in c ? `${repo}:${path}:${c.line}` : `${repo}:${path}#${c.symbol}`;
   const src = repo === "self" ? tree.read(path) : ws.read(repo, path);
   if (src === null) return `the writer's handler ${repo}:${path} cannot be read (workspace ${ws.origin}), so it cannot be verified`;
   const bare = table.replace(/^(hockey_db|supabase:public|public)\./, "");
   if (bare === table && !/^[a-z0-9_]+$/.test(bare)) return `the table ${JSON.stringify(table)} names no schema-qualified table`;
   const py = path.endsWith(".py");
-  const body = handlerBody(src, Number(ln), py);
+  let body: string;
+  if ("line" in c) body = handlerBody(src, c.line, py);
+  else {
+    const r = symbolBody(src, c.symbol, py);
+    if ("problem" in r) return `${repo}:${path} ${r.problem}, so ${at} cannot be verified`;
+    body = r.body;
+  }
   if (!py) {
     const re = new RegExp(`\\.from\\(\\s*["'\`]${escRe(bare)}["'\`]\\s*\\)[\\s\\S]{0,400}?\\.(?:insert|upsert)\\s*\\(`);
-    return re.test(body) ? null : `${repo}:${path}:${ln} does not .insert()/.upsert() into ${bare} (a select, an update or a stamp is not a writer)`;
+    return re.test(body) ? null : `${at} does not .insert()/.upsert() into ${bare} (a select, an update or a stamp is not a writer)`;
   }
   if (new RegExp(`\\bINSERT\\s+INTO\\s+["']?${escRe(bare)}\\b`, "i").test(body)) return null;
   const rootDir = path.includes("/app/") ? path.slice(0, path.indexOf("/app/") + 5) : path.split("/").slice(0, -1).join("/");
@@ -1394,7 +1577,7 @@ export function writerProblem(
     const stmt = new RegExp(`\\b(?:pg_insert|insert|sqlite_insert)\\s*\\(\\s*${M}\\b`).test(body);
     if (built || stmt) return null;
   }
-  return `${repo}:${path}:${ln} does not insert a ${models.join("/")} row into ${bare} in its own body (a select, an update, or an insert hidden in a helper is not verified)`;
+  return `${at} does not insert a ${models.join("/")} row into ${bare} in its own body (a select, an update, or an insert hidden in a helper is not verified)`;
 }
 
 export function judgeProvenance(
@@ -1404,6 +1587,7 @@ export function judgeProvenance(
   rows: Map<string, RegisterRow>,
   config: Pick<GuardConfig, "app" | "rowPrefixes">,
   ws: WorkspaceReader,
+  opts: { strict?: boolean } = {},
 ): ProvenanceVerdict {
   const modelCache = new Map<string, string[]>();
   const surfaces = head.entries.filter((e) => PROVENANCE_KINDS.includes(e.kind) && e.polarity === "present");
@@ -1468,10 +1652,10 @@ export function judgeProvenance(
         }
       } else {
         if (!filled(p.writerSource)) {
-          v.invalid.push({ id: e.id, why: "an endpoint entry must cite its writer's handler as writerSource (<repo>:<path>:<line>)" });
+          v.invalid.push({ id: e.id, why: "an endpoint entry must cite its writer's handler as writerSource (<repo>:<path>#<function>)" });
           continue;
         }
-        const wp = writerProblem(p.writerSource as string, p.table as string, tree, ws, modelCache);
+        const wp = writerProblem(p.writerSource as string, p.table as string, tree, ws, modelCache, opts);
         if (wp) {
           v.invalid.push({ id: e.id, why: `the cited writer does not fill the table: ${wp}` });
           continue;
@@ -1534,13 +1718,15 @@ export function runProvenanceCheck(opts: {
   sidecar?: ProvenanceSidecar;
   registerSource?: RegisterSource;
   workspace?: WorkspaceReader;
+  /** Strict (the release check): also refuses a `:line` citation into another repo. */
+  strict?: boolean;
 }): ProvenanceResult {
   const tree = opts.tree ?? fsTree(opts.repoRoot);
   const head = extractSurface(tree, opts.config, { head: true });
   const sidecar = opts.sidecar ?? loadProvenance(opts.repoRoot);
   const src = opts.registerSource ?? loadRegisterSource(opts.repoRoot);
   const ws = opts.workspace ?? fsWorkspace(opts.repoRoot);
-  const verdict = judgeProvenance(head, tree, sidecar, parseRegister(src.register), opts.config, ws);
+  const verdict = judgeProvenance(head, tree, sidecar, parseRegister(src.register), opts.config, ws, { strict: opts.strict });
   const valid = verdict.invalid.length === 0;
   return { verdict, registerOrigin: src.origin, valid, complete: valid && verdict.unresolved.length === 0 };
 }
