@@ -59,6 +59,52 @@ the backend: a caller-scoped season-index endpoint with a Teams-plan entitlement
      managed block and was erased when the block regenerated, so the rule the owner asked
      to be permanent lasted until the next tool run. -->
 
+## 🛑 REAL CAPABILITY ON LIVE DATA — RULE OF LAW (OWNER RULE — ABSOLUTE, 2026-11-18)
+
+The LIVE SYSTEM rule above says what must never ship. This rule says what must ship instead. Both bind every agent
+(Claude, Gemini / Antigravity, Cursor, Codex) and every human, in every repo, app and platform.
+
+1. **We build real capability on live data. Nothing else counts as progress.** A feature is done only when it reads
+   and writes live backend data end to end for a real signed-in account. Modules, batches, tranches, test counts,
+   version bumps and "COMPLETED" checkmarks are not progress. A status that says COMPLETED without live-data
+   evidence is false and must be corrected.
+2. **Removal is not a fix.** Never delete, hollow out or lock to superadmin-only a user-facing capability (page, view,
+   menu entry, route, endpoint, export, pipeline stage) because its data is fake. Replace the data source with the live backend. If the endpoint, table
+   writer or ingest does not exist, build it (LIVE SYSTEM rule 4). While you build it, the feature stays in place
+   and shows an honest empty or "not yet available" state.
+3. **Only the owner retires a capability.** Retiring a capability needs the owner's written decision, recorded in
+   the retirement ledger of the Conductor epic `PLAT-DATA-EPIC-REAL-DATA-FOUNDATION` (tsai-sitedocs), with the
+   commit that removes it. A removal without a ledger entry is a regression and gets reverted, then rebuilt.
+4. **The two committed real seasons are the reference data.** The owner has committed two team seasons for real-data
+   use: **16U AAA 2026-27** and **14U-2 A 2026-27**. They enter the platform only through the backend's ingest:
+   schedule sync, the GameSheet / box-score importers and hockey-api. They are never embedded in code, fixtures,
+   seeds, migrations or tracked docs. Every feature is validated against them on the local stack before it ships.
+5. **Every surface states its live-data provenance.** Any change that adds, changes or removes a user-facing
+   surface states, in its PR and in the epic's audit log:
+   - which backend endpoint it reads;
+   - which table backs that endpoint;
+   - which real writer fills that table (an importer, a sync, or a user action).
+
+   A surface with no live source does not ship. The release surface guard enforces this and blocks the release.
+6. **A test against a fixture does not prove a feature.** Unit tests may use neutral fixtures inside test files.
+   Each feature also needs one recorded verification against the live local stack, signed in as a real account on
+   one of the committed teams. That verification goes in the epic's `status.md`. Record it with counts, status codes and role words, never a
+   minor's name or contact details.
+7. **Everything is audited, from now on.** Each change follows the Conductor SDLC: canonical spec, then epic
+   track, then build, then verification, then sign-off. Every canonical spec, design doc and gap analysis is drafted
+   with EGM (`/egm:egm-draft`) and passes an EGM Goldfish review (`/egm:egm-review`: fresh-context reviewers that
+   never inherit the author's framing) before sign-off. Every change also gets a read-only Gemini / agy review.
+   Conductor statuses are checked against the code with `/egm:egm-drift-report`. The audit entry goes in the epic. When an agent finds a removed or fake-backed capability, it records the
+   gap in the epic's gap register. It never quietly works around the gap.
+
+**Why this rule exists (2026-11-18):** the fake-data cleanup deleted features instead of rebuilding them on live
+data. Periodical lost its Season & Game Series view, and the linked athlete's real season disappeared. The forensic
+audit then showed the platform had been growing on a demo foundation: features were measured by module and tranche
+counts and fed by built-in data, while the backend tables they needed had no writer. The roadmap that rebases the
+foundation on the two committed seasons is `PLAT-DATA-EPIC-REAL-DATA-FOUNDATION`, and its gap analysis is GA-030.
+
+EGM artifact directory: ../tsai-sitedocs/conductor/egm
+
 ## 🚫 NO CLOUD BUILD OR CLOUD RUN DEPLOYS AFTER ITERATIONS — BINDING GOVERNANCE
 
 **Cloud Build and Cloud Run deploy directly to production.** Agents must NEVER run Cloud Build or deploy to
