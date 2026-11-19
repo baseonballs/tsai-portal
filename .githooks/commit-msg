@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# commit-msg (T2.7): every commit names its author — `Co-Authored-By: <agent> <address>`, `Agent: <agent>`,
+# or `Human-Authored: yes`. Install once per checkout: `pnpm hooks:install` (core.hooksPath is local
+# git config and does not travel with a clone). `pnpm test` runs the same check over origin/main..HEAD,
+# so a commit made without the hook still fails the suite.
+set -uo pipefail
+exec bash "$(git rev-parse --show-toplevel)/scripts/check-commit-trailer" --msg-file "${1:-}"

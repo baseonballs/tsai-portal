@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# check-commit-trailer (T2.7, PLAT-DATA-EPIC-REAL-DATA-FOUNDATION) — identical in every Transcend repo.
+#
+# Every commit says who wrote it. Its message must carry, as a git TRAILER (the last paragraph):
+#   Co-Authored-By: <agent> <address>     an agent wrote or co-wrote it (Claude, Gemini, Antigravity,
+#                                         agy, Cursor, Codex, Copilot, GPT, OpenAI)
+#   Agent: <agent>                        the same attribution where a tool's own co-author line is
+#                                         stripped by repo policy (Spotlight's commit-msg replaces
+#                                         `Co-authored-by: Cursor <cursoragent@cursor.com>` with `Agent: cursor`)
+#   Human-Authored: yes                   a person wrote it with no agent
+# The history cannot show which agent wrote the untrailered commits (GA-030); from here on, it can.
+#
+# Usage:
+#   check-commit-trailer --msg-file <file>   commit-msg hook: check one message
+#   check-commit-trailer [<base>..<head>]    suite / PR: every non-merge commit in the range
+#                                            (default ${TRAILER_BASE:-origin/main}..HEAD)
+#
+# Fails closed: an unreadable message, an unresolvable base or head, or git missing is a failure.
+set -uo pipefail
+
+AGENTS='(claude|gemini|antigravity|agy|cursor|codex|copilot|gpt|openai)'
+AGENT_RE="^co-authored-by:[[:space:]]*${AGENTS}[^<]*<[^>]+>[[:space:]]*\$|^agent:[[:space:]]*${AGENTS}([[:space:]].*)?\$"
+HUMAN_RE='^human-authored:[[:space:]]*yes[[:space:]]*$'
+
+die() { echo "❌ check-commit-trailer: $*" >&2; exit 1; }
+
+# Reads a message on stdin; exit 0 when its trailer block carries an agent or a human attestation.
+has_attribution() {
+  local trailers
+  trailers="$(git stripspace --strip-comments | git interpret-trailers --parse 2>/dev/null)" || return 1
+  printf '%s\n' "$trailers" | grep -qiE "$AGENT_RE|$HUMAN_RE"
+}
+
+explain() {
+  cat >&2 <<'MSG'
+   Add one trailer to the end of the commit message (its own last paragraph):
+     Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>     (or the agent that wrote it)
+     Agent: cursor                                                (where a co-author line is stripped)
+     Human-Authored: yes                                          (a person, no agent)
+MSG
+}
+
+command -v git >/dev/null 2>&1 || die "git is not on PATH"
+
+if [[ "${1:-}" == "--msg-file" ]]; then
+  f="${2:-}"
+  [[ -n "$f" && -r "$f" ]] || die "cannot read the commit message file '${f}'"
+  if ! has_attribution <"$f"; then
+    echo "❌ check-commit-trailer: this commit message names no author trailer." >&2
+    explain
+    exit 1
+  fi
+  exit 0
+fi
+
+range="${1:-${TRAILER_BASE:-origin/main}..HEAD}"
+[[ "$range" == *..* && "$range" != *...* ]] || die "expected <base>..<head>, got '$range'"
+base="${range%%..*}"
+head="${range##*..}"
+for ref in "$base" "$head"; do
+  [[ "$ref" =~ ^[A-Za-z0-9._/@^~-]+$ && "$ref" != -* ]] || die "refusing ref '$ref'"
+  git rev-parse --verify --quiet --end-of-options "${ref}^{commit}" >/dev/null \
+    || die "'$ref' is not a commit here (fetch origin, or set TRAILER_BASE) — the check never passes unread"
+done
+
+shas="$(git rev-list --no-merges "${base}..${head}")" || die "git rev-list ${base}..${head} failed"
+n=0
+bad=()
+for sha in $shas; do
+  n=$((n + 1))
+  if ! git log -1 --format=%B "$sha" | has_attribution; then
+    bad+=("$(git log -1 --format='%h %s' "$sha")")
+  fi
+done
+if ((${#bad[@]})); then
+  echo "❌ check-commit-trailer: ${#bad[@]} of $n commit(s) in ${base}..${head} name no author trailer:" >&2
+  printf '   %s\n' "${bad[@]}" >&2
+  explain
+  exit 1
+fi
+echo "✅ check-commit-trailer: $n commit(s) in ${base}..${head}, each with an agent or human trailer"
