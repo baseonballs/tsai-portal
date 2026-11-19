@@ -13,8 +13,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
+  allMatches,
   assertSafeRef,
   cells,
+  enclosingObject,
+  MENU_FLAG_PATTERNS,
   diffRemovals,
   extractSurface,
   fsTree,
@@ -202,6 +205,14 @@ export function runSelfTest(o: SelfTestOptions): number {
   assert.throws(() => parseRegister(register.replace(`| ${prefix}910 |`, `| ${prefix}901 |`)), /two rows/, "duplicate register ids fail");
   assert.throws(() => parseRegister(register.replace("| Filler 3 |", "| Filler 3 | extra |")), /cells/, "a row with the wrong column count fails");
   checks += 4;
+
+  // ── 7b. menu item flags: an item's own array-valued role lock is read; a child item's flag is not inherited ──
+  const item = '{ url: "/probe", requiredRole: ["coach", "scout"], subItems: [{ url: "/child", disabled: true }] }';
+  const own = enclosingObject(item, item.indexOf('"/probe"')) ?? "";
+  const flags = MENU_FLAG_PATTERNS.flatMap((fp) => allMatches(fp.re, own).map((m) => fp.flag(m)));
+  assert.ok(flags.includes("requiredRole=coach,scout"), `an array-form requiredRole must be read: ${JSON.stringify(flags)}`);
+  assert.ok(!flags.includes("disabled"), "a child item's flag must not be inherited by its parent");
+  checks += 2;
 
   // ── 8. fail loudly ──
   assert.throws(
