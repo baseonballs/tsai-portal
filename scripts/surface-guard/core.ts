@@ -385,7 +385,11 @@ export function matchBracket(src: string, i: number): number {
   return -1;
 }
 
-/** The object literal enclosing position `pos`, with its nested `{…}` / `[…]` bodies removed (its own keys only). */
+/**
+ * The object literal enclosing position `pos`, with its nested `{…}` bodies removed: its own keys only, so a parent
+ * item does not inherit a child item's flags. Arrays stay (with any objects inside them removed), so an item's own
+ * array-valued property such as `requiredRole: ["coach"]` is still read.
+ */
 export function enclosingObject(src: string, pos: number): string | null {
   let depth = 0;
   for (let i = pos; i >= 0; i--) {
@@ -400,7 +404,7 @@ export function enclosingObject(src: string, pos: number): string | null {
         let k = 0;
         let out = "";
         while (k < body.length) {
-          if (body[k] === "{" || body[k] === "[") {
+          if (body[k] === "{") {
             const e = matchBracket(body, k);
             if (e === -1) break;
             out += " ";
