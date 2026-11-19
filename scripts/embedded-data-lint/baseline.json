@@ -1,0 +1,6 @@
+{
+  "note": "T2.3 embedded-data lint baseline (REPORT MODE). Findings already on main when the lint landed, per file and rule. A count above this, or a file/rule not listed, fails the suite. Lower it with --write-baseline; it never raises.",
+  "total": 0,
+  "files": 0,
+  "findings": {}
+}
