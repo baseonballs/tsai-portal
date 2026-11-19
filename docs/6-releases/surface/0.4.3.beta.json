@@ -1,0 +1,482 @@
+{
+  "schema": "surface-guard/v1",
+  "app": "Portal",
+  "version": "0.4.3.beta",
+  "rev": "dcb6b67f074fc3a99dc85c9c97ecb808fb0c9854",
+  "notes": [],
+  "entries": [
+    {
+      "id": "docs-tab:spotlight",
+      "kind": "tab",
+      "polarity": "present",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:applications/edgeiq",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "EdgeIQ Application",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:applications/encore",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Encore Application",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:applications/stratus",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Stratus Application",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:applications/tempest",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Tempest Application",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:knowledge-base/faq",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "FAQ",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:knowledge-base/how-tos",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "How-Tos",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:roadmap",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Delivery Roadmap",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:user-guide/encore-legacy-bridge",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Encore Legacy Bridge",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:user-guide/jobs-workflows",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Jobs, Tasks & Workflows",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:user-guide/orientation",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Orientation & Chrome",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:user-guide/players-seasons",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Players, Teams & Seasons",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:user-guide/settings-support",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Settings & Support",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:user-guide/video-review-intro",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Video Review — Intro",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:user-guide/video-review-workflows",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Video Review — Workflows",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "docs:spotlight:user-guide/workspace",
+      "kind": "docs-page",
+      "polarity": "present",
+      "label": "Workspace & Media",
+      "source": "src/lib/docs/manifest.ts"
+    },
+    {
+      "id": "menu:footer:/legal/privacy",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingFooter.tsx"
+    },
+    {
+      "id": "menu:footer:/legal/terms",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingFooter.tsx"
+    },
+    {
+      "id": "menu:header:/",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/beta",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/beta#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/coachs-corner",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/coachs-corner#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/docs",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/docs#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/locker-room",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/locker-room#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/login",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/players-development",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/players-development#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/pricing",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/pricing#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/spotlight-and-periodical",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/spotlight-and-periodical#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/technology-solutions",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/technology-solutions#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "public:/",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/api/beta-requests",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/auth/callback",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/beta",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/byod-setup",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/club-revshare",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/coachs-corner",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/legal/privacy",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/legal/terms",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/locker-room",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/login",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/players-development",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/pricing",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/spotlight-and-periodical",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/supabase/*?",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/technology-solutions",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "public:/tournament/director",
+      "kind": "public-route",
+      "polarity": "info",
+      "source": "public list"
+    },
+    {
+      "id": "route:/",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/page.tsx"
+    },
+    {
+      "id": "route:/api/beta-requests",
+      "kind": "route",
+      "polarity": "present",
+      "label": "api",
+      "source": "src/app/api/beta-requests/route.ts"
+    },
+    {
+      "id": "route:/api/telemetry/event",
+      "kind": "route",
+      "polarity": "present",
+      "label": "api",
+      "source": "src/app/api/telemetry/event/route.ts"
+    },
+    {
+      "id": "route:/auth/callback",
+      "kind": "route",
+      "polarity": "present",
+      "label": "api",
+      "source": "src/app/auth/callback/route.ts"
+    },
+    {
+      "id": "route:/auth/entitlement",
+      "kind": "route",
+      "polarity": "present",
+      "label": "api",
+      "source": "src/app/auth/entitlement/route.ts"
+    },
+    {
+      "id": "route:/beta",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/beta/page.tsx"
+    },
+    {
+      "id": "route:/byod-setup",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/byod-setup/page.tsx"
+    },
+    {
+      "id": "route:/club-revshare",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/club-revshare/page.tsx"
+    },
+    {
+      "id": "route:/coachs-corner",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/coachs-corner/page.tsx"
+    },
+    {
+      "id": "route:/docs/*?",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/docs/[[...slug]]/page.tsx"
+    },
+    {
+      "id": "route:/legal/privacy",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/legal/privacy/page.tsx"
+    },
+    {
+      "id": "route:/legal/terms",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/legal/terms/page.tsx"
+    },
+    {
+      "id": "route:/locker-room",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/locker-room/page.tsx"
+    },
+    {
+      "id": "route:/login",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/login/page.tsx"
+    },
+    {
+      "id": "route:/players-development",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/players-development/page.tsx"
+    },
+    {
+      "id": "route:/pricing",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/pricing/page.tsx"
+    },
+    {
+      "id": "route:/spotlight-and-periodical",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/spotlight-and-periodical/page.tsx"
+    },
+    {
+      "id": "route:/supabase/*?",
+      "kind": "route",
+      "polarity": "present",
+      "label": "api",
+      "source": "src/app/supabase/[[...path]]/route.ts"
+    },
+    {
+      "id": "route:/technology-solutions",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/technology-solutions/page.tsx"
+    },
+    {
+      "id": "route:/tournament/director",
+      "kind": "route",
+      "polarity": "present",
+      "label": "page",
+      "source": "src/app/tournament/director/page.tsx"
+    }
+  ]
+}
