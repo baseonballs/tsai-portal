@@ -1348,11 +1348,14 @@ export function parseWriterSource(writerSource: string): WriterCitation | null {
  * Only module-level defs, and defs directly in the body of one module-level class, count.
  */
 const PY_RESOLVE = String.raw`
-import ast, io, json, sys, tokenize
+import ast, io, json, re, sys, tokenize
 sym = sys.argv[1]
 src = sys.stdin.read()
 def out(**k):
     print(json.dumps(k)); sys.exit(0)
+# ast and tokenize count lines only at \r\n, \r and \n; str.splitlines() also splits at these, so refuse them outright.
+if re.search("[\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029]", src):
+    out(problem="contains a form feed, vertical tab or Unicode line separator, so its lines cannot be counted unambiguously")
 try:
     tree = ast.parse(src)
 except (SyntaxError, ValueError) as e:
@@ -1369,17 +1372,17 @@ hits = [n for n in scope if isinstance(n, F) and n.name == name]
 if len(hits) != 1:
     out(problem=("defines %s %d times (ambiguous)" % (sym, len(hits))) if hits else "defines no function %s" % sym)
 n = hits[0]
-lines = src.splitlines(keepends=True)
-seg = [list(l) for l in lines]
+seg = [list(l) for l in re.split(r"\r\n|\r|\n", src)]
 try:
-    for t in tokenize.generate_tokens(io.StringIO(src).readline):
+    # newline=None reads \r\n and \r as \n: the same line model as ast and the split above.
+    for t in tokenize.generate_tokens(io.StringIO(src, newline=None).readline):
         if t.type == tokenize.COMMENT and n.lineno <= t.start[0] <= n.end_lineno:
             r = t.start[0] - 1
             for c in range(t.start[1], t.end[1]):
                 seg[r][c] = " "
 except (tokenize.TokenError, IndentationError, SyntaxError) as e:
     out(problem="cannot be tokenized (%s)" % e)
-out(start=n.lineno, end=n.end_lineno, body="".join("".join(l) for l in seg[n.lineno - 1:n.end_lineno]))
+out(start=n.lineno, end=n.end_lineno, body="\n".join("".join(l) for l in seg[n.lineno - 1:n.end_lineno]))
 `;
 
 /** A function's region: TS = character offsets of its body; Python = 1-based first / last line of the def (decorators excluded). */
@@ -1416,6 +1419,14 @@ function fnInitializer(e: ts.Expression | undefined): ts.ArrowFunction | ts.Func
 function tsSymbolBody(src: string, symbol: string, path: string): SymbolRegion | { problem: string } {
   const kind = /\.(tsx|jsx)$/.test(path) ? ts.ScriptKind.TSX : /\.(js|mjs|cjs)$/.test(path) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
   const sf = ts.createSourceFile(path || "cited.ts", src, ts.ScriptTarget.Latest, true, kind);
+  // The parser recovers from syntax errors (a missing `}` nests the next function inside this one): any error fails closed.
+  const diags = (sf as unknown as { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics;
+  if (!Array.isArray(diags)) return { problem: "cannot be checked for syntax errors (no parse diagnostics from the TypeScript parser)" };
+  if (diags.length) {
+    const d = diags[0];
+    const at = d.start === undefined ? "?" : sf.getLineAndCharacterOfPosition(d.start).line + 1;
+    return { problem: `does not parse cleanly as TypeScript (${ts.flattenDiagnosticMessageText(d.messageText, " ")}, line ${at})` };
+  }
   const [a, b] = symbol.split(".");
   type Hit = { body: ts.Node | undefined; what: string };
   const hits: Hit[] = [];

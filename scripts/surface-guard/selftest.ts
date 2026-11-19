@@ -377,6 +377,12 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
       "",
     ].join("\n"),
     "svc/app/broken.py": "def broken(:\n    db.add(ProbeItem(x=1))\n",
+    // A missing `}`: the recovering parser would nest POST inside GET, so GET would "insert".
+    "web/unclosed.ts": 'export function GET() {\n  if (x) {\n    return db.from("probe_rows").select("*");\n\nexport async function POST() {\n  await db.from("probe_rows").insert({ a: 1 });\n}\n',
+    // A line separator splitlines() honours but ast does not: lines would shift between the two models.
+    "svc/app/separators.py": "def reader(db):\n    return None  # note\u2028\ndef writer(db):\n    db.add(ProbeItem(x=1))\n",
+    "svc/app/formfeed.py": "def reader(db):\n    return None\n\x0c\ndef writer(db):\n    db.add(ProbeItem(x=1))\n",
+    "svc/app/crlf.py": "def reader(db):\r\n    # db.add(ProbeItem(x=1))\r\n    return None\r\ndef writer(db):\r\n    db.add(ProbeItem(x=1))\r\n",
   };
   const ws: WorkspaceReader = {
     origin: "neutral",
@@ -486,8 +492,14 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
     ["tsai-probe:svc/app/tricky.py#commented", /does not insert/, "a commented-out Python insert is no evidence"],
     ["tsai-probe:svc/app/tricky.py#inner", /defines no function inner/, "a nested Python def is not a module-level symbol"],
     ["tsai-probe:svc/app/broken.py#broken", /does not parse as Python/, "a file Python cannot parse fails closed"],
+    ["tsai-probe:web/unclosed.ts#GET", /does not parse cleanly as TypeScript/, "a TS file with a syntax error fails closed (no recovered nesting)"],
+    ["tsai-probe:web/unclosed.ts#POST", /does not parse cleanly as TypeScript/, "even the true writer of a file with a syntax error is refused"],
+    ["tsai-probe:svc/app/separators.py#reader", /line separator/, "a Unicode line separator fails closed"],
+    ["tsai-probe:svc/app/separators.py#writer", /line separator/, "a Unicode line separator fails closed for every symbol"],
+    ["tsai-probe:svc/app/formfeed.py#reader", /form feed/, "a form feed fails closed"],
+    ["tsai-probe:svc/app/crlf.py#reader", /does not insert/, "CRLF lines: a commented-out insert is blanked and the next def is not absorbed"],
   ] as const) invalidFor(rows3(cite), target.id, why, what);
-  for (const cite of ["tsai-probe:web/tricky.ts#POST", "tsai-probe:svc/app/tricky.py#MultiHeader.save", "tsai-probe:svc/app/tricky.py#outer", "tsai-probe:svc/app/tricky.py#real_writer"]) {
+  for (const cite of ["tsai-probe:svc/app/crlf.py#writer", "tsai-probe:web/tricky.ts#POST", "tsai-probe:svc/app/tricky.py#MultiHeader.save", "tsai-probe:svc/app/tricky.py#outer", "tsai-probe:svc/app/tricky.py#real_writer"]) {
     const v = judgeOn(rows3(cite));
     assert.ok(v.endpoint.includes(target.id) && !v.invalid.length, `${cite} resolves and inserts: ${JSON.stringify(v.invalid)}`);
     checks++;
