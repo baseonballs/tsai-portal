@@ -36,6 +36,7 @@ import {
   PROVENANCE_KINDS,
   runCheck,
   runProvenanceCheck,
+  symbolBody,
   type GuardConfig,
   type Manifest,
   type ProvenanceSidecar,
@@ -321,6 +322,61 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
       "};",
       "",
     ].join("\n"),
+    // Each shape a hand-rolled resolver got wrong (review of the first cut): every one must resolve to exactly its own body.
+    "web/tricky.ts": [
+      "export function helperHost() {",
+      "  function helper() { return 1 }",
+      "  return helper();",
+      "}",
+      "export async function GET() {",
+      '  const q = s.replace(/"/g, "").replace(/\\{/g, "(").replace(/\'/, "").replace(/\\/\\*/, "");',
+      "  const t = `${fn(`can't ${x}`)} {`;",
+      '  return db.from("probe_rows").select("*");',
+      "}",
+      "export function commentedTs() {",
+      '  // await db.from("probe_rows").insert({ a: 1 });',
+      "  return 1;",
+      "}",
+      'export const routes = { post() { return db.from("probe_rows").insert({ a: 1 }); } };',
+      'export const wrapped = withAuth(async () => { await db.from("probe_rows").insert({ a: 1 }); });',
+      "export async function POST() {",
+      "  function nestedHelper() { return 1 }",
+      '  await db.from("probe_rows").insert({ a: 1 });',
+      "}",
+      "",
+    ].join("\n"),
+    "svc/app/tricky.py": [
+      "def noop(db): return None",
+      "def real_writer(db):",
+      "    db.add(ProbeItem(x=1))",
+      "",
+      'def tagged(db, tag: str = "#none", sep: str = "("):',
+      "    return None",
+      "",
+      "def after_tagged(db):",
+      "    db.add(ProbeItem(x=1))",
+      "",
+      "class MultiHeader(",
+      "    Base,",
+      "    Mixin,",
+      "):",
+      "    def save(self, db):",
+      "        db.add(ProbeItem(x=1))",
+      "",
+      "    def read(self, db):",
+      "        return db.query(ProbeItem).all()",
+      "",
+      "def commented(db):",
+      "    # db.add(ProbeItem(x=1))",
+      "    return None",
+      "",
+      "def outer(db):",
+      "    def inner(db):",
+      "        return None",
+      "    db.add(ProbeItem(x=1))",
+      "",
+    ].join("\n"),
+    "svc/app/broken.py": "def broken(:\n    db.add(ProbeItem(x=1))\n",
   };
   const ws: WorkspaceReader = {
     origin: "neutral",
@@ -415,6 +471,41 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
   invalidFor(hp("tsai-probe:web/service.ts#ProbeStore.read", "supabase:public.probe_rows"), target.id, /does not .insert/, "a TS method that only selects");
   invalidFor(hp("tsai-probe:web/service.ts#ProbeStore.gone", "supabase:public.probe_rows"), target.id, /defines no method/, "a TS method that is not defined");
   invalidFor(hp("tsai-probe:svc/app/endpoints.py#not a name"), target.id, /must be "<repo>/, "a symbol that is not a function name");
+  // Real parsers (TypeScript, Python ast): nested helpers, literals, one-line defs and multi-line headers never overrun.
+  const rows3 = (cite: string) => hp(cite, cite.includes(".ts#") ? "supabase:public.probe_rows" : "hockey_db.probe_items");
+  for (const [cite, why, what] of [
+    ["tsai-probe:web/tricky.ts#helper", /defines no function helper/, "a nested TS helper is not a top-level symbol"],
+    ["tsai-probe:web/tricky.ts#nestedHelper", /defines no function nestedHelper/, "a TS helper nested in a writer is not a symbol"],
+    ["tsai-probe:web/tricky.ts#GET", /does not .insert/, "a TS reader with regex and template literals (quotes, braces) stays its own body"],
+    ["tsai-probe:web/tricky.ts#commentedTs", /does not .insert/, "a commented-out TS insert is no evidence"],
+    ["tsai-probe:web/tricky.ts#routes", /not a function/, "a const that is an object of handlers is not a function"],
+    ["tsai-probe:web/tricky.ts#wrapped", /not a function/, "a const bound to a call is not a function"],
+    ["tsai-probe:svc/app/tricky.py#noop", /does not insert/, "a one-line Python def does not absorb the next def"],
+    ["tsai-probe:svc/app/tricky.py#tagged", /does not insert/, "a # and an unbalanced bracket in a default argument do not overrun"],
+    ["tsai-probe:svc/app/tricky.py#MultiHeader.read", /does not insert/, "a method of a class with a multi-line header that only selects"],
+    ["tsai-probe:svc/app/tricky.py#commented", /does not insert/, "a commented-out Python insert is no evidence"],
+    ["tsai-probe:svc/app/tricky.py#inner", /defines no function inner/, "a nested Python def is not a module-level symbol"],
+    ["tsai-probe:svc/app/broken.py#broken", /does not parse as Python/, "a file Python cannot parse fails closed"],
+  ] as const) invalidFor(rows3(cite), target.id, why, what);
+  for (const cite of ["tsai-probe:web/tricky.ts#POST", "tsai-probe:svc/app/tricky.py#MultiHeader.save", "tsai-probe:svc/app/tricky.py#outer", "tsai-probe:svc/app/tricky.py#real_writer"]) {
+    const v = judgeOn(rows3(cite));
+    assert.ok(v.endpoint.includes(target.id) && !v.invalid.length, `${cite} resolves and inserts: ${JSON.stringify(v.invalid)}`);
+    checks++;
+  }
+  // The resolved region never runs past its function: it ends before the next top-level declaration starts.
+  const tsSrc = probeRepo["web/tricky.ts"];
+  for (const [sym, next] of [["GET", "export function commentedTs"], ["helperHost", "export async function GET"], ["commentedTs", "export const routes"]] as const) {
+    const r = symbolBody(tsSrc, sym, false, "web/tricky.ts");
+    assert.ok(!("problem" in r) && r.end < tsSrc.indexOf(next), `#${sym} must end before \`${next}\`: ${JSON.stringify(r)}`);
+    checks++;
+  }
+  const pyLines = probeRepo["svc/app/tricky.py"].split("\n");
+  const lineOf = (head: string) => pyLines.findIndex((l) => l.startsWith(head)) + 1;
+  for (const [sym, next] of [["noop", "def real_writer"], ["tagged", "def after_tagged"], ["MultiHeader.save", "    def read"], ["commented", "def outer"]] as const) {
+    const r = symbolBody(probeRepo["svc/app/tricky.py"], sym, true);
+    assert.ok(!("problem" in r) && r.end < lineOf(next), `#${sym} must end before \`${next}\` (line ${lineOf(next)}): ${JSON.stringify(r)}`);
+    checks++;
+  }
   // A `:line` citation into ANOTHER repo drifts on its unrelated edits: strict refuses it; a `self` line stays allowed.
   invalidFor(hp("tsai-probe:svc/app/endpoints.py:1"), target.id, /cites a line in another repo/, "a cross-repo line citation in strict mode", true);
   const selfWriter = "scripts/surface-guard-probe-writer.ts";

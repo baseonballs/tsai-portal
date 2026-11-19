@@ -29,9 +29,10 @@
  * at git ref `TSAI_SITEDOCS_REF` (default `origin/main`; `WORKTREE` reads the files on disk). If the checkout,
  * the ref or either file is missing the guard fails loudly. It never passes without reading them.
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
+import ts from "typescript";
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 // git, safely
@@ -1341,158 +1342,117 @@ export function parseWriterSource(writerSource: string): WriterCitation | null {
   return ln ? { repo: ln[1], path: ln[2], line: Number(ln[3]) } : null;
 }
 
-const indentOf = (l: string) => l.length - l.trimStart().length;
+/**
+ * Resolves `name` / `Class.method` with Python's own parser (`ast`, run isolated with `-I`) and prints JSON: the def's
+ * `lineno` / `end_lineno` (decorators excluded) and its source lines with comments removed (`tokenize`), or why not.
+ * Only module-level defs, and defs directly in the body of one module-level class, count.
+ */
+const PY_RESOLVE = String.raw`
+import ast, io, json, sys, tokenize
+sym = sys.argv[1]
+src = sys.stdin.read()
+def out(**k):
+    print(json.dumps(k)); sys.exit(0)
+try:
+    tree = ast.parse(src)
+except (SyntaxError, ValueError) as e:
+    out(problem="does not parse as Python (%s, line %s)" % (getattr(e, "msg", e), getattr(e, "lineno", "?")))
+F = (ast.FunctionDef, ast.AsyncFunctionDef)
+parts = sym.split(".")
+scope, name = tree.body, parts[0]
+if len(parts) == 2:
+    cls = [n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == parts[0]]
+    if len(cls) != 1:
+        out(problem=("defines class %s %d times (ambiguous)" % (parts[0], len(cls))) if cls else "defines no class %s" % parts[0])
+    scope, name = cls[0].body, parts[1]
+hits = [n for n in scope if isinstance(n, F) and n.name == name]
+if len(hits) != 1:
+    out(problem=("defines %s %d times (ambiguous)" % (sym, len(hits))) if hits else "defines no function %s" % sym)
+n = hits[0]
+lines = src.splitlines(keepends=True)
+seg = [list(l) for l in lines]
+try:
+    for t in tokenize.generate_tokens(io.StringIO(src).readline):
+        if t.type == tokenize.COMMENT and n.lineno <= t.start[0] <= n.end_lineno:
+            r = t.start[0] - 1
+            for c in range(t.start[1], t.end[1]):
+                seg[r][c] = " "
+except (tokenize.TokenError, IndentationError, SyntaxError) as e:
+    out(problem="cannot be tokenized (%s)" % e)
+out(start=n.lineno, end=n.end_lineno, body="".join("".join(l) for l in seg[n.lineno - 1:n.end_lineno]))
+`;
 
-/** The Python block whose header (`def` / `class`) is line `d`: past a multi-line signature, to the first line indented no deeper. */
-function pyBlockEnd(lines: string[], d: number): number {
-  const ind = indentOf(lines[d]);
-  let depth = 0;
-  let k = d;
-  for (; k < lines.length; k++) {
-    for (const c of lines[k].replace(/#.*$/, "")) {
-      if ("([{".includes(c)) depth++;
-      else if (")]}".includes(c)) depth--;
-    }
-    if (depth <= 0 && /:\s*(#.*)?$/.test(lines[k])) break;
-  }
-  let j = k + 1;
-  let last = k;
-  for (; j < lines.length; j++) {
-    const t = lines[j].trim();
-    if (t === "" || t.startsWith("#")) continue;
-    if (indentOf(lines[j]) <= ind) break;
-    last = j;
-  }
-  return last + 1;
+/** A function's region: TS = character offsets of its body; Python = 1-based first / last line of the def (decorators excluded). */
+export interface SymbolRegion {
+  body: string;
+  start: number;
+  end: number;
 }
 
-/** The text of Python function `symbol` (`name` at module level, or `Class.method`), decorators included; or why not. */
-function pySymbolBody(src: string, symbol: string): { body: string } | { problem: string } {
-  const lines = src.split("\n");
+function pySymbolBody(src: string, symbol: string): SymbolRegion | { problem: string } {
+  const r = spawnSync("python3", ["-I", "-c", PY_RESOLVE, symbol], { input: src, encoding: "utf8", timeout: 30_000, maxBuffer: 64 * 1024 * 1024 });
+  if (r.error || r.status !== 0) return { problem: `could not be parsed by python3 (${r.error ? r.error.message : (r.stderr || `exit ${r.status}`).trim().split("\n").pop()})` };
+  try {
+    const j = JSON.parse(r.stdout) as { problem?: string; start?: number; end?: number; body?: string };
+    if (j.problem) return { problem: j.problem };
+    if (typeof j.body !== "string" || typeof j.start !== "number" || typeof j.end !== "number") return { problem: "python3 returned no region" };
+    return { body: j.body, start: j.start, end: j.end };
+  } catch {
+    return { problem: "python3 returned no region" };
+  }
+}
+
+/** An initializer that is a function, through parentheses and `as` / `satisfies`; else null (a call, an object, …). */
+function fnInitializer(e: ts.Expression | undefined): ts.ArrowFunction | ts.FunctionExpression | null {
+  while (e && (ts.isParenthesizedExpression(e) || ts.isAsExpression(e) || ts.isSatisfiesExpression(e))) e = e.expression;
+  return e && (ts.isArrowFunction(e) || ts.isFunctionExpression(e)) ? e : null;
+}
+
+/**
+ * Resolves `name` (a top-level FunctionDeclaration, or a top-level `const` / `let` / `var` whose initializer is an arrow
+ * or function expression) or `Class.method` (a MethodDeclaration of a top-level class) with the TypeScript parser.
+ * Nested functions never count. The region is the body, printed with comments removed.
+ */
+function tsSymbolBody(src: string, symbol: string, path: string): SymbolRegion | { problem: string } {
+  const kind = /\.(tsx|jsx)$/.test(path) ? ts.ScriptKind.TSX : /\.(js|mjs|cjs)$/.test(path) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(path || "cited.ts", src, ts.ScriptTarget.Latest, true, kind);
   const [a, b] = symbol.split(".");
-  let from = 0;
-  let to = lines.length;
-  let ind = "";
-  let name = a;
-  if (b !== undefined) {
-    const classes = lines.flatMap((l, i) => (new RegExp(`^class\\s+${escRe(a)}\\b`).test(l) ? [i] : []));
-    if (classes.length !== 1) return { problem: classes.length ? `defines class ${a} ${classes.length} times (ambiguous)` : `defines no class ${a}` };
-    from = classes[0] + 1;
-    to = pyBlockEnd(lines, classes[0]);
-    const first = lines.slice(from, to).find((l) => l.trim() !== "" && !l.trim().startsWith("#"));
-    ind = first ? first.slice(0, indentOf(first)) : "    ";
-    name = b;
-  }
-  const re = new RegExp(`^${escRe(ind)}(?:async\\s+)?def\\s+${escRe(name)}\\s*\\(`);
-  const defs: number[] = [];
-  for (let i = from; i < to; i++) if (re.test(lines[i])) defs.push(i);
-  if (defs.length !== 1) return { problem: defs.length ? `defines ${symbol} ${defs.length} times (ambiguous)` : `defines no function ${symbol}` };
-  let s = defs[0];
-  while (s > from && new RegExp(`^${escRe(ind)}@`).test(lines[s - 1])) s--;
-  return { body: lines.slice(s, pyBlockEnd(lines, defs[0])).join("\n") };
-}
-
-/** `src` with its line and block comments blanked (same length, string-aware), so an apostrophe in a comment is no quote. */
-export function blankComments(src: string): string {
-  const out = src.split("");
-  let quote: string | null = null;
-  for (let j = 0; j < src.length; j++) {
-    const c = src[j];
-    if (quote) {
-      if (c === "\\") j++;
-      else if (c === quote) quote = null;
-      continue;
-    }
-    if (c === '"' || c === "'" || c === "`") quote = c;
-    else if (c === "/" && src[j + 1] === "/") {
-      while (j < src.length && src[j] !== "\n") out[j++] = " ";
-      j--;
-    } else if (c === "/" && src[j + 1] === "*") {
-      const e = src.indexOf("*/", j + 2);
-      const stop = e === -1 ? src.length : e + 2;
-      for (; j < stop; j++) if (src[j] !== "\n") out[j] = " ";
-      j--;
-    }
-  }
-  return out.join("");
-}
-
-/** Index of what closes the quote or bracket at `i` (-1 if nothing does). */
-function closeOf(src: string, i: number): number {
-  const q = src[i];
-  if (q === '"' || q === "'" || q === "`") {
-    for (let j = i + 1; j < src.length; j++) {
-      if (src[j] === "\\") j++;
-      else if (src[j] === q) return j;
-    }
-    return -1;
-  }
-  return matchBracket(src, i);
-}
-
-const OPENER = /["'`[({]/;
-
-/** Index just past the TS declaration starting at `i`: a method ends with its body; a module-level one at `;` or a new top-level line. */
-function tsDeclEnd(src: string, i: number, method: boolean): number {
-  let sawParams = false;
-  let prev = "";
-  for (let j = i; j < src.length; j++) {
-    const c = src[j];
-    if (OPENER.test(c)) {
-      // A `{` after the parameters that does not follow `:` `<` `|` `&` `,` `(` `=` is the body (not a type literal).
-      const isBody = c === "{" && sawParams && !":<|&,(=".includes(prev);
-      if (c === "(") sawParams = true;
-      const k = closeOf(src, j);
-      if (k === -1) return src.length;
-      if (isBody && method) return k + 1;
-      j = k;
-      prev = src[k];
-      continue;
-    }
-    if (c === ";" && !method) return j + 1;
-    if (c === "\n" && !method && j + 1 < src.length && /[^\s.)\]}?:|&+]/.test(src[j + 1])) return j;
-    if (!/\s/.test(c)) prev = c;
-  }
-  return src.length;
-}
-
-/** The text of TS/JS function `symbol` (a function declaration, a `const` / `let` binding, or `Class.method`); or why not. */
-function tsSymbolBody(raw: string, symbol: string): { body: string } | { problem: string } {
-  const src = blankComments(raw);
-  const [a, b] = symbol.split(".");
+  type Hit = { body: ts.Node | undefined; what: string };
+  const hits: Hit[] = [];
   if (b === undefined) {
-    const A = escRe(a);
-    const re = new RegExp(`(?:^|[\\s;{}()])(?:function\\s*\\*?\\s*${A}\\s*[<(]|(?:const|let|var)\\s+${A}\\s*(?::[^=;]*)?=(?![=>]))`, "gm");
-    const hits = allMatches(re, src);
-    if (hits.length !== 1) return { problem: hits.length ? `defines ${symbol} ${hits.length} times (ambiguous)` : `defines no function ${symbol}` };
-    const start = hits[0].index + (/^[\s;{}()]/.test(hits[0][0]) ? 1 : 0);
-    return { body: src.slice(start, tsDeclEnd(src, start, false)) };
+    for (const st of sf.statements) {
+      if (ts.isFunctionDeclaration(st) && st.name?.text === a) {
+        if (st.body) hits.push({ body: st.body, what: "function" });
+      } else if (ts.isVariableStatement(st)) {
+        for (const d of st.declarationList.declarations) {
+          if (!ts.isIdentifier(d.name) || d.name.text !== a) continue;
+          const f = fnInitializer(d.initializer);
+          hits.push({ body: f?.body, what: f ? "function" : "a value that is not a function" });
+        }
+      } else if (ts.isClassDeclaration(st) && st.name?.text === a) {
+        hits.push({ body: undefined, what: "a class (cite Class.method)" });
+      }
+    }
+  } else {
+    const classes = sf.statements.filter((st): st is ts.ClassDeclaration => ts.isClassDeclaration(st) && st.name?.text === a);
+    if (classes.length !== 1) return { problem: classes.length ? `defines class ${a} ${classes.length} times (ambiguous)` : `defines no class ${a}` };
+    for (const m of classes[0].members) {
+      if (ts.isMethodDeclaration(m) && m.name && (ts.isIdentifier(m.name) || ts.isStringLiteral(m.name)) && m.name.text === b && m.body) {
+        hits.push({ body: m.body, what: "method" });
+      }
+    }
   }
-  const classes = allMatches(new RegExp(`\\bclass\\s+${escRe(a)}\\b[^{]*\\{`, "g"), src);
-  if (classes.length !== 1) return { problem: classes.length ? `defines class ${a} ${classes.length} times (ambiguous)` : `defines no class ${a}` };
-  const open = classes[0].index + classes[0][0].length - 1;
-  const close = matchBracket(src, open);
-  if (close === -1) return { problem: `class ${a} has no closing brace` };
-  // Only the class's own members: nested bodies and strings are blanked (positions kept), so a call inside a method is no match.
-  const top = src.slice(open + 1, close).split("");
-  for (let k = 0; k < top.length; k++) {
-    if (!OPENER.test(top[k])) continue;
-    const e = closeOf(src, open + 1 + k) - (open + 1);
-    const end = e < 0 ? top.length - 1 : e;
-    for (let x = k + 1; x < end; x++) if (top[x] !== "\n") top[x] = " ";
-    k = end;
-  }
-  const re = new RegExp(`(?:^|[;}\\n])[^\\S\\n]*(?:(?:public|private|protected|static|async|override|readonly|get|set)\\s+)*\\*?\\s*${escRe(b)}\\s*[<(]`, "g");
-  const hits = allMatches(re, top.join(""));
-  if (hits.length !== 1) return { problem: hits.length ? `defines ${symbol} ${hits.length} times (ambiguous)` : `defines no method ${symbol}` };
-  const start = open + 1 + hits[0].index + (/^[;}\n]/.test(hits[0][0]) ? 1 : 0);
-  return { body: src.slice(start, tsDeclEnd(src, start, true)) };
+  if (hits.length !== 1) return { problem: hits.length ? `defines ${symbol} ${hits.length} times (ambiguous)` : `defines no ${b === undefined ? "function" : "method"} ${symbol}` };
+  const h = hits[0];
+  if (!h.body) return { problem: `binds ${symbol} to ${h.what}, not a function` };
+  const printer = ts.createPrinter({ removeComments: true });
+  return { body: printer.printNode(ts.EmitHint.Unspecified, h.body, sf), start: h.body.getStart(sf), end: h.body.getEnd() };
 }
 
-/** The body of the function `symbol` in `src`, resolved by parsing (never by line number); or why it cannot be. */
-export function symbolBody(src: string, symbol: string, py: boolean): { body: string } | { problem: string } {
+/** The region of the function `symbol` in `src`, resolved by a real parser (never by line number); or why it cannot be. */
+export function symbolBody(src: string, symbol: string, py: boolean, path = ""): SymbolRegion | { problem: string } {
   if (!SYMBOL.test(symbol)) return { problem: `${JSON.stringify(symbol)} is not a function name (name or Class.method)` };
-  return py ? pySymbolBody(src, symbol) : tsSymbolBody(src, symbol);
+  return py ? pySymbolBody(src, symbol) : tsSymbolBody(src, symbol, path);
 }
 
 /** The handler at `line` (1-based): a Python endpoint to the next top-level decorator/def, or a TS window around it. */
@@ -1559,7 +1519,7 @@ export function writerProblem(
   let body: string;
   if ("line" in c) body = handlerBody(src, c.line, py);
   else {
-    const r = symbolBody(src, c.symbol, py);
+    const r = symbolBody(src, c.symbol, py, path);
     if ("problem" in r) return `${repo}:${path} ${r.problem}, so ${at} cannot be verified`;
     body = r.body;
   }
