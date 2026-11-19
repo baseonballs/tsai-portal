@@ -5,11 +5,20 @@
 
 import fs from "fs";
 import path from "path";
-import {
-  DEFAULT_PASSER,
-  DEFAULT_RECEIVER,
-  DEFAULT_DEFENDERS,
-} from "../src/components/tactics/VoronoiPassingLaneWorkbench";
+import type { VoronoiPoint, VoronoiDefenderNode } from "../src/types/voronoi-lane-types";
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const DEFAULT_PASSER: VoronoiPoint = { x: 80, y: 220 };
+
+const DEFAULT_RECEIVER: VoronoiPoint = { x: 440, y: 220 };
+
+const DEFAULT_DEFENDERS: VoronoiDefenderNode[] = [
+  { id: "DEF-1", label: "Left D", jerseyNumber: "4", x: 220, y: 150, vxMps: 0.5, vyMps: 2.8, stickReachM: 1.6 },
+  { id: "DEF-2", label: "Right D", jerseyNumber: "27", x: 300, y: 290, vxMps: -0.2, vyMps: -1.5, stickReachM: 1.6 },
+  { id: "DEF-3", label: "Center F", jerseyNumber: "16", x: 260, y: 120, vxMps: 0.0, vyMps: 3.5, stickReachM: 1.6 },
+];
+
 
 function runTests() {
   console.log("=== Testing VoronoiPassingLaneWorkbench and Types ===");

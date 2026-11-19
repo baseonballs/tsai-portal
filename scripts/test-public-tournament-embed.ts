@@ -19,10 +19,10 @@ function runTests() {
       matchLabel: "QF 1",
       sheetId: "sheet-1",
       rinkName: "Rink 1",
-      homeTeam: { name: "Jr. Sharks", seed: 1, score: 4 },
+      homeTeam: { name: "Fixture Club B", seed: 1, score: 4 },
       awayTeam: { name: "Mission", seed: 8, score: 2 },
       status: "FINAL",
-      winnerTeamName: "Jr. Sharks",
+      winnerTeamName: "Fixture Club B",
     },
     {
       matchId: "m-sf1",
@@ -30,8 +30,8 @@ function runTests() {
       matchLabel: "SF 1",
       sheetId: "sheet-1",
       rinkName: "Rink 1",
-      homeTeam: { name: "Jr. Sharks", seed: 1, score: 0 },
-      awayTeam: { name: "Marlboros", seed: 4, score: 0 },
+      homeTeam: { name: "Fixture Club B", seed: 1, score: 0 },
+      awayTeam: { name: "Fixture Club D", seed: 4, score: 0 },
       status: "UPCOMING",
     },
   ];
@@ -39,8 +39,8 @@ function runTests() {
   if (sampleMatches.length !== 2) {
     throw new Error("Expected 2 matches");
   }
-  if (sampleMatches[0].winnerTeamName !== "Jr. Sharks") {
-    throw new Error("Winner must be Jr. Sharks");
+  if (sampleMatches[0].winnerTeamName !== "Fixture Club B") {
+    throw new Error("Winner must be Fixture Club B");
   }
   console.log("✔ Test 1: Match contract and round tree validated.");
 

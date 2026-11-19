@@ -6,10 +6,7 @@ import {
   RankedTeamStanding,
   BracketSeedMatch,
 } from "./tournament-tiebreaker-types";
-import {
-  DEFAULT_STANDINGS,
-  DEFAULT_BRACKET_SEEDS,
-} from "./tournament-tiebreaker-constants";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
 interface TournamentTiebreakerArbiterProps {
   divisionName?: string;
@@ -17,11 +14,20 @@ interface TournamentTiebreakerArbiterProps {
   bracketSeeds?: BracketSeedMatch[];
 }
 
-export function TournamentTiebreakerArbiter({
-  divisionName = "16U Tier 1 AAA National Invitational",
-  standings = DEFAULT_STANDINGS,
-  bracketSeeds = DEFAULT_BRACKET_SEEDS,
-}: TournamentTiebreakerArbiterProps) {
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function TournamentTiebreakerArbiter(props: TournamentTiebreakerArbiterProps) {
+  if (!props.standings || props.standings.length === 0) {
+    return <NotYetAvailable feature="Tournament standings" detail="No tournament standings are connected." />;
+  }
+  return <TournamentTiebreakerArbiterView {...props} standings={props.standings} />;
+}
+
+function TournamentTiebreakerArbiterView({
+  divisionName = "Division",
+  standings,
+  bracketSeeds = [],
+}: TournamentTiebreakerArbiterProps & { standings: RankedTeamStanding[] }) {
   const [activeTab, setActiveTab] = useState<"standings" | "bracket" | "bylaws">("standings");
 
   return (

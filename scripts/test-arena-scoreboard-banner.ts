@@ -10,7 +10,44 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { SAMPLE_ARENA_SCOREBOARD } from "../src/components/broadcast/scoreboard-stream-types";
+import type { ArenaScoreboardData } from "../src/components/broadcast/scoreboard-stream-types";
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const SAMPLE_ARENA_SCOREBOARD: ArenaScoreboardData = {
+  gameId: "game-u18-championship",
+  period: 2,
+  clockFormatted: "14:22",
+  clockSecondsRemaining: 862,
+  isClockRunning: true,
+  isWhistleStoppage: false,
+  homeTeam: {
+    code: "FHC",
+    name: "Fixture Home Club",
+    score: 2,
+    shots: 18,
+    xg: 2.15,
+  },
+  awayTeam: {
+    code: "FAC",
+    name: "Fixture Club A",
+    score: 1,
+    shots: 14,
+    xg: 1.48,
+  },
+  activePenalties: [
+    {
+      id: "pen-01",
+      teamCode: "FAC",
+      playerNumber: 22,
+      infraction: "Tripping",
+      remainingSeconds: 65,
+    },
+  ],
+  streamLatencyMs: 148,
+  arenaName: "Fixture Arena - Rink A",
+};
+
 
 function runTests() {
   console.log("=== Testing Arena Scoreboard Banner Component ===");

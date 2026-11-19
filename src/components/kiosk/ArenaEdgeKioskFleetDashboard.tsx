@@ -18,67 +18,7 @@ import {
   KioskFeedSource,
   ThermalPressureTier,
 } from "../../types/arena-kiosk-fleet-types";
-
-export const DEFAULT_FLEET_KIOSKS: ArenaEdgeKioskNode[] = [
-  {
-    kioskId: "KIOSK-SJ-RINK-A",
-    venueName: "Solar4America Ice",
-    rinkSheetId: "RINK-A",
-    isWakeLockActive: true,
-    thermalPressureTier: "NOMINAL",
-    activeFeedSource: "COMPOSITE_BROADCAST",
-    pods: [
-      {
-        podId: "POD-A-CENTER",
-        isConnected: true,
-        fps: 60.0,
-        resolution: "4K-UHD",
-        lensTemperatureCelsius: 41.2,
-        lastHeartbeatAgeSec: 0.4,
-      },
-      {
-        podId: "POD-B-ENDZONE",
-        isConnected: true,
-        fps: 60.0,
-        resolution: "4K-UHD",
-        lensTemperatureCelsius: 40.5,
-        lastHeartbeatAgeSec: 0.5,
-      },
-    ],
-    systemUptimeSeconds: 14280.0,
-    activePeriod: 2,
-    periodTimeRemainingSeconds: 845.0,
-  },
-  {
-    kioskId: "KIOSK-SJ-RINK-C",
-    venueName: "Solar4America Ice",
-    rinkSheetId: "RINK-C",
-    isWakeLockActive: true,
-    thermalPressureTier: "NOMINAL",
-    activeFeedSource: "POD_A",
-    pods: [
-      {
-        podId: "POD-A-CENTER",
-        isConnected: true,
-        fps: 59.8,
-        resolution: "4K-UHD",
-        lensTemperatureCelsius: 43.1,
-        lastHeartbeatAgeSec: 0.2,
-      },
-      {
-        podId: "POD-B-ENDZONE",
-        isConnected: true,
-        fps: 60.0,
-        resolution: "4K-UHD",
-        lensTemperatureCelsius: 42.0,
-        lastHeartbeatAgeSec: 0.3,
-      },
-    ],
-    systemUptimeSeconds: 28400.0,
-    activePeriod: 1,
-    periodTimeRemainingSeconds: 1120.0,
-  },
-];
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
 const FEED_OPTIONS: { id: KioskFeedSource; label: string }[] = [
   { id: "COMPOSITE_BROADCAST", label: "Composite" },
@@ -88,8 +28,17 @@ const FEED_OPTIONS: { id: KioskFeedSource; label: string }[] = [
   { id: "TACTICAL_TWIN", label: "Tactical Twin" },
 ];
 
-export function ArenaEdgeKioskFleetDashboard({
-  initialKiosks = DEFAULT_FLEET_KIOSKS,
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function ArenaEdgeKioskFleetDashboard(props: ArenaEdgeKioskFleetDashboardProps) {
+  if (!props.initialKiosks || props.initialKiosks.length === 0) {
+    return <NotYetAvailable feature="Arena kiosk fleet" detail="No kiosk is registered." className={props.className ?? ""} />;
+  }
+  return <ArenaEdgeKioskFleetDashboardView {...props} />;
+}
+
+function ArenaEdgeKioskFleetDashboardView({
+  initialKiosks = [],
   onSelectFeed,
   onToggleWakeLock,
   className = "",

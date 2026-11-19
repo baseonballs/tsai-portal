@@ -5,9 +5,25 @@
 
 import fs from 'fs';
 import path from 'path';
-import {
-  DEFAULT_CLUB_STRIPE_PROFILE,
-} from '../src/types/club-stripe-connect-types';
+import type { ClubStripeConnectProfile } from '../src/types/club-stripe-connect-types';
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const DEFAULT_CLUB_STRIPE_PROFILE: ClubStripeConnectProfile = {
+  clubId: 'club_fixture',
+  clubName: 'Fixture Youth Club',
+  einOrTaxId: 'XX-XXX4192',
+  accountType: 'NON_PROFIT_501C3',
+  kycStatus: 'VERIFIED',
+  stripeConnectAccountId: 'acct_fixture_01',
+  bankRoutingNumberMasked: '*****0214',
+  bankAccountNumberMasked: '*****8841',
+  revenueShareRatio: 0.50,
+  payoutFrequency: 'MONTHLY',
+  estimatedEnrolledFamilies: 350,
+  monthlyPerFamilyFeeUsd: 15.00,
+};
+
 
 function assert(condition: boolean, message: string) {
   if (!condition) {

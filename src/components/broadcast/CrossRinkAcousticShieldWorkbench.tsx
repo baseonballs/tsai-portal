@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import {
   SheetAcousticChannel,
-  INITIAL_SHEET_CHANNELS,
 } from '../../types/acoustic-shield-portal-types';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const CrossRinkAcousticShieldWorkbench: React.FC = () => {
-  const [channels, setChannels] = useState<SheetAcousticChannel[]>(INITIAL_SHEET_CHANNELS);
-  const [selectedSheetId, setSelectedSheetId] = useState<string>('sheet_rink_1');
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const CrossRinkAcousticShieldWorkbench: React.FC<{ initialChannels?: SheetAcousticChannel[] }> = ({ initialChannels }) => {
+  if (!initialChannels || initialChannels.length === 0) {
+    return <NotYetAvailable feature="Cross-rink acoustic shield" detail="No rink audio channel is connected." />;
+  }
+  return <CrossRinkAcousticShieldWorkbenchView initialChannels={initialChannels} />;
+};
+
+const CrossRinkAcousticShieldWorkbenchView: React.FC<{ initialChannels: SheetAcousticChannel[] }> = ({ initialChannels }) => {
+  const [channels, setChannels] = useState<SheetAcousticChannel[]>(initialChannels);
+  const [selectedSheetId, setSelectedSheetId] = useState<string>(initialChannels[0].sheetId);
   const [globalMasterShield, setGlobalMasterShield] = useState<boolean>(true);
 
   const activeChannel = channels.find((c) => c.sheetId === selectedSheetId) || channels[0];

@@ -5,14 +5,23 @@ import {
   PortalSheetChannel,
   BroadcastCameraAngle,
   PortalReplayItem,
-  INITIAL_CHANNELS,
   formatStreamTime,
 } from './broadcast-cloud-switcher-types';
 import { Radio, Video, RefreshCw, Play, Film, Layers } from 'lucide-react';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export function MultiSheetCloudSwitcher() {
-  const [channels, setChannels] = useState<PortalSheetChannel[]>(INITIAL_CHANNELS);
-  const [selectedSheetId, setSelectedSheetId] = useState<string>('sheet-1');
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function MultiSheetCloudSwitcher({ initialChannels }: { initialChannels?: PortalSheetChannel[] }) {
+  if (!initialChannels || initialChannels.length === 0) {
+    return <NotYetAvailable feature="Multi-sheet broadcast switcher" detail="No broadcast channel is connected." />;
+  }
+  return <MultiSheetCloudSwitcherView initialChannels={initialChannels} />;
+}
+
+function MultiSheetCloudSwitcherView({ initialChannels }: { initialChannels: PortalSheetChannel[] }) {
+  const [channels, setChannels] = useState<PortalSheetChannel[]>(initialChannels);
+  const [selectedSheetId, setSelectedSheetId] = useState<string>(initialChannels[0].sheetId);
   const [replays, setReplays] = useState<PortalReplayItem[]>([]);
   const [lastCutMs, setLastCutMs] = useState<number>(45);
 

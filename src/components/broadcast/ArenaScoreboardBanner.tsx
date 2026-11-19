@@ -1,16 +1,23 @@
 "use client";
 
 import React from "react";
-import {
-  ArenaScoreboardBannerProps,
-  SAMPLE_ARENA_SCOREBOARD,
-} from "./scoreboard-stream-types";
+import { ArenaScoreboardBannerProps } from "./scoreboard-stream-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export function ArenaScoreboardBanner({
-  data = SAMPLE_ARENA_SCOREBOARD,
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function ArenaScoreboardBanner(props: ArenaScoreboardBannerProps) {
+  if (!props.data) {
+    return <NotYetAvailable feature="Arena scoreboard" detail="No live game is connected." className={props.className ?? ""} />;
+  }
+  return <ArenaScoreboardBannerView {...props} data={props.data} />;
+}
+
+function ArenaScoreboardBannerView({
+  data,
   onRefresh,
   className = "",
-}: ArenaScoreboardBannerProps) {
+}: ArenaScoreboardBannerProps & { data: NonNullable<ArenaScoreboardBannerProps["data"]> }) {
   const { homeTeam, awayTeam, activePenalties } = data;
 
   return (

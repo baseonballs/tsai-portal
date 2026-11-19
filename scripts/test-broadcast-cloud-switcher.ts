@@ -12,10 +12,55 @@
 import fs from 'fs';
 import path from 'path';
 import {
-  INITIAL_CHANNELS,
   formatStreamTime,
   PortalSheetChannel,
 } from '../src/components/broadcast/broadcast-cloud-switcher-types';
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const INITIAL_CHANNELS: PortalSheetChannel[] = [
+  {
+    sheetId: 'sheet-1',
+    sheetName: 'Rink A (NHL)',
+    programAngle: 'BROADCAST_HIGH',
+    previewAngle: 'LOW_CREASE',
+    isLive: true,
+    bitrateKbps: 4500,
+    fps: 60.0,
+    streamUptimeSeconds: 1420,
+  },
+  {
+    sheetId: 'sheet-2',
+    sheetName: 'Rink B (Olympic)',
+    programAngle: 'OVERHEAD_TACTICAL',
+    previewAngle: 'SLOT_DEFENSE_CAM',
+    isLive: true,
+    bitrateKbps: 4400,
+    fps: 60.0,
+    streamUptimeSeconds: 980,
+  },
+  {
+    sheetId: 'sheet-3',
+    sheetName: 'Rink C (Training)',
+    programAngle: 'BROADCAST_HIGH',
+    previewAngle: 'OVERHEAD_TACTICAL',
+    isLive: true,
+    bitrateKbps: 4600,
+    fps: 60.0,
+    streamUptimeSeconds: 2100,
+  },
+  {
+    sheetId: 'sheet-4',
+    sheetName: 'Rink D (South)',
+    programAngle: 'LOW_CREASE',
+    previewAngle: 'BROADCAST_HIGH',
+    isLive: true,
+    bitrateKbps: 4550,
+    fps: 60.0,
+    streamUptimeSeconds: 450,
+  },
+];
+
 
 function assert(condition: boolean, message: string) {
   if (!condition) {

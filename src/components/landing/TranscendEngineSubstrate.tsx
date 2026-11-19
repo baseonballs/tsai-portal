@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   Cpu, 
   Brain, 
@@ -16,15 +16,8 @@ import {
 
 export function TranscendEngineSubstrate() {
   const [activeTab, setActiveTab] = useState<number>(0);
-  const [pulseCount, setPulseCount] = useState<number>(1422);
-
-  // Simulating live engine telemetry counter increments
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPulseCount((prev) => prev + Math.floor(Math.random() * 3) + 1);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  // GA-030 O-03 (T0.4): there is no live engine-throughput feed yet, so the badge shows no number.
+  // It said "<n> events/sec" with n invented by a random generator. Rebuilt on a real metric in T8.1, or retired.
 
   const pillars = [
     {
@@ -111,7 +104,7 @@ export function TranscendEngineSubstrate() {
             Transcend AI Substrate
           </span>
           <span className="text-cyan-400 font-bold text-[11px] bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded">
-            {pulseCount} events/sec
+            <span data-testid="engine-throughput-unavailable">Live throughput: not yet available</span>
           </span>
         </div>
 

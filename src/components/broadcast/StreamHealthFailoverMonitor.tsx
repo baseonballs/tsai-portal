@@ -14,19 +14,28 @@ import {
 import {
   StreamHealthMetrics,
   StreamRouteState,
-  DEFAULT_HEALTH_METRICS,
   DEFAULT_FAILOVER_THRESHOLDS,
   evaluatePipelineHealth,
   determineFailoverRoute,
 } from './stream-failover-types';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
 export interface StreamHealthFailoverMonitorProps {
   initialMetrics?: StreamHealthMetrics;
   onRouteSwitch?: (newRoute: StreamRouteState, latencyMs: number) => void;
 }
 
-export const StreamHealthFailoverMonitor: React.FC<StreamHealthFailoverMonitorProps> = ({
-  initialMetrics = DEFAULT_HEALTH_METRICS,
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const StreamHealthFailoverMonitor: React.FC<StreamHealthFailoverMonitorProps> = (props) => {
+  if (!props.initialMetrics) {
+    return <NotYetAvailable feature="Stream health" detail="No live stream is connected." />;
+  }
+  return <StreamHealthFailoverMonitorView {...props} initialMetrics={props.initialMetrics} />;
+};
+
+const StreamHealthFailoverMonitorView: React.FC<StreamHealthFailoverMonitorProps & { initialMetrics: StreamHealthMetrics }> = ({
+  initialMetrics,
   onRouteSwitch,
 }) => {
   const [metrics, setMetrics] = useState<StreamHealthMetrics>(initialMetrics);
@@ -62,7 +71,7 @@ export const StreamHealthFailoverMonitor: React.FC<StreamHealthFailoverMonitorPr
   const handleResetHealthy = () => {
     startTransition(() => {
       const healthyMetrics: StreamHealthMetrics = {
-        ...DEFAULT_HEALTH_METRICS,
+        ...initialMetrics,
         activeRoute: 'PRIMARY_YOUTUBE',
         failoverLatencyMs: 110,
       };

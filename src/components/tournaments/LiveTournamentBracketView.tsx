@@ -21,90 +21,12 @@ interface LiveTournamentBracketViewProps {
   onSelectMatchSheet?: (sheetId: string) => void;
 }
 
-const DEFAULT_MATCHES: BracketMatch[] = [
-  // Quarterfinals
-  {
-    matchId: "m-qf1",
-    round: "QUARTERFINALS",
-    matchLabel: "QF 1",
-    sheetId: "sheet-nhl-center",
-    sheetName: "Main Center Arena",
-    homeTeam: { name: "Jr. Sharks AAA", score: 4, seed: 1 },
-    awayTeam: { name: "Chicago Mission", score: 2, seed: 8 },
-    status: "FINAL",
-  },
-  {
-    matchId: "m-qf2",
-    round: "QUARTERFINALS",
-    matchLabel: "QF 2",
-    sheetId: "sheet-olympic-south",
-    sheetName: "Olympic South",
-    homeTeam: { name: "Toronto Marlboros", score: 3, seed: 4 },
-    awayTeam: { name: "Detroit HoneyBaked", score: 3, seed: 5 },
-    status: "LIVE",
-    period: 3,
-    timeRemaining: "0:15 (OT)",
-    youtubeUrl: "https://youtube.com/watch?v=live_qf2",
-  },
-  {
-    matchId: "m-qf3",
-    round: "QUARTERFINALS",
-    matchLabel: "QF 3",
-    sheetId: "sheet-north-3",
-    sheetName: "North Rink 3",
-    homeTeam: { name: "Shattuck St. Mary's", score: 5, seed: 2 },
-    awayTeam: { name: "Boston Jr. Eagles", score: 1, seed: 7 },
-    status: "FINAL",
-  },
-  {
-    matchId: "m-qf4",
-    round: "QUARTERFINALS",
-    matchLabel: "QF 4",
-    sheetId: "sheet-north-4",
-    sheetName: "North Rink 4",
-    homeTeam: { name: "Little Caesars", score: 2, seed: 3 },
-    awayTeam: { name: "MN Blades", score: 1, seed: 6 },
-    status: "LIVE",
-    period: 2,
-    timeRemaining: "11:42",
-    youtubeUrl: "https://youtube.com/watch?v=live_qf4",
-  },
-  // Semifinals
-  {
-    matchId: "m-sf1",
-    round: "SEMIFINALS",
-    matchLabel: "Semi 1",
-    sheetId: "sheet-nhl-center",
-    sheetName: "Main Center Arena",
-    homeTeam: { name: "Jr. Sharks AAA", score: 0, seed: 1 },
-    awayTeam: { name: "TBD", score: 0, seed: 4 },
-    status: "UPCOMING",
-  },
-  {
-    matchId: "m-sf2",
-    round: "SEMIFINALS",
-    matchLabel: "Semi 2",
-    sheetId: "sheet-olympic-south",
-    sheetName: "Olympic South",
-    homeTeam: { name: "Shattuck St. Mary's", score: 0, seed: 2 },
-    awayTeam: { name: "TBD", score: 0, seed: 3 },
-    status: "UPCOMING",
-  },
-  // Championship
-  {
-    matchId: "m-final",
-    round: "CHAMPIONSHIP",
-    matchLabel: "Championship Final",
-    sheetId: "sheet-nhl-center",
-    sheetName: "Main Center Arena (Showcase)",
-    homeTeam: { name: "TBD", score: 0, seed: 1 },
-    awayTeam: { name: "TBD", score: 0, seed: 2 },
-    status: "UPCOMING",
-  },
-];
+// GA-030 O-01 (T0.4): the built-in bracket (real club names, scores, live clocks) was deleted.
+// With no matches the view shows "not yet available"; real brackets arrive with T6.1.
+const NO_MATCHES: BracketMatch[] = [];
 
 export function LiveTournamentBracketView({
-  matches = DEFAULT_MATCHES,
+  matches = NO_MATCHES,
   onSelectMatchSheet,
 }: LiveTournamentBracketViewProps) {
   const qfMatches = matches.filter((m) => m.round === "QUARTERFINALS");
@@ -198,12 +120,21 @@ export function LiveTournamentBracketView({
         </span>
       </div>
 
+      {matches.length === 0 ? (
+        <div
+          data-testid="tournament-bracket-unavailable"
+          className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 text-center text-xs text-slate-400"
+        >
+          <p className="font-semibold text-white text-sm">Bracket: not yet available</p>
+          <p className="mt-1">No tournament bracket is connected.</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Round 1: Quarterfinals */}
         <div className="flex flex-col gap-3">
           <div className="text-xs font-mono font-bold text-slate-400 tracking-wider uppercase flex items-center gap-2">
             <span>Quarterfinals</span>
-            <span className="text-[10px] px-1.5 py-0.5 bg-slate-900 rounded text-slate-500">4 Matches</span>
+            <span className="text-[10px] px-1.5 py-0.5 bg-slate-900 rounded text-slate-500">{qfMatches.length} Matches</span>
           </div>
           <div className="flex flex-col gap-3">{qfMatches.map(renderMatchCard)}</div>
         </div>
@@ -212,7 +143,7 @@ export function LiveTournamentBracketView({
         <div className="flex flex-col gap-3">
           <div className="text-xs font-mono font-bold text-slate-400 tracking-wider uppercase flex items-center gap-2">
             <span>Semifinals</span>
-            <span className="text-[10px] px-1.5 py-0.5 bg-slate-900 rounded text-slate-500">2 Matches</span>
+            <span className="text-[10px] px-1.5 py-0.5 bg-slate-900 rounded text-slate-500">{sfMatches.length} Matches</span>
           </div>
           <div className="flex flex-col gap-3 my-auto">{sfMatches.map(renderMatchCard)}</div>
         </div>
@@ -228,6 +159,7 @@ export function LiveTournamentBracketView({
           <div className="flex flex-col gap-3 my-auto">{finalMatches.map(renderMatchCard)}</div>
         </div>
       </div>
+      )}
     </div>
   );
 }

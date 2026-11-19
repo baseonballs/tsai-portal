@@ -12,8 +12,8 @@ export * from "./multi-sheet-types";
 
 export function MultiSheetCommandCenter({
   initialSheets = [],
-  tournamentName = "International Silver Stick AAA Finals",
-  venueName = "Transcend Sports Complex (8-Sheet Facility)",
+  tournamentName = "Tournament Director",
+  venueName = "No tournament connected",
   selectedSheetId: controlledSheetId,
   onSelectSheet,
 }: MultiSheetCommandCenterProps) {
@@ -52,7 +52,7 @@ export function MultiSheetCommandCenter({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0B0F17] p-5 rounded-2xl border border-slate-800 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-red-500 animate-ping" />
+            <span className={`flex h-2.5 w-2.5 rounded-full ${sheets.length > 0 ? "bg-red-500 animate-ping" : "bg-slate-600"}`} />
             <h2 className="text-xl font-black tracking-tight text-white uppercase">{tournamentName}</h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
@@ -79,6 +79,19 @@ export function MultiSheetCommandCenter({
           </button>
         </div>
       </div>
+
+      {/* GA-030 O-01 (T0.4): no tournament backend yet — an honest empty state, never built-in sheets. */}
+      {sheets.length === 0 && (
+        <div
+          data-testid="tournament-director-unavailable"
+          className="rounded-2xl border border-slate-800 bg-[#0d121d] p-8 text-center text-sm text-slate-400"
+        >
+          <p className="font-semibold text-white">Live sheets: not yet available</p>
+          <p className="mt-1 text-xs">
+            No tournament, rink sheet or stream is connected. Nothing on this page is live.
+          </p>
+        </div>
+      )}
 
       {/* ── 8-Sheet Mosaic Video Matrix ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

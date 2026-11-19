@@ -6,24 +6,22 @@ import {
   GoalLineProjectionData,
   GoalLineReviewCanvasProps,
 } from "../../types/goal-line-projection-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const DEFAULT_PROJECTION_DATA: GoalLineProjectionData = {
-  puckX: 27.195,
-  puckY: 0.12,
-  puckZ: 0.04,
-  clearanceMarginMm: 4.3,
-  crossingPercentage: 100.0,
-  isWithinGoalFrame: true,
-  opticalConfidence: 0.96,
-  verdict: "GOAL_CONFIRMED",
-  timestamp: 1204.5,
-};
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function GoalLineOrthogonalReviewCanvas(props: GoalLineReviewCanvasProps) {
+  if (!props.projectionData) {
+    return <NotYetAvailable feature="Goal-line review" detail="No reviewed game event is connected." className={props.className ?? ""} />;
+  }
+  return <GoalLineOrthogonalReviewCanvasView {...props} projectionData={props.projectionData} />;
+}
 
-export function GoalLineOrthogonalReviewCanvas({
-  projectionData = DEFAULT_PROJECTION_DATA,
+function GoalLineOrthogonalReviewCanvasView({
+  projectionData,
   onVerdictChange,
   className = "",
-}: GoalLineReviewCanvasProps) {
+}: GoalLineReviewCanvasProps & { projectionData: NonNullable<GoalLineReviewCanvasProps["projectionData"]> }) {
   const [activeVerdict, setActiveVerdict] = useState<GoalReviewVerdict>(
     projectionData.verdict
   );

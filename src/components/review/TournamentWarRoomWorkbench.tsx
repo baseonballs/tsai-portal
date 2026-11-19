@@ -12,22 +12,21 @@
 import React, { useState } from "react";
 import { AlertTriangle, Radio, Tv, ShieldAlert, CheckCircle2, Clock, Layers, Flame, Activity, Send } from "lucide-react";
 import { SheetMonitoringView, TournamentWarRoomProps, WarRoomAlertUI } from "../../types/tournament-war-room-portal-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const DEFAULT_SHEETS: SheetMonitoringView[] = [
-  { sheetId: "sheet-1", sheetName: "Rink 1 - North Arena", homeTeam: "Edina Green", awayTeam: "Wayzata Blue", score: "3 - 2", periodClock: "P3 14:00", cameraCount: 4, hasCriticalAlert: true, status: "live" },
-  { sheetId: "sheet-2", sheetName: "Rink 2 - South Arena", homeTeam: "Minnetonka White", awayTeam: "Eden Prairie Red", score: "1 - 1", periodClock: "P2 07:00", cameraCount: 4, hasCriticalAlert: false, status: "live" },
-  { sheetId: "sheet-3", sheetName: "Rink 3 - East Studio", homeTeam: "Duluth East", awayTeam: "Hermantown Hawks", score: "4 - 0", periodClock: "INT 2", cameraCount: 3, hasCriticalAlert: false, status: "intermission" },
-];
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function TournamentWarRoomWorkbench(props: TournamentWarRoomProps) {
+  if (!props.initialSheets || props.initialSheets.length === 0) {
+    return <NotYetAvailable feature="Tournament war room" detail="No tournament sheet is connected." />;
+  }
+  return <TournamentWarRoomWorkbenchView {...props} />;
+}
 
-export const DEFAULT_ALERTS: WarRoomAlertUI[] = [
-  { id: "alt-1", sheetId: "sheet-1", sheetName: "Rink 1 - North", timestamp: "10s ago", type: "concussion", severity: "critical", title: "Concussion Risk Alert (52.4g, 610 N·s)", details: "High-G collision at center-ice red line. SCAT6 sideline triage recommended.", telemetryValue: "52.4g / 610 N·s", resolved: false },
-  { id: "alt-2", sheetId: "sheet-2", sheetName: "Rink 2 - South", timestamp: "3m ago", type: "review", severity: "medium", title: "Goal Line Review Requested", details: "Crossbar rebound deflection; referee tablet scrubbing initiated.", resolved: true },
-];
-
-export function TournamentWarRoomWorkbench({
-  facilityName = "National Sports Center Super Rink",
-  initialSheets = DEFAULT_SHEETS,
-  initialAlerts = DEFAULT_ALERTS,
+function TournamentWarRoomWorkbenchView({
+  facilityName = "Facility",
+  initialSheets = [],
+  initialAlerts = [],
   onDispatchDirective,
   onResolveAlert,
 }: TournamentWarRoomProps) {

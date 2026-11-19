@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import {
   ClubStripeConnectProfile,
-  DEFAULT_CLUB_STRIPE_PROFILE,
   KycStatus,
 } from '../../types/club-stripe-connect-types';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const ClubStripeConnectOnboarding: React.FC = () => {
-  const [profile, setProfile] = useState<ClubStripeConnectProfile>(DEFAULT_CLUB_STRIPE_PROFILE);
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const ClubStripeConnectOnboarding: React.FC<{ initialProfile?: ClubStripeConnectProfile }> = ({ initialProfile }) => {
+  if (!initialProfile) {
+    return <NotYetAvailable feature="Club payout onboarding" detail="There is no club payout product yet; no account is connected." />;
+  }
+  return <ClubStripeConnectOnboardingView initialProfile={initialProfile} />;
+};
+
+const ClubStripeConnectOnboardingView: React.FC<{ initialProfile: ClubStripeConnectProfile }> = ({ initialProfile }) => {
+  const [profile, setProfile] = useState<ClubStripeConnectProfile>(initialProfile);
   const [isConnectingStripe, setIsConnectingStripe] = useState<boolean>(false);
 
   // Revenue projection calculation

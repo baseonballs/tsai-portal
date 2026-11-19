@@ -78,8 +78,8 @@ export function mapLocationToSheetNumber(location: string): { sheetNumber: numbe
 /**
  * Parses Home vs Away team names, round, and division from summary text.
  * Handles formats like:
- * "Jr Sharks AAA vs Chicago Mission (16U AAA Quarterfinal 1)"
- * "Toronto Marlboros @ Detroit HoneyBaked - Semifinal"
+ * "Home Club AAA vs Away Club (16U AAA Quarterfinal 1)"
+ * "Home Club @ Away Club - Semifinal"
  */
 export function parseTeamsFromSummary(summary: string): {
   homeTeam: string;
@@ -301,53 +301,56 @@ export function provisionTournamentSheetsFromICal(
     // Find current active game or next upcoming game
     const nowTime = now.getTime();
     let activeEvent = sheetEvents.find((e) => e.dtStart.getTime() <= nowTime && nowTime <= e.dtEnd.getTime());
-    let streamState: SheetStreamState = "LIVE";
+    // GA-030 O-01 (T0.4): a calendar says when a game is scheduled, not that a stream is live.
+    // There is no streaming backend yet, so every sheet is UNINITIALIZED and carries no stream
+    // key, ingest URL, playback URL, score, clock or hardware reading. Those used to be invented.
+    let streamState: SheetStreamState = "UNINITIALIZED";
 
     if (!activeEvent) {
       // Find next upcoming
       const upcoming = sheetEvents.find((e) => e.dtStart.getTime() > nowTime);
       if (upcoming) {
         activeEvent = upcoming;
-        streamState = "TESTING";
+        streamState = "UNINITIALIZED";
       } else if (sheetEvents.length > 0) {
         // Last finished
         activeEvent = sheetEvents[sheetEvents.length - 1];
-        streamState = "COMPLETED";
+        streamState = "UNINITIALIZED";
       }
     }
 
     const rinkName = activeEvent?.rinkName || defaultRinkNames[sheetNum];
     const matchId = activeEvent?.uid || `sheet-${sheetNum}-idle`;
-    const homeTeam = activeEvent?.homeTeam || `Team Sheet ${sheetNum} Home`;
-    const awayTeam = activeEvent?.awayTeam || `Team Sheet ${sheetNum} Away`;
+    const homeTeam = activeEvent?.homeTeam ?? "";
+    const awayTeam = activeEvent?.awayTeam ?? "";
 
     sheets.push({
       sheetId: `sheet-0${sheetNum}`,
       sheetNumber: sheetNum,
       rinkName,
       streamState,
-      youtubeBroadcastId: `yt_bc_prov_s${sheetNum}_${matchId.slice(-6)}`,
-      youtubeStreamKey: `live_tsai_s${sheetNum}_auto_${matchId.slice(-4)}`,
-      rtmpsIngestUrl: `rtmps://a.rtmps.youtube.com/live2/live_tsai_s${sheetNum}_auto_${matchId.slice(-4)}`,
-      playbackUrl: `https://youtube.com/watch?v=live_tsai_s0${sheetNum}`,
-      bitrateKbps: streamState === "COMPLETED" ? 0 : 8500,
-      fps: streamState === "COMPLETED" ? 0 : 60,
+      youtubeBroadcastId: "",
+      youtubeStreamKey: "",
+      rtmpsIngestUrl: "",
+      playbackUrl: "",
+      bitrateKbps: 0,
+      fps: 0,
       activeAngle: "TACTICAL_PRIMARY",
-      isPublicShowcase: sheetNum === 1,
+      isPublicShowcase: false,
       matchInfo: {
         matchId,
         homeTeam,
         awayTeam,
-        period: streamState === "COMPLETED" ? 3 : 2,
-        gameClockSeconds: streamState === "COMPLETED" ? 0 : 420,
-        scoreHome: streamState === "COMPLETED" ? 4 : 2,
-        scoreAway: streamState === "COMPLETED" ? 2 : 1,
+        period: 0,
+        gameClockSeconds: 0,
+        scoreHome: 0,
+        scoreAway: 0,
         isOvertime: false,
       },
       hardwareHealth: {
-        temperatureCelsius: 40.0 + sheetNum * 0.5,
+        temperatureCelsius: 0,
         droppedFramesCount: 0,
-        ispLoadPercentage: 42.0,
+        ispLoadPercentage: 0,
         thermalThrottled: false,
       },
       acousticShieldMuted: false,
@@ -361,81 +364,4 @@ export function provisionTournamentSheetsFromICal(
     sheets,
     unmappedEventsCount: unmappedEvents,
   };
-}
-
-/**
- * Generates canonical 8-sheet Silver Stick AAA tournament sample .ics data for testing and demonstrations.
- */
-export function generateSampleTournamentICal(): string {
-  return `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Transcendental Sports AI//Tournament Provisioner 2.0//EN
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-X-WR-CALNAME:International Silver Stick AAA Finals 2026
-BEGIN:VEVENT
-UID:ss-2026-qf1-sheet1
-DTSTART:20260918T180000Z
-DTEND:20260918T193000Z
-SUMMARY:Jr Sharks AAA vs Chicago Mission (16U AAA Quarterfinal 1)
-LOCATION:Sheet 1 - Main Center Arena
-DESCRIPTION:Silver Stick Championship Bracket Game 1. Stream ingest YouTube CDN.
-END:VEVENT
-BEGIN:VEVENT
-UID:ss-2026-qf2-sheet2
-DTSTART:20260918T181500Z
-DTEND:20260918T194500Z
-SUMMARY:Toronto Marlboros vs Detroit HoneyBaked (16U AAA Quarterfinal 2)
-LOCATION:Olympic South Sheet (Sheet 2)
-DESCRIPTION:Silver Stick Championship Bracket Game 2.
-END:VEVENT
-BEGIN:VEVENT
-UID:ss-2026-qf3-sheet3
-DTSTART:20260918T180000Z
-DTEND:20260918T193000Z
-SUMMARY:Shattuck St. Mary's vs Boston Jr. Eagles (16U AAA Quarterfinal 3)
-LOCATION:North Rink 3 (Sheet 3)
-DESCRIPTION:Silver Stick Championship Bracket Game 3.
-END:VEVENT
-BEGIN:VEVENT
-UID:ss-2026-qf4-sheet4
-DTSTART:20260918T183000Z
-DTEND:20260918T200000Z
-SUMMARY:Minnesota Blades vs Little Caesars (16U AAA Quarterfinal 4)
-LOCATION:West Rink 4 (Sheet 4)
-DESCRIPTION:Silver Stick Championship Bracket Game 4.
-END:VEVENT
-BEGIN:VEVENT
-UID:ss-2026-cons1-sheet5
-DTSTART:20260918T180000Z
-DTEND:20260918T193000Z
-SUMMARY:Pittsburgh Pens Elite vs Buffalo Jr. Sabres (Consolation 1)
-LOCATION:Sheet 5 (East Rink 5)
-DESCRIPTION:Consolation round game 1.
-END:VEVENT
-BEGIN:VEVENT
-UID:ss-2026-cons2-sheet6
-DTSTART:20260918T181500Z
-DTEND:20260918T194500Z
-SUMMARY:Team Illinois vs Oakland Jr. Grizzlies (Consolation 2)
-LOCATION:Sheet 6 (Training Sheet)
-DESCRIPTION:Consolation round game 2.
-END:VEVENT
-BEGIN:VEVENT
-UID:ss-2026-dev1-sheet7
-DTSTART:20260918T183000Z
-DTEND:20260918T200000Z
-SUMMARY:Colorado Thunderbirds vs Dallas Stars Elite (Showcase)
-LOCATION:Sheet 7 (Community Rink)
-DESCRIPTION:Showcase exhibition.
-END:VEVENT
-BEGIN:VEVENT
-UID:ss-2026-skills-sheet8
-DTSTART:20260918T180000Z
-DTEND:20260918T193000Z
-SUMMARY:Goalie Skills & Breakaway Showcase (Special Event)
-LOCATION:Sheet 8 (Studio Pond)
-DESCRIPTION:Skills competition and shootout challenge.
-END:VEVENT
-END:VCALENDAR`;
 }
