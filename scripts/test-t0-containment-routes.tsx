@@ -4,16 +4,16 @@
  * Each surface STAYS and renders an honest "not yet available" marker instead of invented data.
  * Rendered with react-dom/server, so this checks what a visitor actually receives, not only source.
  * It FAILS if any built-in club, score, clock, stream key, payout, calibration reading or random
- * counter comes back.
+ * counter comes back, or if the owner-only real-name list cannot be loaded.
  *
  * Run: npx tsx scripts/test-t0-containment-routes.tsx
  */
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { extname, join, relative } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { NameMatcher, loadRealNameList } from "./lib/real-names";
 
 import ClubRevSharePage from "../src/app/club-revshare/page";
 import TournamentDirectorPage from "../src/app/tournament/director/page";
@@ -38,6 +38,14 @@ import { GoalieRVHJointLoadReviewCanvas } from "../src/components/review/GoalieR
 import { VoronoiPassingLaneWorkbench } from "../src/components/tactics/VoronoiPassingLaneWorkbench";
 import { LiveBroadcastStreamPlayer } from "../src/components/broadcast/LiveBroadcastStreamPlayer";
 import { ArenaScoreboardBanner } from "../src/components/broadcast/ArenaScoreboardBanner";
+import { PowerplayUmbrellaCanvas } from "../src/components/tactics/PowerplayUmbrellaCanvas";
+import { IceFrictionChatterWorkbench } from "../src/components/analytics/IceFrictionChatterWorkbench";
+import { BenchDoorSubstitutionWorkbench } from "../src/components/bench/BenchDoorSubstitutionWorkbench";
+import { PenaltyBoxMagneticGateWorkbench } from "../src/components/penalty/PenaltyBoxMagneticGateWorkbench";
+import { BenchReplayWhistleSyncWorkbench } from "../src/components/replay/BenchReplayWhistleSyncWorkbench";
+import { NetPocketStrainDissipationWorkbench } from "../src/components/broadcast/NetPocketStrainDissipationWorkbench";
+import { MultiRinkBroadcastDirectorWorkbench } from "../src/components/broadcast/MultiRinkBroadcastDirectorWorkbench";
+import { MultiSheetCommandCenter } from "../src/components/tournaments/MultiSheetCommandCenter";
 
 const ROOT = process.cwd();
 let passed = 0;
@@ -56,14 +64,31 @@ const src = (p: string) => readFileSync(join(ROOT, p), "utf8");
 /** Source with comments removed, so a containment note that quotes the old claim does not count. */
 const code = (p: string) => src(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
 
-// The real youth club that /club-revshare named, kept as hashes of normalised word pairs so this
-// public repo never spells it. A pair is two adjacent lowercase alphanumeric words.
-const CLUB_PAIR_HASHES = new Set(["9e75e53b0bbb0228", "00487bde74a01251", "7a0e035eded779fa", "2ed78e36067638e6"]);
-const pairHash = (a: string, b: string) => createHash("sha256").update(`${a} ${b}`).digest("hex").slice(0, 16);
-function namesTheClub(text: string): boolean {
-  const words = text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(" ");
-  for (let i = 0; i + 1 < words.length; i++) if (CLUB_PAIR_HASHES.has(pairHash(words[i], words[i + 1]))) return true;
-  return false;
+// Real names come only from the OWNER-ONLY list (scripts/lib/real-names.ts, TSAI_REAL_NAME_LIST); this public
+// repo never carries a name, a hash of one, or a pattern for one. If the list cannot be loaded the suite FAILS:
+// a missing list must never turn into a silent pass.
+const listVerdict = loadRealNameList();
+if (listVerdict.verdict !== "ok") {
+  console.error(`test-t0-containment: FAILED — real-name check cannot run: ${listVerdict.reason}`);
+  process.exit(1);
+}
+const matcher = new NameMatcher(listVerdict.data);
+const realNameHits = (text: string) => matcher.hits(text).length;
+/** Visible text of the element carrying data-testid=`id` (static markup, no nested element of the same tag). */
+function textOfTestId(html: string, id: string): string {
+  const start = html.indexOf(`data-testid="${id}"`);
+  assert.ok(start >= 0, `marker ${id} missing`);
+  const open = html.lastIndexOf("<", start);
+  const tag = html.slice(open + 1).match(/^[a-z0-9]+/)![0];
+  let depth = 0;
+  const re = new RegExp(`<(/?)${tag}\\b[^>]*>`, "g");
+  re.lastIndex = open;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    depth += m[1] ? -1 : 1;
+    if (depth === 0) return html.slice(open, m.index + m[0].length).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  }
+  throw new Error(`unterminated ${id}`);
 }
 
 console.log("\n=== T0.4 containment: Portal public false claims ===\n");
@@ -76,7 +101,13 @@ check("partner block says not yet available and names no club", () => {
   assert.doesNotMatch(html, /acct_/, "no invented Stripe Connect account");
   assert.doesNotMatch(html, /Next Payout|Active Direct Deposit|Stripe Connect Account/i, "no invented payout schedule");
   assert.doesNotMatch(html, /Direct deposit to team bank account/i);
-  assert.equal(namesTheClub(html), false, "the real club must not be named");
+  // Structural (needs no name): the partner block holds ONLY the not-yet-available marker — no partner of any name.
+  assert.equal(
+    textOfTestId(html, "club-partner-unavailable"),
+    "Club partner payouts: not yet available No club is connected and no payouts are made today. The figures above are a calculator, not account data.",
+    "the partner block names no partner",
+  );
+  assert.equal(realNameHits(html), 0, "no listed real name on /club-revshare");
 });
 
 console.log("O-01 /tournament/director");
@@ -89,7 +120,21 @@ check("sheets and bracket show not yet available; no invented stream, score or c
   assert.doesNotMatch(html, /\b\d+ - \d+\b/, "no invented score");
   assert.match(html, /Tournament Director/, "a neutral heading, no built-in tournament name");
   assert.match(html, /No tournament connected/);
-  assert.equal(namesTheClub(html), false);
+  assert.equal(realNameHits(html), 0, "no listed real name on /tournament/director");
+});
+check("a sheet without xG shows it as missing, never an even split", () => {
+  const sheet = {
+    sheetId: "fixture-sheet", sheetNumber: 1, rinkName: "Fixture Rink", streamState: "UNINITIALIZED" as const,
+    youtubeBroadcastId: "", youtubeStreamKey: "", rtmpsIngestUrl: "", playbackUrl: "", bitrateKbps: 0, fps: 0,
+    activeAngle: "TACTICAL_PRIMARY" as const, isPublicShowcase: false,
+    matchInfo: { matchId: "m", homeTeam: "", awayTeam: "", period: 0, gameClockSeconds: 0, scoreHome: 0, scoreAway: 0, isOvertime: false },
+    hardwareHealth: { temperatureCelsius: 0, droppedFramesCount: 0, ispLoadPercentage: 0, thermalThrottled: false },
+    acousticShieldMuted: false,
+  };
+  const html = render(<MultiSheetCommandCenter initialSheets={[sheet]} />);
+  assert.match(html, /xG not available/);
+  assert.doesNotMatch(html, /xG 1\.50/);
+  assert.doesNotMatch(code("src/components/tournaments/MultiSheetCommandCenter.tsx"), /\?\? 1\.5/);
 });
 check("director page source carries no built-in sheets", () => {
   const s = code("src/app/tournament/director/page.tsx");
@@ -109,6 +154,7 @@ check("wizard claims no pairing or calibration", () => {
   const html = render(<BYODSetupPage />);
   assert.ok(html.includes("Device check: not yet available"), "step 1 says the device check is not yet available");
   assert.ok(html.includes("Optical sensor check:"), "step 1 sensor check is present");
+  assert.equal(realNameHits(html), 0);
   assert.doesNotMatch(html, /A18 Pro \/ M4 Ready|acceleration verified/);
   const s = code("src/components/vision/BYODSetupWizard.tsx");
   for (const claim of [
@@ -146,6 +192,8 @@ check("no random events/sec counter", () => {
   const html = render(<TranscendEngineSubstrate />);
   assert.match(html, /data-testid="engine-throughput-unavailable"/);
   assert.doesNotMatch(html, /events\/sec/);
+  assert.match(html, /data-testid="platform-status-unavailable"/);
+  assert.doesNotMatch(html, /\bONLINE\b|SYNC OK|Sync: Realtime/, "no live-status claim");
   assert.doesNotMatch(code("src/components/landing/TranscendEngineSubstrate.tsx"), /Math\.random|setInterval|pulseCount/);
 });
 
@@ -168,6 +216,13 @@ const EMPTY: Array<[string, React.ReactElement]> = [
   ["VoronoiPassingLaneWorkbench", <VoronoiPassingLaneWorkbench key="o" />],
   ["LiveBroadcastStreamPlayer", <LiveBroadcastStreamPlayer key="p" />],
   ["ArenaScoreboardBanner", <ArenaScoreboardBanner key="q" />],
+  ["PowerplayUmbrellaCanvas", <PowerplayUmbrellaCanvas key="r" />],
+  ["IceFrictionChatterWorkbench", <IceFrictionChatterWorkbench key="s" />],
+  ["BenchDoorSubstitutionWorkbench", <BenchDoorSubstitutionWorkbench key="t" />],
+  ["PenaltyBoxMagneticGateWorkbench", <PenaltyBoxMagneticGateWorkbench key="u" />],
+  ["BenchReplayWhistleSyncWorkbench", <BenchReplayWhistleSyncWorkbench key="v" />],
+  ["NetPocketStrainDissipationWorkbench", <NetPocketStrainDissipationWorkbench key="w" />],
+  ["MultiRinkBroadcastDirectorWorkbench", <MultiRinkBroadcastDirectorWorkbench key="x" />],
 ];
 for (const [name, el] of EMPTY) {
   check(`${name} with no data renders only "not yet available"`, () => {
@@ -177,6 +232,23 @@ for (const [name, el] of EMPTY) {
     assert.doesNotMatch(text, /\d/, "the empty state carries no number");
   });
 }
+check("no component invents data when its data prop is missing", () => {
+  const offenders: string[] = [];
+  const walk = (d: string) => {
+    for (const e of readdirSync(join(ROOT, d), { withFileTypes: true })) {
+      const rel = join(d, e.name);
+      if (e.isDirectory()) walk(rel);
+      else if (/\.tsx?$/.test(e.name)) {
+        const t = code(rel);
+        if (/function generate(Default|Sample|Mock|Fake|Demo)\w*\(/.test(t)) offenders.push(`${rel}: generator`);
+        if (/\binitial(State|Data)\s*(\|\||\?\?)\s*\{/.test(t) || /^\s+initial(State|Data|Sequence)\s*=\s*\{/m.test(t)) offenders.push(`${rel}: fallback literal`);
+        if (/^\s+activeSequence\s*=\s*\{/m.test(t)) offenders.push(`${rel}: fallback literal`);
+      }
+    }
+  };
+  walk("src/components");
+  assert.deepEqual(offenders, [], offenders.join("\n"));
+});
 check("no built-in data constants remain in the component and type trees", () => {
   const dirs = ["src/components", "src/types", "src/app", "src/lib/tournament"];
   const offenders: string[] = [];
@@ -187,7 +259,7 @@ check("no built-in data constants remain in the component and type trees", () =>
       else if (/\.(ts|tsx)$/.test(e.name)) {
         const text = src(rel);
         // Thresholds are configuration, not data; DEFAULT_FAILOVER_THRESHOLDS stays.
-        const m = text.match(/^(export )?const (DEFAULT|INITIAL|SAMPLE)_(?!FAILOVER_THRESHOLDS\b)[A-Z_]+\s*:/gm);
+        const m = text.match(/^(export\s+)?const\s+(DEFAULT|INITIAL|SAMPLE)_(?!FAILOVER_THRESHOLDS\b)[A-Z0-9_]+\b/gm);
         if (m) offenders.push(`${rel}: ${m.join(", ")}`);
       }
     }
@@ -199,23 +271,12 @@ check("no built-in data constants remain in the component and type trees", () =>
   assert.deepEqual(unexpected, [], `built-in data constants found:\n${unexpected.join("\n")}`);
 });
 
-console.log("Club name, tree-wide");
-check("the real club named on /club-revshare appears nowhere in the repository", () => {
-  const skip = new Set(["node_modules", ".next", ".git", "graphify-out", "coverage", "dist", "out"]);
-  const binary = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".woff", ".woff2", ".ttf", ".mp4", ".mov", ".webm", ".zip"]);
-  const hits: string[] = [];
-  const walk = (d: string) => {
-    for (const e of readdirSync(d, { withFileTypes: true })) {
-      if (skip.has(e.name) || e.name.startsWith(".env")) continue;
-      const full = join(d, e.name);
-      if (e.isDirectory()) walk(full);
-      else if (e.isFile() && !binary.has(extname(e.name).toLowerCase()) && statSync(full).size < 5_000_000) {
-        if (namesTheClub(readFileSync(full, "utf8"))) hits.push(relative(ROOT, full));
-      }
-    }
-  };
-  walk(ROOT);
-  assert.deepEqual(hits, [], `files that name the club: ${hits.join(", ")}`);
+console.log("Real names (owner-only list)");
+check("no listed real name in any rendered T0.4 surface", () => {
+  for (const [name, el] of EMPTY) assert.equal(realNameHits(render(el)), 0, `${name}: listed real name rendered`);
+  assert.equal(realNameHits(render(<RinkTelemetryChart />)), 0);
+  assert.equal(realNameHits(render(<TranscendEngineSubstrate />)), 0);
+  // The tree-wide scan against the same list is scripts/test-no-real-names.ts (also in pnpm test).
 });
 
 console.log(`\n=== T0.4 containment: ${passed} checks passed ===\n`);

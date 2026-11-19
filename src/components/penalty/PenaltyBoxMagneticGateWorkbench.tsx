@@ -8,6 +8,7 @@
  */
 
 import React, { useState } from 'react';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
 export interface PenaltyBoxGateFeed {
   penaltyId: string;
@@ -35,53 +36,21 @@ interface PenaltyBoxMagneticGateWorkbenchProps {
   onAuditTrigger?: () => void;
 }
 
-export const PenaltyBoxMagneticGateWorkbench: React.FC<PenaltyBoxMagneticGateWorkbenchProps> = ({
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const PenaltyBoxMagneticGateWorkbench: React.FC<PenaltyBoxMagneticGateWorkbenchProps> = (props) => {
+  if (!props.initialState) {
+    return <NotYetAvailable feature="Penalty-box gate review" detail="No live game event is connected." />;
+  }
+  return <PenaltyBoxMagneticGateWorkbenchView {...props} initialState={props.initialState} />;
+};
+
+const PenaltyBoxMagneticGateWorkbenchView: React.FC<PenaltyBoxMagneticGateWorkbenchProps & { initialState: PenaltyGateSyncState }> = ({
   initialState,
   onAuditTrigger,
 }) => {
   const [state] = useState<PenaltyGateSyncState>(
-    initialState || {
-      sheetId: 'sheet-north-01',
-      activeGameClockSec: 742.85,
-      isGameRunning: true,
-      isWhistleActive: false,
-      hallSensorLatencyMs: 6.0,
-      penaltyGates: [
-        {
-          penaltyId: 'PEN-8102',
-          sheetId: 'sheet-north-01',
-          penalizedPlayerId: 'PLY-24',
-          teamSide: 'HOME',
-          penaltyClockRemainingSec: 0.0,
-          gateLatchStatus: 'UNLATCHED',
-          unlatchTimestampSec: 742.85,
-          skaterDistanceToIceM: 0.12,
-          arbitrationVerdict: 'CLEARED_EXPIRATION_LEGAL',
-        },
-        {
-          penaltyId: 'PEN-8105',
-          sheetId: 'sheet-north-01',
-          penalizedPlayerId: 'PLY-88',
-          teamSide: 'AWAY',
-          penaltyClockRemainingSec: 1.45,
-          gateLatchStatus: 'UNLATCHED',
-          unlatchTimestampSec: 741.4,
-          skaterDistanceToIceM: 0.35,
-          arbitrationVerdict: 'ILLEGAL_SUBSTITUTION_INFRACTION',
-        },
-        {
-          penaltyId: 'PEN-8109',
-          sheetId: 'sheet-north-01',
-          penalizedPlayerId: 'PLY-17',
-          teamSide: 'HOME',
-          penaltyClockRemainingSec: 48.0,
-          gateLatchStatus: 'LATCHED',
-          unlatchTimestampSec: 0.0,
-          skaterDistanceToIceM: 1.85,
-          arbitrationVerdict: 'CLEARED_EXPIRATION_LEGAL',
-        },
-      ],
-    }
+    initialState
   );
 
   const hasInfraction = state.penaltyGates.some(

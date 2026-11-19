@@ -14,14 +14,30 @@ import {
   HighlightTriggerEvent,
   DirectorProgramState
 } from "@/types/broadcast-director-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
 interface Props {
-  initialFeeds: RinkCameraFeed[];
-  initialEvents: HighlightTriggerEvent[];
-  initialProgram: DirectorProgramState;
+  initialFeeds?: RinkCameraFeed[];
+  initialEvents?: HighlightTriggerEvent[];
+  initialProgram?: DirectorProgramState;
 }
 
-export const MultiRinkBroadcastDirectorWorkbench: React.FC<Props> = ({
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const MultiRinkBroadcastDirectorWorkbench: React.FC<Props> = ({ initialFeeds, initialEvents, initialProgram }) => {
+  if (!initialFeeds || initialFeeds.length === 0 || !initialProgram) {
+    return <NotYetAvailable feature="Multi-rink broadcast director" detail="No rink camera feed is connected." />;
+  }
+  return (
+    <MultiRinkBroadcastDirectorWorkbenchView
+      initialFeeds={initialFeeds}
+      initialEvents={initialEvents ?? []}
+      initialProgram={initialProgram}
+    />
+  );
+};
+
+const MultiRinkBroadcastDirectorWorkbenchView: React.FC<Required<Props>> = ({
   initialFeeds,
   initialEvents,
   initialProgram

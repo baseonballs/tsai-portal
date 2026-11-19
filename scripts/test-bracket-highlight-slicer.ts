@@ -25,7 +25,7 @@ const INITIAL_PORTAL_MATCHES: PortalTournamentMatch[] = [
     roundName: 'Quarterfinal 1',
     sheetName: 'Rink A',
     homeTeam: { id: 'team-north', name: 'North Stars', seed: 1, score: 4 },
-    awayTeam: { id: 'team-south', name: 'South Blades', seed: 8, score: 3 },
+    awayTeam: { id: 'team-south', name: 'South Fixture Club', seed: 8, score: 3 },
     status: 'COMPLETED',
     winnerTeamId: 'team-north',
     nextMatchId: 'match-semi-1',
@@ -89,7 +89,7 @@ async function runBracketHighlightSlicerTests() {
   assert(qf1.matchId === 'match-qf-1', 'First match is QF1');
   assert(qf1.status === 'COMPLETED', 'QF1 is completed');
   assert(qf1.homeTeam.score === 4, 'North Stars score 4');
-  assert(qf1.awayTeam.score === 3, 'South Blades score 3');
+  assert(qf1.awayTeam.score === 3, 'South Fixture Club score 3');
   assert(qf1.highlightClips.length === 2, 'QF1 has 2 sliced highlight clips');
   console.log('  ✔ Verified tournament matches, scores, and sliced highlight clips.\n');
 

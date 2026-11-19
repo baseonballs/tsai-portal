@@ -20,7 +20,7 @@ function runTests() {
       sheetId: "sheet-1",
       rinkName: "Rink 1",
       homeTeam: { name: "Fixture Club B", seed: 1, score: 4 },
-      awayTeam: { name: "Mission", seed: 8, score: 2 },
+      awayTeam: { name: "Fixture Club A", seed: 8, score: 2 },
       status: "FINAL",
       winnerTeamName: "Fixture Club B",
     },

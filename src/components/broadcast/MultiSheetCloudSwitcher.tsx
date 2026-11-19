@@ -23,7 +23,8 @@ function MultiSheetCloudSwitcherView({ initialChannels }: { initialChannels: Por
   const [channels, setChannels] = useState<PortalSheetChannel[]>(initialChannels);
   const [selectedSheetId, setSelectedSheetId] = useState<string>(initialChannels[0].sheetId);
   const [replays, setReplays] = useState<PortalReplayItem[]>([]);
-  const [lastCutMs, setLastCutMs] = useState<number>(45);
+  // No measured cut latency exists yet (it was random); nothing is shown until one does.
+  const lastCutMs: number | null = null;
 
   const activeChannel = channels.find((c) => c.sheetId === selectedSheetId) || channels[0];
 
@@ -43,7 +44,6 @@ function MultiSheetCloudSwitcherView({ initialChannels }: { initialChannels: Por
           : c
       )
     );
-    setLastCutMs(Math.floor(40 + Math.random() * 15));
   };
 
   const handleTriggerReplay = (sec: number, type: PortalReplayItem['eventType']) => {
@@ -122,7 +122,7 @@ function MultiSheetCloudSwitcherView({ initialChannels }: { initialChannels: Por
             </div>
           </div>
           <div className="text-[11px] text-slate-500 flex justify-between pt-4 border-t border-slate-800">
-            <span>Latency: {lastCutMs} ms</span>
+            <span>Latency: {lastCutMs === null ? "not measured" : `${lastCutMs} ms`}</span>
             <span className="text-emerald-400 font-mono">BROADCAST SECURE</span>
           </div>
         </div>

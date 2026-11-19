@@ -13,8 +13,8 @@ function runTests() {
 
   // 1. Data Contract & Invariants
   const kiosk: ArenaEdgeKioskNode = {
-    kioskId: "KIOSK-SJ-RINK-A",
-    venueName: "Solar4America Ice",
+    kioskId: "KIOSK-FIXTURE-RINK-A",
+    venueName: "Fixture Arena",
     rinkSheetId: "RINK-A",
     isWakeLockActive: true,
     thermalPressureTier: "NOMINAL",

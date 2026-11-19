@@ -31,7 +31,7 @@ function runTests() {
       sheetId: 'sheet-2',
       sheetName: 'Rink 2',
       tournamentId: 't-1',
-      homeTeam: 'Mission',
+      homeTeam: 'Fixture Club A',
       awayTeam: 'Fixture Club E',
       homeScore: 4,
       awayScore: 4,

@@ -143,15 +143,15 @@ export function TranscendEngineSubstrate() {
           <div className="bg-black/80 border border-white/15 p-4 rounded-2xl font-mono text-xs space-y-2 shrink-0 shadow-inner">
             <div className="flex items-center justify-between gap-4">
               <span className="text-zinc-400 text-[11px]">PLATFORM STATUS</span>
-              <span className="text-emerald-400 font-bold flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> ONLINE
+              <span data-testid="platform-status-unavailable" className="text-zinc-400 font-bold flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-zinc-600" /> Live status: not yet available
               </span>
             </div>
             <div className="text-zinc-200 font-semibold text-[11px] flex items-center gap-1.5">
               <Database className="w-3.5 h-3.5 text-cyan-400" /> MASCE Neural Core v2.4
             </div>
             <div className="text-[10px] text-zinc-500">
-              Latency: 41s ingest · Sync: Realtime
+              No live engine metrics are connected
             </div>
           </div>
         </div>
@@ -253,13 +253,13 @@ export function TranscendEngineSubstrate() {
                   )}
                 </p>
 
-                {/* SIMULATED HIGH-TECH AI TERMINAL METRICS */}
+                {/* ENGINE ARCHITECTURE SUMMARY (descriptive; no live status) */}
                 <div className="mt-6 p-4 rounded-xl bg-zinc-950 border border-white/10 font-mono text-xs space-y-2">
                   <div className="flex items-center justify-between text-zinc-400 border-b border-white/5 pb-2 text-[11px]">
                     <span className="flex items-center gap-1.5 text-cyan-400">
-                      <Terminal className="w-3.5 h-3.5" /> Engine Telemetry Stream
+                      <Terminal className="w-3.5 h-3.5" /> Engine Architecture
                     </span>
-                    <span className="text-emerald-400">SYNC OK</span>
+                    <span className="text-zinc-500">Live sync: not yet available</span>
                   </div>
                   <div className="text-[11px] text-zinc-300 space-y-1">
                     <div className="flex justify-between">

@@ -99,10 +99,11 @@ export function MultiSheetCommandCenter({
           const isSelected = sheet.sheetId === activeSheetId;
           const isLive = sheet.streamState === "LIVE";
           const whistleActive = sheet.matchInfo?.whistleDuckingActive ?? false;
-          const homeXg = sheet.matchInfo?.homeXg ?? 1.5;
-          const awayXg = sheet.matchInfo?.awayXg ?? 1.5;
-          const totalXg = Math.max(homeXg + awayXg, 0.1);
-          const homeXgPct = Math.round((homeXg / totalXg) * 100);
+          // No xG reading → show it as missing, never a made-up even split (GA-030 O-01).
+          const homeXg = sheet.matchInfo?.homeXg;
+          const awayXg = sheet.matchInfo?.awayXg;
+          const hasXg = typeof homeXg === "number" && typeof awayXg === "number";
+          const homeXgPct = hasXg ? Math.round((homeXg / Math.max(homeXg + awayXg, 0.1)) * 100) : 0;
 
           return (
             <div
@@ -153,13 +154,15 @@ export function MultiSheetCommandCenter({
                 </div>
                 <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1.5 font-mono">
                   <span>P{sheet.matchInfo.period} • {Math.floor(sheet.matchInfo.gameClockSeconds / 60)}:{(sheet.matchInfo.gameClockSeconds % 60).toString().padStart(2, "0")}</span>
-                  <span className="text-cyan-400">xG {homeXg.toFixed(2)} - {awayXg.toFixed(2)}</span>
+                  <span className="text-cyan-400">{hasXg ? `xG ${homeXg.toFixed(2)} - ${awayXg.toFixed(2)}` : "xG not available"}</span>
                 </div>
                 {/* Dynamic xG pressure bar */}
-                <div className="w-full bg-slate-800 h-1 rounded-full mt-1.5 overflow-hidden flex">
-                  <div className="bg-cyan-500 h-full" style={{ width: `${homeXgPct}%` }} />
-                  <div className="bg-slate-600 h-full" style={{ width: `${100 - homeXgPct}%` }} />
-                </div>
+                {hasXg && (
+                  <div className="w-full bg-slate-800 h-1 rounded-full mt-1.5 overflow-hidden flex">
+                    <div className="bg-cyan-500 h-full" style={{ width: `${homeXgPct}%` }} />
+                    <div className="bg-slate-600 h-full" style={{ width: `${100 - homeXgPct}%` }} />
+                  </div>
+                )}
               </div>
 
               {/* Bottom Angle Controls */}
