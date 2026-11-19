@@ -21,18 +21,20 @@
  *   uuid-keyed-map   an object keyed by a UUID literal, or `new Map([["<uuid>", …]])`
  *   uuid-list        an array of 2+ UUID string literals (the "team-id scope heuristic" shape)
  *
- * What it does NOT scan: tests (`*.test.*`, `*.spec.*`, `__tests__`, `__mocks__`, `fixtures`), `scripts/`,
- * `src/scripts/`, `e2e/`, stories, `node_modules`, build output. Those never ship to a user.
+ * What it does NOT scan: test files (`*.test.*`, `*.spec.*`, stories, `__tests__/`), and the repo-level tooling
+ * trees `scripts/`, `src/scripts/`, `e2e/` and build output. A `fixtures/` or `__mocks__/` directory inside a
+ * runtime root IS scanned — runtime code can import it.
  *
  * Two ways a finding is accepted, and only two:
- *   1. ALLOW-LIST (`config.allow`): one file + one rule + a gap-register row id that exists in the register
- *      (tsai-sitedocs origin/main, read by the surface guard's loader) + a reason. A row id that is not in the
- *      register fails the lint. There are no wildcards.
+ *   1. ALLOW-LIST (`config.allow`): one file + one rule + a gap-register row id + a reason. The row must exist in
+ *      the register (tsai-sitedocs origin/main, read by the surface guard's loader), belong to THIS app, be OPEN,
+ *      and not be CLOSED* or RETIRED. Anything else fails the lint. There are no wildcards.
  *   2. BASELINE (`baseline.json`): the findings on main when the lint landed, per file and rule, as counts. It
  *      is REPORT MODE for what was already there: those are listed, not failed, so the register can route them.
  *      It is a ratchet: a count above the baseline, or a file/rule not in it, fails. A count BELOW it fails too
  *      ("stale baseline") until `--write-baseline` lowers it; `--write-baseline` refuses to raise a count or to
- *      add an entry, so it cannot launder a new finding.
+ *      add an entry. And the committed baseline is itself checked against `origin/main`'s (`baselineGrowth`): a
+ *      branch may lower a count, never raise one or add a file/rule, so a hand-edited baseline fails too.
  *
  * Fail closed: an unreadable root, an unparseable file, a missing baseline, an allow entry without a register
  * row, or an unreadable register (when there are allow entries) is a failure, never a pass.
@@ -92,23 +94,13 @@ export type Baseline = Record<string, Partial<Record<RuleId, number>>>;
 // Which files are runtime code
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-const SKIP_DIRS = new Set([
-  "node_modules",
-  ".git",
-  ".next",
-  "dist",
-  "out",
-  "build",
-  "coverage",
-  "graphify-out",
-  ".turbo",
-  "__tests__",
-  "__mocks__",
-  "__fixtures__",
-  "fixtures",
-  "e2e",
-  "scripts",
-]);
+/** Never runtime, wherever they sit. `__tests__` holds only tests; the rest are tooling or build output. */
+const SKIP_DIRS = new Set(["node_modules", ".git", ".next", ".turbo", "__tests__"]);
+/**
+ * Never runtime, but ONLY at these repo-relative prefixes. A `fixtures/`, `__mocks__/`, `scripts/` or `build/`
+ * directory INSIDE a runtime root (say `src/lib/fixtures/`) is scanned: if app code can import it, it ships.
+ */
+const SKIP_PREFIXES = ["scripts/", "src/scripts/", "e2e/", "dist/", "out/", "build/", "coverage/", "graphify-out/"];
 const CODE_EXT = /\.(ts|tsx|js|jsx|mjs|cjs|json)$/;
 const NOT_RUNTIME = /(\.test\.|\.spec\.|\.stories\.|\.d\.ts$|(^|\/)(tsconfig|package)[^/]*\.json$)/;
 
@@ -116,6 +108,7 @@ export function isRuntimePath(rel: string, exclude: string[] = []): boolean {
   const p = rel.split(sep).join("/");
   if (!CODE_EXT.test(p) || NOT_RUNTIME.test(p)) return false;
   if (p.split("/").some((seg) => SKIP_DIRS.has(seg))) return false;
+  if (SKIP_PREFIXES.some((x) => p.startsWith(x))) return false;
   return !exclude.some((e) => p === e || p.startsWith(e.endsWith("/") ? e : e + "/"));
 }
 
@@ -405,14 +398,37 @@ export interface Verdict {
 
 const ROW_ID = /^[A-Z]{1,2}-S?\d+$/;
 
-export function judge(findings: Finding[], config: LintConfig, baseline: Baseline, registerIds: Set<string> | null): Verdict {
+/** The fields of a gap-register row the allow-list needs (a subset of the surface guard's `RegisterRow`). */
+export interface AllowRow {
+  surface: string;
+  status: string;
+  state: string;
+}
+
+/** Why a register row cannot back an allow entry for `app`, or null when it can. */
+export function allowRowProblem(id: string, row: AllowRow | undefined, app: string): string | null {
+  if (!row) return `${id} is not a row in gap-register.md`;
+  if (row.surface !== app) return `${id} belongs to ${row.surface}, not ${app}`;
+  if (!/^OPEN\b/.test(row.state)) return `${id} is ${row.state || "not OPEN"} — only an OPEN row can carry embedded data`;
+  if (/^CLOSED/.test(row.status) || /RETIRED/.test(row.status)) return `${id} has status ${row.status}`;
+  return null;
+}
+
+export function judge(
+  findings: Finding[],
+  config: LintConfig,
+  baseline: Baseline,
+  registerRows: Map<string, AllowRow> | null,
+): Verdict {
   const invalidAllow: Verdict["invalidAllow"] = [];
   const allowKey = new Set<string>();
   for (const a of config.allow) {
     if (!a.file || !RULES.includes(a.rule)) invalidAllow.push({ entry: a, why: "needs an exact file and a known rule" });
     else if (!ROW_ID.test(a.register ?? "")) invalidAllow.push({ entry: a, why: "needs a gap-register row id (e.g. P-12)" });
-    else if (!registerIds) invalidAllow.push({ entry: a, why: "the gap register could not be read" });
-    else if (!registerIds.has(a.register)) invalidAllow.push({ entry: a, why: `${a.register} is not a row in gap-register.md` });
+    else if (!registerRows) invalidAllow.push({ entry: a, why: "the gap register could not be read" });
+    else if (allowRowProblem(a.register, registerRows.get(a.register), config.app)) {
+      invalidAllow.push({ entry: a, why: allowRowProblem(a.register, registerRows.get(a.register), config.app) as string });
+    }
     else if (!a.reason?.trim()) invalidAllow.push({ entry: a, why: "needs a reason" });
     else allowKey.add(`${a.file}\0${a.rule}`);
   }
@@ -499,4 +515,16 @@ export function formatVerdict(v: Verdict, app: string): string {
     lines.push(`  ✗ stale baseline ${s.file} ${s.rule}: baseline ${s.baseline}, now ${s.now} — run with --write-baseline to lower it`);
   }
   return lines.join("\n");
+}
+
+/** Every way `next` exceeds `base` (a raised count, or a file/rule `base` does not have). */
+export function baselineGrowth(base: Baseline, next: Baseline): string[] {
+  const out: string[] = [];
+  for (const [file, rules] of Object.entries(next)) {
+    for (const [rule, n] of Object.entries(rules) as [RuleId, number][]) {
+      const was = base[file]?.[rule] ?? 0;
+      if (n > was) out.push(`${file} ${rule}: ${was} on the base, ${n} here`);
+    }
+  }
+  return out;
 }

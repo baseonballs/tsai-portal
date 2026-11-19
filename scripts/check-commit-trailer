@@ -4,6 +4,9 @@
 # Every commit says who wrote it. Its message must carry, as a git TRAILER (the last paragraph):
 #   Co-Authored-By: <agent> <address>     an agent wrote or co-wrote it (Claude, Gemini, Antigravity,
 #                                         agy, Cursor, Codex, Copilot, GPT, OpenAI)
+#   Agent: <agent>                        the same attribution where a tool's own co-author line is
+#                                         stripped by repo policy (Spotlight's commit-msg replaces
+#                                         `Co-authored-by: Cursor <cursoragent@cursor.com>` with `Agent: cursor`)
 #   Human-Authored: yes                   a person wrote it with no agent
 # The history cannot show which agent wrote the untrailered commits (GA-030); from here on, it can.
 #
@@ -15,7 +18,8 @@
 # Fails closed: an unreadable message, an unresolvable base or head, or git missing is a failure.
 set -uo pipefail
 
-AGENT_RE='^co-authored-by:[[:space:]]*(claude|gemini|antigravity|agy|cursor|codex|copilot|gpt|openai)[^<]*<[^>]+>[[:space:]]*$'
+AGENTS='(claude|gemini|antigravity|agy|cursor|codex|copilot|gpt|openai)'
+AGENT_RE="^co-authored-by:[[:space:]]*${AGENTS}[^<]*<[^>]+>[[:space:]]*\$|^agent:[[:space:]]*${AGENTS}([[:space:]].*)?\$"
 HUMAN_RE='^human-authored:[[:space:]]*yes[[:space:]]*$'
 
 die() { echo "❌ check-commit-trailer: $*" >&2; exit 1; }
@@ -31,6 +35,7 @@ explain() {
   cat >&2 <<'MSG'
    Add one trailer to the end of the commit message (its own last paragraph):
      Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>     (or the agent that wrote it)
+     Agent: cursor                                                (where a co-author line is stripped)
      Human-Authored: yes                                          (a person, no agent)
 MSG
 }

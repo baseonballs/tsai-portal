@@ -6,8 +6,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { BASELINE_PATH, registerIdsFor } from "./cli";
-import { judge, lintSource, lintTree, lowerBaseline, readBaseline, RULES, type LintConfig, type RuleId } from "./core";
+import { BASELINE_PATH, registerRowsFor, runLint } from "./cli";
+import { baselineGrowth, isRuntimePath, judge, lintSource, lintTree, lowerBaseline, readBaseline, RULES, type AllowRow, type LintConfig, type RuleId } from "./core";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`embedded-data-lint self-test: ${msg}`);
@@ -56,22 +56,38 @@ export function runSelfTest(root: string, config: LintConfig, probeFile: string)
   // The real tree, with one violation INTRODUCED at a real runtime path, must fail.
   const baseline = readBaseline(join(root, BASELINE_PATH));
   const real = lintTree(root, config);
-  const register = registerIdsFor(root, config);
+  const register = registerRowsFor(root, config);
   const probeText = readFileSync(join(root, probeFile), "utf8") + "\n" + VIOLATIONS["player-records"] + "\n";
   const overlaid = real.filter((f) => f.file !== probeFile).concat(lintSource(probeFile, probeText));
   const v = judge(overlaid, config, baseline, register);
   assert(!v.ok && v.fresh.some((f) => f.file === probeFile && f.rule === "player-records"), `an introduced roster in ${probeFile} did not fail the lint`);
   checks++;
 
-  // Bad approvals fail.
+  // Bad approvals fail: unknown, malformed, unreadable, foreign, closed, retired, unmatched.
   const probeFinding = { file: probeFile, line: 1, rule: "player-records" as RuleId, detail: "probe" };
   const withAllow = (register: string) => ({ ...config, allow: [{ file: probeFile, rule: "player-records" as RuleId, register, reason: "probe" }] });
-  assert(!judge([probeFinding], withAllow("ZZ-999999"), {}, new Set(["P-01"])).ok, "an allow entry with an unknown register row passed");
-  assert(!judge([probeFinding], withAllow("not a row"), {}, new Set(["P-01"])).ok, "an allow entry without a row id passed");
+  const rows = (row: Partial<AllowRow>) => new Map<string, AllowRow>([["P-01", { surface: config.app, status: "REBUILD-NOW", state: "OPEN", ...row }]]);
+  assert(!judge([probeFinding], withAllow("ZZ-999999"), {}, rows({})).ok, "an allow entry with an unknown register row passed");
+  assert(!judge([probeFinding], withAllow("not a row"), {}, rows({})).ok, "an allow entry without a row id passed");
   assert(!judge([probeFinding], withAllow("P-01"), {}, null).ok, "an allow entry passed with no register to check it against");
-  assert(judge([probeFinding], withAllow("P-01"), {}, new Set(["P-01"])).ok, "a valid allow entry was refused");
-  assert(!judge([], withAllow("P-01"), {}, new Set(["P-01"])).ok, "an allow entry that matches nothing passed");
-  checks += 5;
+  assert(!judge([probeFinding], withAllow("P-01"), {}, rows({ surface: "Another App" })).ok, "an allow entry on another app's row passed");
+  assert(!judge([probeFinding], withAllow("P-01"), {}, rows({ state: "CLOSED" })).ok, "an allow entry on a CLOSED row passed");
+  assert(!judge([probeFinding], withAllow("P-01"), {}, rows({ state: "RETIRED" })).ok, "an allow entry on a RETIRED row passed");
+  assert(!judge([probeFinding], withAllow("P-01"), {}, rows({ state: "AWAITING OWNER (OD-17)", status: "CLOSED-CORRECT" })).ok, "an allow entry on a CLOSED-CORRECT row passed");
+  assert(judge([probeFinding], withAllow("P-01"), {}, rows({})).ok, "a valid allow entry was refused");
+  assert(!judge([], withAllow("P-01"), {}, rows({})).ok, "an allow entry that matches nothing passed");
+  checks += 9;
+
+  // Fixtures and mocks inside a runtime root are runtime code; only test files and tooling trees are skipped.
+  assert(isRuntimePath("src/lib/fixtures/roster.ts") && isRuntimePath("src/__mocks__/teams.ts"), "fixtures/ or __mocks__/ inside src/ was skipped");
+  assert(!isRuntimePath("src/lib/roster.test.ts") && !isRuntimePath("src/scripts/probe.ts") && !isRuntimePath("src/a/__tests__/b.ts"), "a test file was scanned");
+  checks += 2;
+
+  // The committed baseline may only shrink against the base branch.
+  assert(baselineGrowth({ [probeFile]: { "player-records": 1 } }, { [probeFile]: { "player-records": 2 } }).length === 1, "a raised baseline count was not caught");
+  assert(baselineGrowth({}, { [probeFile]: { "team-list": 1 } }).length === 1, "a new baseline entry was not caught");
+  assert(baselineGrowth({ [probeFile]: { "player-records": 2 } }, { [probeFile]: { "player-records": 1 } }).length === 0, "a lowered baseline was refused");
+  checks += 3;
 
   // The baseline is a ratchet.
   assert(!judge([probeFinding, probeFinding], { ...config, allow: [] }, { [probeFile]: { "player-records": 1 } }, null).ok, "a count above the baseline passed");
@@ -93,9 +109,12 @@ export function runSelfTest(root: string, config: LintConfig, probeFile: string)
   assert(missing, "a missing baseline did not fail");
   checks += 5;
 
-  // And the real tree passes.
-  const now = judge(real, config, baseline, register);
-  assert(now.ok, `the tree fails the lint:\n${now.fresh.map((f) => `${f.file}:${f.line} ${f.rule}`).join("\n")}`);
+  // And the real tree passes, baseline checked against the base branch.
+  const now = runLint(root, config);
+  assert(
+    now.ok,
+    `the tree fails the lint:\n${[...now.fresh.map((f) => `${f.file}:${f.line} ${f.rule}`), ...now.baseGrowth, ...now.staleBaseline.map((s) => `stale ${s.file} ${s.rule}`)].join("\n")}`,
+  );
   checks++;
   return checks;
 }

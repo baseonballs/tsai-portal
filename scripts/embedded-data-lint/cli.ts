@@ -10,26 +10,78 @@
  * Allow entries are checked against tsai-sitedocs gap-register.md through the surface guard's loader
  * (TSAI_SITEDOCS_DIR / TSAI_SITEDOCS_REF, default ../tsai-sitedocs at origin/main).
  */
+import { execFileSync } from "node:child_process";
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { loadRegisterSource, parseRegister, repoRootFrom } from "../surface-guard/core";
 import { config } from "./config";
-import { baselineTotal, countByFileRule, formatVerdict, judge, lintTree, lowerBaseline, readBaseline, type Baseline, type LintConfig, type Verdict } from "./core";
+import {
+  baselineGrowth,
+  baselineTotal,
+  countByFileRule,
+  formatVerdict,
+  judge,
+  lintTree,
+  lowerBaseline,
+  readBaseline,
+  type AllowRow,
+  type Baseline,
+  type LintConfig,
+  type Verdict,
+} from "./core";
 
 export const BASELINE_PATH = "scripts/embedded-data-lint/baseline.json";
 
-export function registerIdsFor(root: string, cfg: LintConfig): Set<string> | null {
+export function registerRowsFor(root: string, cfg: LintConfig): Map<string, AllowRow> | null {
   if (!cfg.allow.length) return null;
   const src = loadRegisterSource(root);
-  const rows = parseRegister(src.register);
-  return new Set(rows.keys());
+  return parseRegister(src.register) as Map<string, AllowRow>;
 }
 
-export function runLint(root: string, cfg: LintConfig = config): Verdict {
+/**
+ * The baseline on the base branch (`TSAI_LINT_BASE_REF`, default `origin/main`). `null` only when the base has
+ * no baseline yet (the change that lands the lint); an unresolvable base is an error, never a pass.
+ */
+export function baseBaseline(root: string, env: Record<string, string | undefined> = process.env): { ref: string; baseline: Baseline | null } {
+  const ref = env.TSAI_LINT_BASE_REF || "origin/main";
+  if (!/^[A-Za-z0-9._/-]+$/.test(ref) || ref.startsWith("-")) throw new Error(`embedded-data-lint: refusing base ref ${JSON.stringify(ref)}`);
+  try {
+    execFileSync("git", ["-C", root, "rev-parse", "--verify", "--quiet", "--end-of-options", `${ref}^{commit}`], { stdio: "pipe" });
+  } catch {
+    throw new Error(`embedded-data-lint: base ${ref} is not a commit here (fetch origin, or set TSAI_LINT_BASE_REF) — the baseline cannot be checked`);
+  }
+  let text: string;
+  try {
+    text = execFileSync("git", ["-C", root, "show", "--end-of-options", `${ref}:${BASELINE_PATH}`], { stdio: "pipe" }).toString("utf8");
+  } catch {
+    return { ref, baseline: null };
+  }
+  const raw = JSON.parse(text) as { findings?: Baseline };
+  if (!raw || typeof raw.findings !== "object" || raw.findings === null) throw new Error(`embedded-data-lint: ${ref}:${BASELINE_PATH} has no "findings"`);
+  return { ref, baseline: raw.findings };
+}
+
+export interface LintRun extends Verdict {
+  /** The baseline grew relative to the base branch: these fail. */
+  baseGrowth: string[];
+  baseRef: string;
+  baseHasBaseline: boolean;
+}
+
+export function runLint(root: string, cfg: LintConfig = config): LintRun {
   const baseline = readBaseline(join(root, BASELINE_PATH));
-  const findings = lintTree(root, cfg);
-  return judge(findings, cfg, baseline, registerIdsFor(root, cfg));
+  const base = baseBaseline(root);
+  const baseGrowth = base.baseline ? baselineGrowth(base.baseline, baseline) : [];
+  const v = judge(lintTree(root, cfg), cfg, baseline, registerRowsFor(root, cfg));
+  return { ...v, baseGrowth, baseRef: base.ref, baseHasBaseline: base.baseline !== null, ok: v.ok && !baseGrowth.length };
+}
+
+export function formatRun(v: LintRun, app: string): string {
+  const lines = [formatVerdict(v, app)];
+  if (!v.baseHasBaseline) lines.push(`  · ${v.baseRef} has no baseline yet: this change lands it (review baseline.json)`);
+  for (const g of v.baseGrowth) lines.push(`  ✗ baseline grew against ${v.baseRef}: ${g}`);
+  return lines.join("\n");
 }
 
 function writeBaseline(root: string, b: Baseline) {
@@ -72,7 +124,7 @@ function main(argv: string[]) {
   const v = runLint(root);
   if (argv.includes("--json")) console.log(JSON.stringify(v, null, 2));
   else {
-    console.log(formatVerdict(v, config.app));
+    console.log(formatRun(v, config.app));
     if (argv.includes("--list")) {
       const files = new Map<string, Set<string>>();
       for (const f of v.baselined) files.set(f.file, (files.get(f.file) ?? new Set()).add(f.rule));

@@ -67,6 +67,7 @@
     "test:embedded-data-lint": "npx tsx scripts/test-embedded-data-lint.ts",
     "check:embedded-data": "npx tsx scripts/embedded-data-lint/cli.ts",
     "check:commit-trailer": "bash scripts/check-commit-trailer",
+    "hooks:install": "git config core.hooksPath .githooks && chmod +x .githooks/commit-msg && echo 'commit-msg hook active (T2.7)'",
     "test:commit-trailer": "bash scripts/test-check-commit-trailer.sh && bash scripts/check-commit-trailer",
     "verify:build": "pnpm run build"
   },

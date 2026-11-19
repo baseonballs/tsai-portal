@@ -30,6 +30,10 @@ g commit -q --allow-empty -m $'human co-author only\n\nCo-Authored-By: Some Pers
 printf 'msg\n\nHuman-Authored: no\n' >"$T/m1"; (cd "$T" && expect 1 "Human-Authored: no fails" "$CHECK" --msg-file "$T/m1")
 printf 'msg\n\nCo-Authored-By: Gemini <noreply@example.com>\n# comment line\n' >"$T/m2"; (cd "$T" && expect 0 "commit-msg mode passes an agent trailer" "$CHECK" --msg-file "$T/m2")
 (cd "$T" && expect 1 "commit-msg mode fails on a missing file" "$CHECK" --msg-file "$T/nope")
+(cd "$T" && expect 1 "commit-msg mode fails with no file argument" "$CHECK" --msg-file)
+printf 'msg\n\nAgent: cursor\n' >"$T/m3"; (cd "$T" && expect 0 "an Agent: cursor trailer passes" "$CHECK" --msg-file "$T/m3")
+printf 'msg\n\nAgent: someone\n' >"$T/m4"; (cd "$T" && expect 1 "an Agent: trailer naming no agent fails" "$CHECK" --msg-file "$T/m4")
+printf 'msg\n\nCo-authored-by: Cursor <cursoragent@example.com>\n' >"$T/m5"; (cd "$T" && expect 0 "a Cursor co-author line passes" "$CHECK" --msg-file "$T/m5")
 g branch -f base HEAD
 (cd "$T" && expect 0 "an empty range passes (nothing to attribute)" "$CHECK" base..HEAD)
 if ((fail)); then echo "❌ check-commit-trailer self-test failed"; exit 1; fi
