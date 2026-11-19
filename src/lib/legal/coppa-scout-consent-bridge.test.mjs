@@ -87,7 +87,7 @@ const minorChildWithVpc = {
   ...minorChildUnder13,
   vpcStatus: {
     vpcAcceptedAt: "2026-09-01T10:00:00Z",
-    vpcParentName: "Jeffrey Lucas",
+    vpcParentName: "Fixture Guardian",
     vpcParentEmail: "parent@example.com",
     vpcVersion: "1.0",
   },
@@ -102,7 +102,7 @@ assert.equal(minorWithVpcResult.redactionLevel, "redacted_metrics_only");
 const exportedCard = exportAthleteScoutingCard(minorChildWithVpc, verifiedScout, refDate);
 assert.equal(exportedCard.personalContactIncluded, false);
 assert.equal(exportedCard.parentContact?.parentEmail, "parent@example.com");
-assert.equal(exportedCard.parentContact?.parentName, "Jeffrey Lucas");
+assert.equal(exportedCard.parentContact?.parentName, "Fixture Guardian");
 assert.equal(exportedCard.filmAccessAllowed, true);
 assert.deepEqual(exportedCard.authorizedFilmReels, ["reel-01", "reel-02"]);
 console.log("✅ Gate 3: Minor under 13 with VPC allows verified metrics & parent contact");
@@ -110,7 +110,7 @@ console.log("✅ Gate 3: Minor under 13 with VPC allows verified metrics & paren
 // 5. Protected Teen (13-17) without VPC (allowed only with anonymized metrics, film & contact redacted)
 const teenNoVpc = {
   athleteId: "ath-teen-16",
-  fullName: "Alex Mercer",
+  fullName: "Athlete C",
   birthDate: "2010-03-20", // Age 16
   jerseyNumber: 17,
   teamName: "Fixture Club H 16U AAA",
