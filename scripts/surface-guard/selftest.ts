@@ -22,14 +22,24 @@ import {
   extractSurface,
   fsTree,
   judge,
+  dataAccessIn,
+  importAliases,
+  jsonc,
+  judgeProvenance,
+  loadProvenance,
   loadRegisterSource,
   manifestJson,
   overlayTree,
   parseLedger,
+  parseProvenance,
   parseRegister,
+  PROVENANCE_KINDS,
   runCheck,
+  runProvenanceCheck,
   type GuardConfig,
   type Manifest,
+  type ProvenanceSidecar,
+  type WorkspaceReader,
   type RegisterMap,
   type SourceTree,
   type SurfaceEntry,
@@ -64,6 +74,7 @@ function neutralRegister(app: string, prefix: string): { register: string; ledge
     `| ${prefix}902 | ${app} | Neutral closed row | REMOVED | P2 | REBUILD-NOW | — | — | T3.1 | CLOSED |`,
     `| ${prefix}904 | ${app} | Neutral still-fake row with \`a | b\` and a \\| pipe | STILL-FAKE | P2 | REBUILD-NOW | — | T0.5 | T3.7 | OPEN |`,
     `| ${prefix}905 | ${app} | Neutral row in an unknown state | REMOVED | P2 | REBUILD-NOW | — | — | T3.1 | CLOSED-CORRECT |`,
+    `| ${prefix}906 | ${app} | Neutral closed-correct row awaiting the owner | REMOVED | P3 | CLOSED-CORRECT | — | — | CLOSED | AWAITING OWNER (OD-17) |`,
     `| ZZ-903 | ${other} | Neutral foreign row | REMOVED | P2 | REBUILD-NOW | — | — | T3.1 | OPEN |`,
   ];
   for (let i = 0; i < 10; i++) rows.push(`| ${prefix}91${i} | ${app} | Filler ${i} | REMOVED | P3 | REBUILD-NOW | — | — | T3.1 | OPEN |`);
@@ -239,5 +250,187 @@ export function runSelfTest(o: SelfTestOptions): number {
   assert.throws(check([committed, forged]), /not an ancestor|not in/, "a release manifest from a commit outside HEAD's history is refused");
   checks += 3;
 
+  return checks;
+}
+
+/**
+ * The provenance half's own gate (T2.1 / T2.2), identical in the four apps. Every case runs against this tree (or an
+ * overlay of it) and the neutral register above, and must come out as stated: a check that cannot fail is not a check.
+ */
+export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }): number {
+  const { root, config } = o;
+  const prefix = config.rowPrefixes[0];
+  const base = fsTree(root);
+  const head = extractSurface(base, config, { head: true });
+  const { register, ledger } = neutralRegister(config.app, prefix);
+  const rows = parseRegister(register);
+  const surfaces = head.entries.filter((e) => PROVENANCE_KINDS.includes(e.kind) && e.polarity === "present");
+  assert.ok(surfaces.length > 0, "provenance self-test: no route or tab at HEAD");
+  const all = (): ProvenanceSidecar => ({ surfaces: Object.fromEntries(surfaces.map((e) => [e.id, { register: `${prefix}901` }])) });
+  // A neutral workspace: one sibling repo holding a hockey-api-style model and handlers, and a TS writer.
+  const probeRepo: Record<string, string> = {
+    "svc/app/models.py": 'class ProbeItem(Base):\n    __tablename__ = "probe_items"\n',
+    "svc/app/endpoints.py": [
+      '@router.post("/probe-items")',
+      "async def create_probe(db):",
+      "    db.add(ProbeItem(x=1))",
+      '@router.get("/probe-items")',
+      "async def list_probe(db):",
+      "    return db.query(ProbeItem).all()",
+      '@router.post("/probe-items/hidden")',
+      "async def hidden(db):",
+      "    return create_probe_item(db)",
+      "",
+    ].join("\n"),
+    "web/route.ts": 'export async function POST() {\n  await db.from("probe_rows").insert({ a: 1 });\n}\nexport async function GET() {\n  return db.from("probe_reads").select("*");\n}\n',
+  };
+  const ws: WorkspaceReader = {
+    origin: "neutral",
+    read: (repo, path) => (repo === "tsai-probe" ? probeRepo[path] ?? null : null),
+    files: (repo, dir) => (repo === "tsai-probe" ? Object.keys(probeRepo).filter((f) => f.startsWith(dir)) : []),
+  };
+  const judgeOn = (sc: ProvenanceSidecar, tree: SourceTree = base) =>
+    judgeProvenance(extractSurface(tree, config, { head: true }), tree, sc, rows, config, ws);
+  const invalidFor = (sc: ProvenanceSidecar, id: string, why: RegExp, what: string) => {
+    const v = judgeOn(sc);
+    assert.ok(v.invalid.some((i) => i.id === id && why.test(i.why)), `${what}: must be invalid (${why}); got ${JSON.stringify(v.invalid.slice(0, 3))}`);
+    checks++;
+  };
+  let checks = 0;
+  const target = surfaces[0];
+  const withEntry = (entry: unknown): ProvenanceSidecar => {
+    const sc = all();
+    (sc.surfaces as Record<string, unknown>)[target.id] = entry;
+    return sc;
+  };
+
+  // ── 1. every surface mapped to an open row of this app: complete ──
+  const full = judgeOn(all());
+  assert.equal(full.invalid.length, 0, `a fully mapped sidecar must be valid: ${JSON.stringify(full.invalid.slice(0, 3))}`);
+  assert.equal(full.unresolved.length, 0, "a fully mapped sidecar leaves nothing unresolved");
+  checks++;
+
+  // ── 2. a surface with no entry is UNRESOLVED; a NEW route with no entry is UNRESOLVED ──
+  const missing = all();
+  delete missing.surfaces[target.id];
+  assert.deepEqual(judgeOn(missing).unresolved.map((u) => u.id), [target.id], "a surface with no entry must be unresolved");
+  checks++;
+  const dir = config.appDirs[0];
+  const probe = `${dir}/surface-guard-provenance-probe/page.tsx`;
+  const added = judgeOn(all(), overlayTree(base, { [probe]: "export default function Probe() { return null; }\n" }));
+  assert.deepEqual(added.unresolved.map((u) => u.id), ["route:/surface-guard-provenance-probe"], "a new route with no entry must be unresolved");
+  const strictNew = runProvenanceCheck({
+    repoRoot: root,
+    config,
+    tree: overlayTree(base, { [probe]: "export default function Probe() { return null; }\n" }),
+    sidecar: all(),
+    registerSource: { origin: "neutral", register, ledger },
+  });
+  assert.ok(strictNew.valid && !strictNew.complete, "strict mode must refuse a new route with no provenance; report mode must not");
+  checks += 2;
+
+  // ── 3. endpoint entries: table and a real writer are required ──
+  const ok3 = judgeOn(withEntry({ endpoint: "hockey-api GET /api/v1/probe-items", table: "hockey_db.probe_items", writer: "user-action: POST /api/v1/probe-items", writerSource: "tsai-probe:svc/app/endpoints.py:1" }));
+  assert.ok(ok3.endpoint.includes(target.id) && !ok3.invalid.length, `a complete endpoint entry whose handler inserts is valid: ${JSON.stringify(ok3.invalid)}`);
+  const ok3b = judgeOn(withEntry({ endpoint: "x", table: "supabase:public.probe_rows", writer: "user-action: POST web/route", writerSource: "tsai-probe:web/route.ts:2" }));
+  assert.ok(ok3b.endpoint.includes(target.id) && !ok3b.invalid.length, `a TS handler that .insert()s is a writer: ${JSON.stringify(ok3b.invalid)}`);
+  const okAuth = judgeOn(withEntry({ endpoint: "GoTrue", table: "auth.users", writer: "user-action: GoTrue sign-up / sign-in" }));
+  assert.ok(okAuth.endpoint.includes(target.id), "auth.users written by GoTrue is valid without a handler");
+  checks += 3;
+  // The cited handler must INSERT into the named table: a select, a helper call, another table or no citation fail.
+  invalidFor(withEntry({ endpoint: "x", table: "hockey_db.probe_items", writer: "user-action: POST /api/v1/probe-items" }), target.id, /writerSource/, "no writerSource");
+  const mid = judgeOn(withEntry({ endpoint: "x", table: "hockey_db.probe_items", writer: "user-action: POST /api/v1/probe-items", writerSource: "tsai-probe:svc/app/endpoints.py:3" }));
+  assert.ok(mid.endpoint.includes(target.id), "a citation inside the handler body resolves to that handler");
+  checks++;
+  invalidFor(withEntry({ endpoint: "x", table: "hockey_db.probe_items", writer: "user-action: POST /x", writerSource: "tsai-probe:svc/app/endpoints.py:6" }), target.id, /does not insert/, "a handler that only selects (cited inside its body)");
+  invalidFor(withEntry({ endpoint: "x", table: "hockey_db.probe_items", writer: "user-action: POST /x", writerSource: "tsai-probe:svc/app/endpoints.py:7" }), target.id, /does not insert/, "an insert hidden in a helper");
+  invalidFor(withEntry({ endpoint: "x", table: "hockey_db.other_items", writer: "user-action: POST /x", writerSource: "tsai-probe:svc/app/endpoints.py:1" }), target.id, /no ORM model/, "a handler that inserts another table");
+  invalidFor(withEntry({ endpoint: "x", table: "supabase:public.probe_reads", writer: "user-action: GET web/route", writerSource: "tsai-probe:web/route.ts:5" }), target.id, /does not .insert/, "a TS handler that only selects");
+  invalidFor(withEntry({ endpoint: "x", table: "supabase:public.probe_rows", writer: "user-action: x", writerSource: "tsai-nope:web/route.ts:2" }), target.id, /cannot be read/, "an unreadable handler");
+  invalidFor(withEntry({ endpoint: "x", table: "supabase:public.probe_rows", writer: "user-action: x", writerSource: "web/route.ts" }), target.id, /must be "<repo>/, "a malformed writerSource");
+  invalidFor(withEntry({ endpoint: "x", table: "auth.users", writer: "user-action: some app route" }), target.id, /GoTrue/, "auth.users with a non-GoTrue writer");
+  invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", writer: "user-action: POST /api/v1/probe" }), target.id, /must name table/, "an endpoint with no table");
+  invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "hockey_db.probe" }), target.id, /must name writer/, "an endpoint with no writer");
+  invalidFor(withEntry({ endpoint: "hockey-api GET /api/v1/probe", table: "unknown", writer: "user-action: x" }), target.id, /must name table/, "an `unknown` table");
+  invalidFor(withEntry({ endpoint: "x", table: "t", writer: "importer: scripts/seed_probe.py" }), target.id, /never count/, "a seed script as the writer");
+  invalidFor(withEntry({ endpoint: "x", table: "t", writer: "importer: alembic migration 0042" }), target.id, /never count/, "a migration as the writer");
+  invalidFor(withEntry({ endpoint: "x", table: "t", writer: "seed.sql" }), target.id, /must be "user-action/, "a writer with no real kind");
+  invalidFor(withEntry({ endpoint: "x", table: "t", writer: "user-action: GET /api/v1/probe" }), target.id, /not a writer/, "a GET endpoint as the writer");
+  invalidFor(withEntry({ endpoint: "x", table: "t", writer: "user-action: DELETE /api/v1/probe/{id}" }), target.id, /not a writer/, "a DELETE endpoint as the writer");
+  invalidFor(withEntry({ endpoint: "x", table: "hockey_db.cb_audit_events", writer: "user-action: POST /api/v1/probe" }), target.id, /audit table/, "an audit table as the backing table");
+
+  // ── 4. register entries: an OPEN row of this app only ──
+  assert.ok(judgeOn(withEntry({ register: `${prefix}901` })).register.includes(target.id), "an open row of this app is valid");
+  checks++;
+  invalidFor(withEntry({ register: `${prefix}902` }), target.id, /only an OPEN/, "a CLOSED row");
+  invalidFor(withEntry({ register: `${prefix}905` }), target.id, /only an OPEN/, "a row in an unknown state");
+  invalidFor(withEntry({ register: `${prefix}906` }), target.id, /closed or retired row/, "a CLOSED-CORRECT row, even one AWAITING OWNER");
+  invalidFor(withEntry({ register: `${prefix}999` }), target.id, /not in gap-register/, "a missing row");
+  invalidFor(withEntry({ register: "ZZ-903" }), target.id, /belongs to/, "another app's row");
+
+  // ── 5. shape ──
+  invalidFor(withEntry({ register: `${prefix}901`, static: "x" }), target.id, /exactly one/, "two shapes at once");
+  invalidFor(withEntry({}), target.id, /exactly one/, "an empty entry");
+  invalidFor(withEntry({ register: `${prefix}901`, writer: "user-action: x" }), target.id, /may not carry/, "a stray field");
+  const stale = all();
+  stale.surfaces["route:/surface-guard-no-such-route"] = { register: `${prefix}901` };
+  invalidFor(stale, "route:/surface-guard-no-such-route", /stale/, "an entry for a surface that does not exist");
+
+  // ── 6. static: the tripwire refuses a static surface whose module reads data ──
+  // A page whose import graph reaches no data today, so each mutation below is the only thing the tripwire can see.
+  // An app whose every page reaches data (shared session chrome) gets a data-free probe page in the overlay instead.
+  const found = surfaces.find((e) => e.kind === "route" && e.label === "page" && base.read(e.source) !== null && dataAccessIn(base, e.source) === null);
+  const probeFile = `${config.appDirs[0]}/surface-guard-static-probe/page.tsx`;
+  const sbase = found ? base : overlayTree(base, { [probeFile]: "export default function StaticProbe() { return null; }\n" });
+  const page = found ?? { id: "route:/surface-guard-static-probe", source: probeFile, kind: "route", polarity: "present" as const };
+  const clean = judgeOn({ surfaces: { ...all().surfaces, [page.id]: { static: "probe" } } }, sbase);
+  assert.ok(clean.static.includes(page.id) && !clean.invalid.length, `a data-free page is a valid static surface: ${JSON.stringify(clean.invalid.slice(0, 2))}`);
+  checks++;
+  const st: ProvenanceSidecar = { surfaces: { ...all().surfaces, [page.id]: { static: "probe" } } };
+  const fetching = overlayTree(sbase, { [page.source]: `${sbase.read(page.source)}\nexport async function probe() { return fetch("/api/probe"); }\n` });
+  const sv = judgeOn(st, fetching);
+  assert.ok(sv.invalid.some((i) => i.id === page.id && /fetch\(/.test(i.why)), "a static surface that fetches must be invalid");
+  // The tripwire follows local imports: a store or a fetch two hops away (one through a tsconfig alias) still counts.
+  const dirOf = page.source.split("/").slice(0, -1).join("/");
+  const viaStore = overlayTree(sbase, {
+    [page.source]: `import { probeStore } from "./surface-guard-probe-store";\n${sbase.read(page.source)}`,
+    [`${dirOf}/surface-guard-probe-store.ts`]: "export const probeStore = new Map<string, number>();\n",
+  });
+  assert.ok(judgeOn(st, viaStore).invalid.some((i) => i.id === page.id && /in-process store/.test(i.why)), "a static page importing an in-process store is invalid");
+  const alias = importAliases(base)[0];
+  assert.ok(alias, "provenance self-test: tsconfig.json declares no path alias to exercise");
+  const hop2 = `${alias[1]}surface-guard-probe/deep.ts`;
+  const viaAlias = overlayTree(sbase, {
+    [page.source]: `import { probe } from "./surface-guard-probe-mid";\n${sbase.read(page.source)}`,
+    [`${dirOf}/surface-guard-probe-mid.ts`]: `export { probe } from "${alias[0]}surface-guard-probe/deep";\n`,
+    [hop2]: 'export const probe = () => fetch("/api/probe");\n',
+  });
+  assert.ok(judgeOn(st, viaAlias).invalid.some((i) => i.id === page.id && /fetch/.test(i.why)), "a fetch two imports away (through an alias) is found");
+  const viaStub = overlayTree(sbase, { [page.source]: `${sbase.read(page.source)}\nexport function probe() { notFound(); }\n` });
+  assert.ok(judgeOn(st, viaStub).invalid.some((i) => i.id === page.id && /notFound/.test(i.why)), "a hollowed notFound() page cannot be static");
+  const tab = surfaces.find((e) => e.kind === "tab");
+  if (tab) {
+    assert.ok(judgeOn({ surfaces: { ...all().surfaces, [tab.id]: { static: "probe" } } }).invalid.some((i) => i.id === tab.id && /cannot be static/.test(i.why)), "a tab is never static");
+    checks++;
+  }
+  checks += 3;
+  const empty: ProvenanceSidecar = { surfaces: { ...all().surfaces, [page.id]: { static: "" } } };
+  assert.ok(judgeOn(empty, sbase).invalid.some((i) => i.id === page.id), "a static entry with no reason is invalid");
+  checks += 2;
+
+  assert.deepEqual(JSON.parse(jsonc('{"a": "**/*.ts", /* c */ "b": [1,], // d\n}')), { a: "**/*.ts", b: [1] }, "tsconfig globs are not comments");
+  checks++;
+
+  // ── 7. fail loudly ──
+  assert.throws(() => loadProvenance(join(tmpdir(), "surface-guard-no-such-app")), /missing/, "a missing sidecar must fail, never pass");
+  assert.throws(() => parseProvenance("{", "probe"), /not valid JSON/, "a broken sidecar must fail");
+  assert.throws(() => parseProvenance("{}", "probe"), /no "surfaces"/, "a sidecar with no surfaces object must fail");
+  const none = judgeProvenance({ ...head, entries: head.entries.filter((e) => !PROVENANCE_KINDS.includes(e.kind)) }, base, all(), rows, config, ws);
+  assert.ok(none.invalid.length > 0, "an extractor that finds no routed surface must fail, never pass");
+  checks += 4;
+
+  // ── 8. the committed sidecar is the one the suite reads ──
+  loadProvenance(root);
+  checks++;
   return checks;
 }
