@@ -2,10 +2,16 @@
   "$comment": "Provenance sidecar (T2.1, GOV-REAL-DATA-001 rule 5). One entry per routed surface id that scripts/surface-guard extracts (every route and in-page tab): {endpoint, table, writer} with a REAL writer (user-action / importer / sync; never a seed, migration or fixture), or {register} naming an OPEN gap-register row of this app that explains why there is no live source yet, or {static} for a surface that renders no domain data. A surface with no entry is UNRESOLVED. Checked by `surface-guard provenance` (strict: the release preflight) and `provenance --report` (the test suite). Each entry was derived from the code path cited in `evidence`.",
   "surfaces": {
     "docs-tab:spotlight": {
-      "static": "The Spotlight customer manual tab of /docs (src/lib/docs/manifest.ts)"
+      "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses (the entitlement gate; the manual pages ship in the build)",
+      "table": "supabase:public.user_product_licenses",
+      "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
+      "evidence": "src/lib/auth/portal-entitlement.ts:53"
     },
     "route:/": {
-      "static": "Marketing landing (DesktopLanding); no fetch, no domain data"
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63"
     },
     "route:/api/beta-requests": {
       "endpoint": "platform PostgREST POST /rest/v1/lead_submissions",
@@ -26,13 +32,16 @@
       "evidence": "src/app/auth/callback/route.ts:30"
     },
     "route:/auth/entitlement": {
-      "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses",
-      "table": "auth.users",
-      "writer": "user-action: GoTrue sign-up / sign-in (Google through the platform OAuth edge, Apple id_token exchange, email+password)",
-      "evidence": "src/lib/auth/portal-entitlement.ts:87"
+      "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses (the entitlement gate; the manual pages ship in the build)",
+      "table": "supabase:public.user_product_licenses",
+      "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
+      "evidence": "src/app/auth/entitlement/route.ts (getEntitledPortalUser, src/lib/auth/portal-entitlement.ts:53)"
     },
     "route:/beta": {
-      "static": "Beta sign-up page; reads no data (its form posts to /api/beta-requests, which carries its own provenance)"
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63"
     },
     "route:/byod-setup": {
       "register": "O-09",
@@ -45,19 +54,34 @@
       "evidence": "src/components/billing/ClubRevShareDashboard.tsx:308"
     },
     "route:/coachs-corner": {
-      "static": "Marketing copy from src/data/superpowers; no fetch"
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63"
     },
     "route:/docs/*?": {
-      "static": "Customer manual pages shipped in the build (src/lib/docs/manifest.ts); access is a GoTrue + licence check, the content is not domain data"
+      "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses (the entitlement gate; the manual pages ship in the build)",
+      "table": "supabase:public.user_product_licenses",
+      "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
+      "evidence": "src/lib/auth/portal-entitlement.ts:53"
     },
     "route:/legal/privacy": {
-      "static": "Legal text"
+      "endpoint": "platform GoTrue session (supabase.auth.getSession in the shared LandingHeader; the page reads no domain data)",
+      "table": "auth.users",
+      "writer": "user-action: GoTrue sign-up / sign-in (Google through the platform OAuth edge, Apple id_token exchange, email+password)",
+      "evidence": "src/components/landing/LandingHeader.tsx:29"
     },
     "route:/legal/terms": {
-      "static": "Legal text"
+      "endpoint": "platform GoTrue session (supabase.auth.getSession in the shared LandingHeader; the page reads no domain data)",
+      "table": "auth.users",
+      "writer": "user-action: GoTrue sign-up / sign-in (Google through the platform OAuth edge, Apple id_token exchange, email+password)",
+      "evidence": "src/components/landing/LandingHeader.tsx:29"
     },
     "route:/locker-room": {
-      "static": "Marketing copy (LockerRoomHub, src/data/superpowers); no fetch"
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63"
     },
     "route:/login": {
       "endpoint": "platform GoTrue POST /auth/v1/token (signInWithPassword) and /auth/v1/authorize (signInWithOAuth)",
@@ -66,10 +90,15 @@
       "evidence": "src/app/login/page.tsx:29"
     },
     "route:/players-development": {
-      "static": "Marketing copy; no fetch"
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63"
     },
     "route:/pricing": {
-      "static": "Plan copy; no fetch, no checkout (Stripe checkout is register O-05)"
+      "register": "O-05",
+      "via": "checkout buttons disabled (Stripe checkout removed)",
+      "evidence": "src/app/pricing/page.tsx:135"
     },
     "route:/spotlight-and-periodical": {
       "register": "O-03",

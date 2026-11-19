@@ -1097,12 +1097,15 @@ export function formatReport(r: CheckResult, app: string): string {
 // every in-page `tab`), where its data comes from. Keys are the extracted surface ids — never a hand-kept route list —
 // so a new route or tab shows up as UNRESOLVED until someone states its source. An entry is exactly one of:
 //   { endpoint, table, writer }  the backend endpoint it reads, the table behind it, and the REAL writer that fills
-//                                that table: `user-action: …`, `importer: …` or `sync: …`. Seed scripts, migrations
-//                                and fixtures never count.
+//                                that table: `user-action: …`, `importer: …` or `sync: …`. Seed scripts, migrations,
+//                                fixtures, and GET / HEAD / OPTIONS / DELETE endpoints never count; an audit table is
+//                                never the backing table.
 //   { register: "<row id>" }     an OPEN (or AWAITING OWNER) gap-register row of THIS app that explains why there is
-//                                no live source yet.
-//   { static: "<why>" }          the surface renders no domain data (legal text, a redirect, a sign-in form). Its own
-//                                module may not fetch: a tripwire refuses a `static` surface whose source reads data.
+//                                no live source yet. A row whose status is CLOSED-… or RETIRED never does.
+//   { static: "<why>" }          a ROUTE that renders no domain data (legal text, a redirect). A tripwire walks its local
+//                                import graph (tsconfig aliases included, bounded) and refuses `static` on any data
+//                                access, in-process store, server action, notFound() stub or unavailable marker. A
+//                                tab is never static: its source is the tab list, not the panel.
 // The check fails on an invalid entry (always) and on an unresolved surface (strict mode: `check:provenance`, which
 // the bifrost release preflight runs). Report mode (`pnpm test`) prints the unresolved count and fails only on
 // invalid entries, a missing sidecar or an unreadable register.
@@ -1114,8 +1117,119 @@ export const WRITER_KINDS: readonly string[] = ["user-action", "importer", "sync
 /** A word starting with one of these (so `seed_teams.py`, `migrations/`, `fixtures` all match) is not a writer. */
 const NOT_A_WRITER = /(?<![A-Za-z])(seed|migrat|alembic|fixture|sample|mock|demo)/i;
 const OPEN_STATE = /^(OPEN|AWAITING OWNER)\b/;
-/** Reading data from a module that claims to be `static`. Applied to the comment-stripped source of the surface. */
-const READS_DATA = /\bfetch\s*\(|\.from\s*\(\s*["'`]|\.rpc\s*\(|\bcreateHockeyClient\s*\(|\bhockeyApi(?:Fetch)?\s*\(|\buseSWR\s*\(|\buseQuery\s*\(/;
+/**
+ * Data access, an in-process store, a server action or a hollowed / unavailable surface, anywhere in the import graph
+ * of a module that claims to be `static`. Any match refuses `static`: such a surface states its endpoint, table and
+ * writer, maps to its open register row, or stays UNRESOLVED.
+ */
+const DATA_ACCESS: { re: RegExp; what: string }[] = [
+  { re: /\bfetch\s*\(/, what: "fetch(" },
+  { re: /\.from\s*\(\s*["'`]/, what: "a PostgREST .from()" },
+  { re: /\.rpc\s*\(/, what: "a PostgREST .rpc()" },
+  { re: /\bcreate(?:Server|Browser|Admin|Service)?(?:Supabase)?Client\s*\(/, what: "a Supabase client" },
+  { re: /\.auth\.(?:getUser|getSession|onAuthStateChange|signIn\w*|exchangeCodeForSession)\s*\(/, what: "a GoTrue session read" },
+  { re: /\bhockey(?:Api|Client|ApiFetch)\b|\bcreateHockeyClient\b|HOCKEY_API/, what: "a hockey-api client" },
+  { re: /\buse(?:SWR|Query|Mutation)\s*\(/, what: "a data hook" },
+  { re: /^\s*["']use server["']/m, what: "a server action" },
+  { re: /\bnew\s+(?:Map|Set)\s*(?:<[^>]*>)?\s*\(/, what: "an in-process store (new Map/Set)" },
+  { re: /\bnotFound\s*\(/, what: "a notFound() stub" },
+  { re: /\bFeatureUnavailable\b|data-testid=["'`][^"'`]*-(?:unavailable|not-available|not-connected|empty)["'`]|not yet available/i, what: "an unavailable marker" },
+];
+/** Bounds on the static tripwire's import walk; a graph larger than this cannot be proven static, which is a failure. */
+const STATIC_WALK = { depth: 8, files: 400 };
+const SOURCE_EXT = ["", ".ts", ".tsx", ".js", ".jsx", ".mjs", "/index.ts", "/index.tsx", "/index.js"];
+
+/** JSON with comments and trailing commas (tsconfig.json) → JSON. String-aware: a glob such as a double star, slash, star inside a string is not a comment. */
+export function jsonc(raw: string): string {
+  let out = "";
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (c === '"') {
+      let j = i + 1;
+      while (j < raw.length && raw[j] !== '"') j += raw[j] === "\\" ? 2 : 1;
+      out += raw.slice(i, j + 1);
+      i = j;
+    } else if (c === "/" && raw[i + 1] === "/") {
+      while (i < raw.length && raw[i] !== "\n") i++;
+      out += "\n";
+    } else if (c === "/" && raw[i + 1] === "*") {
+      const end = raw.indexOf("*/", i + 2);
+      i = end === -1 ? raw.length : end + 1;
+    } else out += c;
+  }
+  return out.replace(/,(\s*[}\]])/g, "$1");
+}
+
+/** `@/` and other tsconfig `paths` aliases of this tree, e.g. `@/` → `src/`. */
+export function importAliases(tree: SourceTree): [string, string][] {
+  const raw = tree.read("tsconfig.json");
+  if (raw === null) return [];
+  let cfg: { compilerOptions?: { paths?: Record<string, string[]> } };
+  try {
+    cfg = JSON.parse(jsonc(raw));
+  } catch {
+    throw new Error("surface-guard: tsconfig.json cannot be parsed, so the static tripwire cannot resolve imports");
+  }
+  const out: [string, string][] = [];
+  for (const [k, v] of Object.entries(cfg.compilerOptions?.paths ?? {})) {
+    if (!k.endsWith("/*") || !v[0]?.endsWith("/*")) continue;
+    out.push([k.slice(0, -1), v[0].slice(0, -1).replace(/^\.\//, "")]);
+  }
+  return out;
+}
+
+/** The repo-relative file an import specifier names, or null for a package (outside this tree). */
+export function resolveImport(tree: SourceTree, from: string, spec: string, aliases: [string, string][]): string | null {
+  let base: string | null = null;
+  if (spec.startsWith(".")) {
+    const parts = from.split("/").slice(0, -1);
+    for (const seg of spec.split("/")) {
+      if (seg === "..") parts.pop();
+      else if (seg !== ".") parts.push(seg);
+    }
+    base = parts.join("/");
+  } else {
+    const a = aliases.find(([k]) => spec.startsWith(k));
+    if (a) base = a[1] + spec.slice(a[0].length);
+  }
+  if (base === null) return null;
+  const known = new Set(tree.files());
+  for (const ext of SOURCE_EXT) if (known.has(base + ext)) return base + ext;
+  return null;
+}
+
+/** The first data access in the local import graph of `file`, or a reason the graph cannot be proven static. */
+export function dataAccessIn(tree: SourceTree, file: string): string | null {
+  const aliases = importAliases(tree);
+  const seen = new Set<string>([file]);
+  let frontier = [file];
+  for (let depth = 0; frontier.length; depth++) {
+    const next: string[] = [];
+    for (const f of frontier) {
+      const src = tree.read(f);
+      if (src === null) return `${f} cannot be read`;
+      if (!/\.(tsx?|jsx?|mjs)$/.test(f)) continue;
+      const code = stripComments(src);
+      for (const d of DATA_ACCESS) if (d.re.test(code)) return `${d.what} in ${f}`;
+      for (const m of allMatches(/(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*)["'`]([^"'`]+)["'`]/g, code)) {
+        const r = resolveImport(tree, f, m[1], aliases);
+        if (r && !seen.has(r)) {
+          seen.add(r);
+          next.push(r);
+        }
+      }
+    }
+    if (next.length && depth + 1 >= STATIC_WALK.depth) return `its import graph is deeper than ${STATIC_WALK.depth}, so it cannot be proven static`;
+    if (seen.size > STATIC_WALK.files) return `its import graph exceeds ${STATIC_WALK.files} files, so it cannot be proven static`;
+    frontier = next;
+  }
+  return null;
+}
+
+/** A writer that cannot fill a table: a read or a delete. */
+const NON_WRITER_METHOD = /\b(GET|HEAD|OPTIONS|DELETE)\s+\//;
+/** Audit / log tables record that something happened; they are never the domain table a surface reads. */
+const AUDIT_TABLE = /audit/i;
 const ENTRY_KEYS: Record<"endpoint" | "register" | "static", string[]> = {
   endpoint: ["endpoint", "table", "writer", "evidence", "note"],
   register: ["register", "via", "evidence", "note"],
@@ -1217,6 +1331,14 @@ export function judgeProvenance(
         v.invalid.push({ id: e.id, why: `the writer must be "user-action: …", "importer: …" or "sync: …", not ${JSON.stringify(writer)}` });
         continue;
       }
+      if (NON_WRITER_METHOD.test(writer)) {
+        v.invalid.push({ id: e.id, why: `a GET, HEAD, OPTIONS or DELETE endpoint does not fill a table, so it is not a writer: ${JSON.stringify(writer)}` });
+        continue;
+      }
+      if (AUDIT_TABLE.test(p.table as string)) {
+        v.invalid.push({ id: e.id, why: `an audit table is not the domain table a surface reads: ${JSON.stringify(p.table)}` });
+        continue;
+      }
       if (NOT_A_WRITER.test(writer)) {
         v.invalid.push({ id: e.id, why: `seed scripts, migrations and fixtures never count as a writer: ${JSON.stringify(writer)}` });
         continue;
@@ -1233,6 +1355,10 @@ export function judgeProvenance(
         v.invalid.push({ id: e.id, why: `row ${row.id} belongs to ${row.surface}, not ${config.app}` });
         continue;
       }
+      if (/^CLOSED|^RETIRED/i.test(row.status.trim())) {
+        v.invalid.push({ id: e.id, why: `row ${row.id} has status "${row.status}": a closed or retired row cannot explain a present surface's missing source` });
+        continue;
+      }
       if (!OPEN_STATE.test(row.state.trim().toUpperCase())) {
         v.invalid.push({ id: e.id, why: `row ${row.id} is "${row.state}": only an OPEN (or AWAITING OWNER) row explains a missing live source` });
         continue;
@@ -1243,14 +1369,13 @@ export function judgeProvenance(
         v.invalid.push({ id: e.id, why: "a static entry must say why the surface renders no domain data" });
         continue;
       }
-      const src = tree.read(e.source);
-      if (src === null) {
-        v.invalid.push({ id: e.id, why: `its source ${e.source} cannot be read, so "static" cannot be checked` });
+      if (e.kind !== "route") {
+        v.invalid.push({ id: e.id, why: `a ${e.kind} cannot be static: its source (${e.source}) is the host of the tab list, not the panel it renders` });
         continue;
       }
-      const hit = READS_DATA.exec(stripComments(src));
+      const hit = dataAccessIn(tree, e.source);
       if (hit) {
-        v.invalid.push({ id: e.id, why: `marked static, but ${e.source} reads data (${JSON.stringify(hit[0])}): state its endpoint, table and writer` });
+        v.invalid.push({ id: e.id, why: `marked static, but its import graph reaches ${hit}: state its endpoint, table and writer, or its open register row` });
         continue;
       }
       v.static.push(e.id);
