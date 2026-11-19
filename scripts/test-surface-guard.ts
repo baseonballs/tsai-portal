@@ -19,6 +19,8 @@ const checks = runSelfTest({
   pageForMarker: "src/app/pricing/page.tsx",
   unavailableSnippet: 'export const Probe = () => <div data-testid="surface-guard-probe-unavailable" />;',
   unavailableId: "unavailable:testid:surface-guard-probe-unavailable",
+  // The Portal extracts no gate and no superadmin lock (the self-test fails if it ever does without a mutation here).
+  mutations: [],
 });
 console.log(`✅ surface-guard self-test: ${checks} mutation and refusal checks behave`);
 

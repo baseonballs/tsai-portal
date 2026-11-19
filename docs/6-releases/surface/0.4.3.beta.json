@@ -2,7 +2,7 @@
   "schema": "surface-guard/v1",
   "app": "Portal",
   "version": "0.4.3.beta",
-  "rev": "release",
+  "rev": "dcb6b67f074fc3a99dc85c9c97ecb808fb0c9854",
   "notes": [],
   "entries": [
     {
@@ -117,73 +117,121 @@
       "source": "src/lib/docs/manifest.ts"
     },
     {
-      "id": "menu:/",
-      "kind": "menu",
-      "polarity": "present",
-      "source": "src/components/landing/LandingHeader.tsx"
-    },
-    {
-      "id": "menu:/beta",
-      "kind": "menu",
-      "polarity": "present",
-      "source": "src/components/landing/LandingHeader.tsx"
-    },
-    {
-      "id": "menu:/coachs-corner",
-      "kind": "menu",
-      "polarity": "present",
-      "source": "src/components/landing/LandingHeader.tsx"
-    },
-    {
-      "id": "menu:/docs",
-      "kind": "menu",
-      "polarity": "present",
-      "source": "src/components/landing/LandingHeader.tsx"
-    },
-    {
-      "id": "menu:/legal/privacy",
+      "id": "menu:footer:/legal/privacy",
       "kind": "menu",
       "polarity": "present",
       "source": "src/components/landing/LandingFooter.tsx"
     },
     {
-      "id": "menu:/legal/terms",
+      "id": "menu:footer:/legal/terms",
       "kind": "menu",
       "polarity": "present",
       "source": "src/components/landing/LandingFooter.tsx"
     },
     {
-      "id": "menu:/locker-room",
+      "id": "menu:header:/",
       "kind": "menu",
       "polarity": "present",
       "source": "src/components/landing/LandingHeader.tsx"
     },
     {
-      "id": "menu:/login",
+      "id": "menu:header:/beta",
       "kind": "menu",
       "polarity": "present",
       "source": "src/components/landing/LandingHeader.tsx"
     },
     {
-      "id": "menu:/players-development",
+      "id": "menu:header:/beta#2",
       "kind": "menu",
       "polarity": "present",
       "source": "src/components/landing/LandingHeader.tsx"
     },
     {
-      "id": "menu:/pricing",
+      "id": "menu:header:/coachs-corner",
       "kind": "menu",
       "polarity": "present",
       "source": "src/components/landing/LandingHeader.tsx"
     },
     {
-      "id": "menu:/spotlight-and-periodical",
+      "id": "menu:header:/coachs-corner#2",
       "kind": "menu",
       "polarity": "present",
       "source": "src/components/landing/LandingHeader.tsx"
     },
     {
-      "id": "menu:/technology-solutions",
+      "id": "menu:header:/docs",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/docs#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/locker-room",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/locker-room#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/login",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/players-development",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/players-development#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/pricing",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/pricing#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/spotlight-and-periodical",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/spotlight-and-periodical#2",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/technology-solutions",
+      "kind": "menu",
+      "polarity": "present",
+      "source": "src/components/landing/LandingHeader.tsx"
+    },
+    {
+      "id": "menu:header:/technology-solutions#2",
       "kind": "menu",
       "polarity": "present",
       "source": "src/components/landing/LandingHeader.tsx"

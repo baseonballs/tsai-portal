@@ -4,8 +4,10 @@
  *   npx tsx scripts/surface-guard/cli.ts check              the guard (run by the test suite); exit 1 on any finding
  *   npx tsx scripts/surface-guard/cli.ts check --json       the same, as JSON
  *   npx tsx scripts/surface-guard/cli.ts snapshot --baseline   (re)write the pre-cleanup baseline manifest from git
- *   npx tsx scripts/surface-guard/cli.ts snapshot --head       write docs/6-releases/surface/<VERSION>.json from the
- *                                                              working tree (do this when the version is bumped)
+ *   npx tsx scripts/surface-guard/cli.ts snapshot --release [--rev <ref>]
+ *        write docs/6-releases/surface/<version>.json for a RELEASED commit (default origin/main), extracted from
+ *        git at that commit with the version file at that commit. The check re-derives every manifest from its
+ *        commit, so a manifest can only describe a tree that really existed on an ancestor of HEAD.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -13,14 +15,13 @@ import { join } from "node:path";
 import { config } from "./config";
 import {
   MANIFEST_DIR,
-  extractSurface,
   formatReport,
-  fsTree,
-  gitTree,
+  isAncestor,
   manifestJson,
-  readVersion,
   repoRootFrom,
+  resolveCommit,
   runCheck,
+  snapshotAt,
   type RegisterMap,
 } from "./core";
 
@@ -35,23 +36,25 @@ function main(argv: string[]): number {
   if (cmd === "snapshot") {
     mkdirSync(join(ROOT, MANIFEST_DIR), { recursive: true });
     if (argv.includes("--baseline")) {
-      const m = extractSurface(gitTree(ROOT, config.baseline.rev), config, { head: false });
-      m.version = config.baseline.version;
+      const m = { ...snapshotAt(ROOT, config, config.baseline.rev), version: config.baseline.version };
       const out = join(ROOT, MANIFEST_DIR, `${m.version}.json`);
       writeFileSync(out, manifestJson(m));
-      console.log(`wrote ${out} (${m.entries.length} entries from ${config.baseline.rev})`);
+      console.log(`wrote ${out} (${m.entries.length} entries from ${m.rev})`);
       return 0;
     }
-    if (argv.includes("--head")) {
-      const m = extractSurface(fsTree(ROOT), config, { head: true });
-      m.version = readVersion(ROOT, config.versionFile);
-      m.rev = "release";
+    if (argv.includes("--release")) {
+      const i = argv.indexOf("--rev");
+      const ref = i >= 0 ? argv[i + 1] : "origin/main";
+      if (!ref) throw new Error("--rev needs a ref");
+      const rev = resolveCommit(ROOT, ref);
+      if (!isAncestor(ROOT, rev, "HEAD")) throw new Error(`${ref} (${rev}) is not an ancestor of HEAD`);
+      const m = snapshotAt(ROOT, config, rev);
       const out = join(ROOT, MANIFEST_DIR, `${m.version}.json`);
       writeFileSync(out, manifestJson(m));
-      console.log(`wrote ${out} (${m.entries.length} entries)`);
+      console.log(`wrote ${out} (${m.entries.length} entries from ${rev})`);
       return 0;
     }
-    console.error("snapshot needs --baseline or --head");
+    console.error("snapshot needs --baseline or --release [--rev <ref>]");
     return 2;
   }
   if (cmd === "check") {
@@ -68,6 +71,7 @@ function main(argv: string[]): number {
             unmapped: r.verdict.unmapped.map((u) => ({ id: u.id, change: u.change })),
             invalid: r.verdict.invalid.map((i) => ({ id: i.removal.id, target: i.target, why: i.why })),
             stale: r.verdict.stale,
+            vanished: r.vanished,
           },
           null,
           2,

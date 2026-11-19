@@ -4,12 +4,20 @@
  * Surface sources, all parsed from source:
  *   routes      every `src/app/**​/page.tsx` and `route.ts`; public = `PUBLIC_PAGES` / `PUBLIC_API` in
  *               `scripts/test-no-session-route-tree.ts` (recorded, not diffed: see core.ts `info`)
- *   menu        `LandingHeader.tsx`, `LandingFooter.tsx` (every href)
+ *   menu        `LandingHeader.tsx`, `LandingFooter.tsx` (every href), each its own scope
  *   docs        every `*_DOCS` list (`src/lib/docs/manifest.ts`; before Phase 156, the /docs page itself):
  *               each published page and each docs tab (spotlight / periodical / watson)
  *   unavailable `*-unavailable` / `*-not-available` test ids; route handlers that answer 501
  */
-import { allMatches, sliceBlock, stripComments, type GuardConfig, type SourceTree, type SurfaceEntry } from "./core";
+import {
+  allMatches,
+  sliceBlock,
+  stripComments,
+  type ExtractContext,
+  type GuardConfig,
+  type SourceTree,
+  type SurfaceEntry,
+} from "./core";
 
 const ROUTE_TREE_TEST = "scripts/test-no-session-route-tree.ts";
 const HEADER = "src/components/landing/LandingHeader.tsx";
@@ -32,8 +40,11 @@ function publicRoutes(tree: SourceTree, routes: { path: string; sample: string; 
 }
 
 /** `docs-tab:<app>` and `docs:<app>:<slug>` for every `<APP>_DOCS` list in the docs sources. */
-function docs(tree: SourceTree): SurfaceEntry[] {
+function docs(tree: SourceTree, ctx: ExtractContext): SurfaceEntry[] {
   const out: SurfaceEntry[] = [];
+  if (ctx.head && !/const [A-Z]+_DOCS\b/.test(tree.read(DOCS_SOURCES[0]) ?? "")) {
+    throw new Error(`surface-guard: no *_DOCS list in ${DOCS_SOURCES[0]} — the extractor is out of date`);
+  }
   for (const file of DOCS_SOURCES) {
     const raw = tree.read(file);
     if (raw === null) continue;
@@ -62,7 +73,11 @@ export const config: GuardConfig = {
   },
   requiredAtHead: [HEADER, FOOTER, ROUTE_TREE_TEST, DOCS_SOURCES[0]],
   publicRoutes,
-  menus: [HEADER, FOOTER].map((file) => ({ file, item: /href[:=]\s*\{?\s*["'`]([^"'`]+)["'`]/g })),
+  // Header and footer are separate scopes; the header's desktop and mobile copies of one link are `…` and `…#2`.
+  menus: [
+    { name: "header", file: HEADER, item: /href[:=]\s*\{?\s*["'`]([^"'`]+)["'`]/g },
+    { name: "footer", file: FOOTER, item: /href[:=]\s*\{?\s*["'`]([^"'`]+)["'`]/g },
+  ],
   lists: [],
   routeRestrictions: [{ re: /\bstatus:\s*501\b/, prefix: "unavailable", on: "api" }],
   unavailable: {

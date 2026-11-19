@@ -2,24 +2,27 @@
  * surface-guard — the REMOVAL half (T0.7, GA-029 §7.1–7.6).
  *
  * The same file lives in Periodical, Spotlight, Portal and Watson (`scripts/surface-guard/core.ts`). Only
- * `config.ts` differs per app. Keep the four copies identical: a fix here is a fix in all four.
+ * `config.ts` and `register-map.json` differ per app. Keep the four copies identical: a fix here is a fix in all four.
  *
  * What it does
  *   1. EXTRACTS the user-visible surface of a source tree (the working tree, or any git revision) into a
  *      sorted, deterministic manifest. It is source-derived: it parses the route tree, the menu sources, the
  *      tab registries, the gates and the unavailable markers. It is not a hand-kept list, so it cannot drift.
- *      A configured source that is missing at HEAD, or that yields nothing, FAILS — the extractor is out of
- *      date, which is never a pass.
- *   2. DIFFS HEAD against the committed manifests (`docs/6-releases/surface/*.json`): the pre-cleanup
- *      baseline (the retroactive bootstrap) and the latest release manifest.
- *      A removal is: an entry of polarity `present` (route, public route, menu entry, tab, deep-link alias,
- *      feature, role destination) that disappears, OR an entry of polarity `restriction` (gated,
- *      superadmin-locked, unavailable/hollowed) that newly appears.
+ *      A configured source that is missing at HEAD, whose block is gone, or that yields nothing where it must
+ *      yield something, FAILS — the extractor is out of date, which is never a pass.
+ *   2. DIFFS HEAD against EVERY committed manifest (`docs/6-releases/surface/*.json`): the pre-cleanup baseline
+ *      (the retroactive bootstrap) and each release manifest. No manifest is trusted as written: each is
+ *      re-extracted from git at its recorded commit (which must be an ancestor of HEAD) and must match byte for
+ *      byte, and its version must equal the version file at that commit.
+ *      A removal is: an entry of polarity `present` (route, menu entry, tab, deep-link alias, feature, role
+ *      destination, docs page) that disappears, OR an entry of polarity `restriction` (gated, superadmin-locked,
+ *      unavailable/hollowed) that newly appears.
  *   3. APPROVES a removal only by a LOOKUP in the epic's `gap-register.md` / `retirement-ledger.md`
- *      (tsai-sitedocs). `register-map.json` in this directory only says which register row a surface id
- *      belongs to; it carries no decision of its own. The row must exist, belong to this app and still be
- *      open (or be retired through a ledger row). An unmapped removal, a mapping to a missing / foreign /
- *      CLOSED row, and a stale mapping (a surface that is no longer removed) all FAIL.
+ *      (tsai-sitedocs). `register-map.json` in this directory only says which register row (or ledger
+ *      capability) one exact surface id belongs to; it carries no decision of its own, and has no wildcards.
+ *      The row must exist, belong to this app, be in an allowed state (OPEN / AWAITING OWNER / RETIRED with a
+ *      dated ledger row), and a deleted surface may not map to a STILL-FAKE row (containment keeps the surface).
+ *      An unmapped removal, an invalid mapping and a stale mapping (a surface that is not removed) all FAIL.
  *
  * Reading the register: `TSAI_SITEDOCS_DIR` (default: the sibling `../tsai-sitedocs` of the main checkout)
  * at git ref `TSAI_SITEDOCS_REF` (default `origin/main`; `WORKTREE` reads the files on disk). If the checkout,
@@ -30,13 +33,54 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+// git, safely
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+const SAFE_REF = /^(?!-)[A-Za-z0-9._/-]+$/;
+
+/** A ref or sha handed to git: no leading `-`, nothing outside `[A-Za-z0-9._/-]`. */
+export function assertSafeRef(ref: string, what: string): string {
+  if (!SAFE_REF.test(ref) || ref.includes("..")) {
+    throw new Error(`surface-guard: refusing ${what} ${JSON.stringify(ref)}: a git ref must match ${SAFE_REF} (no leading "-", no "..")`);
+  }
+  return ref;
+}
+
+function git(repo: string, args: string[], input?: string): Buffer {
+  return execFileSync("git", ["-C", repo, ...args], { input, maxBuffer: 1 << 30, stdio: ["pipe", "pipe", "pipe"] });
+}
+
+export function resolveCommit(repo: string, ref: string): string {
+  assertSafeRef(ref, "revision");
+  try {
+    return git(repo, ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`]).toString("utf8").trim();
+  } catch {
+    throw new Error(
+      `surface-guard: git revision ${ref} is not in ${repo}. Fetch full history (git fetch --unshallow) — ` +
+        "a committed manifest cannot be verified without its commit.",
+    );
+  }
+}
+
+export function isAncestor(repo: string, ancestor: string, of: string): boolean {
+  assertSafeRef(ancestor, "revision");
+  assertSafeRef(of, "revision");
+  try {
+    git(repo, ["merge-base", "--is-ancestor", "--end-of-options", ancestor, of]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 // Source trees
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export interface SourceTree {
-  /** "worktree" or the git revision. */
+  /** "worktree" or the git commit. */
   readonly label: string;
-  /** Every tracked file path, repo-relative with `/` separators. */
+  /** Every file path, repo-relative with `/` separators. */
   files(): string[];
   /** File contents, or null when the file does not exist in this tree. */
   read(path: string): string | null;
@@ -83,18 +127,9 @@ export function fsTree(root: string): SourceTree {
   };
 }
 
-export function gitTree(repo: string, rev: string): SourceTree {
-  const git = (args: string[], input?: string) =>
-    execFileSync("git", ["-C", repo, ...args], { input, maxBuffer: 1 << 30 });
-  try {
-    git(["cat-file", "-e", `${rev}^{commit}`]);
-  } catch {
-    throw new Error(
-      `surface-guard: git revision ${rev} is not in ${repo}. Fetch full history (git fetch --unshallow) — ` +
-        "the baseline cannot be verified without it.",
-    );
-  }
-  const list = git(["ls-tree", "-r", "-z", "--name-only", rev])
+export function gitTree(repo: string, ref: string): SourceTree {
+  const rev = resolveCommit(repo, ref);
+  const list = git(repo, ["ls-tree", "-r", "-z", "--name-only", "--end-of-options", rev])
     .toString("utf8")
     .split("\0")
     .filter(Boolean)
@@ -104,7 +139,7 @@ export function gitTree(repo: string, rev: string): SourceTree {
   const readMany = (paths: string[]) => {
     const want = paths.filter((p) => known.has(p) && !cache.has(p));
     if (want.length) {
-      const out = git(["cat-file", "--batch"], want.map((p) => `${rev}:${p}`).join("\n") + "\n");
+      const out = git(repo, ["cat-file", "--batch"], want.map((p) => `${rev}:${p}`).join("\n") + "\n");
       let off = 0;
       for (const p of want) {
         const nl = out.indexOf(10, off);
@@ -179,6 +214,7 @@ export interface Manifest {
   schema: "surface-guard/v1";
   app: string;
   version: string;
+  /** The full commit sha the manifest was extracted from (an ancestor of every later HEAD). */
   rev: string;
   notes: string[];
   entries: SurfaceEntry[];
@@ -212,14 +248,31 @@ export interface ListSpec {
 }
 
 export interface MenuSpec {
+  /** The menu this source is (ids are `menu:<name>:<href>`): an entry removed from ONE menu is a removal. */
+  name: string;
   file: string;
-  /** Group 1 = href (or module id), optional `labelGroup` = label. Must be a global regex. */
+  /** Only the block starting here (e.g. one array of a file holding two menus). */
+  block?: RegExp;
+  /**
+   * Group 1 = a literal href (or module id); group 2 (optional) = an identifier holding it, resolved from a
+   * `const NAME = "…"` in the same file. Must be a global regex.
+   */
   item: RegExp;
-  labelGroup?: number;
 }
 
+/**
+ * Flags on a menu item's own object literal that lock, gate or disable it. Each found one is a restriction
+ * entry `gated:menu:<name>:<href>:<flag>`, read order-independently from the item's object (not its children).
+ */
+export const MENU_FLAG_PATTERNS: { re: RegExp; flag: (m: RegExpExecArray) => string }[] = [
+  { re: /\b(superadminOnly|superuserOnly|disabled|comingSoon|isLocked|locked|hidden)\s*:\s*true\b/g, flag: (m) => m[1] },
+  { re: /\brequiredRole\s*:\s*["'`]([^"'`]+)["'`]/g, flag: (m) => `requiredRole=${m[1]}` },
+  { re: /\brequiredRole\s*:\s*\[([^\]]*)\]/g, flag: (m) => `requiredRole=${m[1].replace(/["'`\s]/g, "")}` },
+  { re: /\brequiredTierLevel\s*:\s*(\d+)/g, flag: (m) => `requiredTierLevel=${m[1]}` },
+];
+
 export interface UnavailableSpec {
-  /** Directory prefixes scanned for markers. */
+  /** Path prefixes scanned for markers. */
   roots: string[];
   /** Files under the roots that are not shipped UI (tests, scripts). */
   exclude: RegExp;
@@ -245,19 +298,25 @@ export interface RouteInfo {
   type: "page" | "api";
 }
 
+export interface ExtractContext {
+  notes: string[];
+  /** True for the tree under test: a custom extractor must then throw when its source block is gone. */
+  head: boolean;
+}
+
 export interface GuardConfig {
   /** Must equal the register's "Surface" column for this app's rows. */
   app: string;
   /** Route roots, e.g. `src/app`. */
   appDirs: string[];
-  /** Returns the set of public route paths, or null when this tree has no public list (stated in notes). */
+  /** Returns the set of public route paths, or null when this tree has no public list (HEAD: a failure). */
   publicRoutes?: (tree: SourceTree, routes: RouteInfo[]) => Set<string> | null;
   menus: MenuSpec[];
   lists: ListSpec[];
   unavailable?: UnavailableSpec;
   routeRestrictions?: RouteRestriction[];
-  /** App-specific extractors (e.g. a feature matrix or a role → destinations function). */
-  custom?: ((tree: SourceTree, notes: string[]) => SurfaceEntry[])[];
+  /** App-specific extractors (a feature matrix, a role → destinations function, an access policy). */
+  custom?: ((tree: SourceTree, ctx: ExtractContext) => SurfaceEntry[])[];
   /** Files that must exist at HEAD for the extractor to be current. */
   requiredAtHead: string[];
   /** The pre-cleanup release the bootstrap diffs from (GA-029 §7.5). */
@@ -299,6 +358,14 @@ export function sliceBlock(src: string, start: RegExp): string | null {
     if (src[i] === ";") return src.slice(m.index, i);
     i++;
   }
+  const j = matchBracket(src, i);
+  return j === -1 ? src.slice(m.index) : src.slice(m.index, j + 1);
+}
+
+/** Index of the bracket closing the one at `i` (string-aware), or -1. */
+export function matchBracket(src: string, i: number): number {
+  const open = "[{(";
+  const close: Record<string, string> = { "[": "]", "{": "}", "(": ")" };
   const stack: string[] = [];
   let quote: string | null = null;
   for (let j = i; j < src.length; j++) {
@@ -312,10 +379,44 @@ export function sliceBlock(src: string, start: RegExp): string | null {
     else if (open.includes(c)) stack.push(close[c]);
     else if (c === stack[stack.length - 1]) {
       stack.pop();
-      if (!stack.length) return src.slice(m.index, j + 1);
+      if (!stack.length) return j;
     }
   }
-  return src.slice(m.index);
+  return -1;
+}
+
+/** The object literal enclosing position `pos`, with its nested `{…}` / `[…]` bodies removed (its own keys only). */
+export function enclosingObject(src: string, pos: number): string | null {
+  let depth = 0;
+  for (let i = pos; i >= 0; i--) {
+    const c = src[i];
+    if (c === "}") depth++;
+    else if (c === "{") {
+      if (depth === 0) {
+        const end = matchBracket(src, i);
+        if (end === -1) return null;
+        let body = src.slice(i + 1, end);
+        // Drop nested blocks so a parent item does not inherit its children's flags.
+        let k = 0;
+        let out = "";
+        while (k < body.length) {
+          if (body[k] === "{" || body[k] === "[") {
+            const e = matchBracket(body, k);
+            if (e === -1) break;
+            out += " ";
+            k = e + 1;
+          } else {
+            out += body[k];
+            k++;
+          }
+        }
+        body = out;
+        return body;
+      }
+      depth--;
+    }
+  }
+  return null;
 }
 
 /** The text of a top-level function: from `function <name>(` to the next top-level declaration. */
@@ -373,6 +474,13 @@ export function listRoutes(tree: SourceTree, appDirs: string[]): RouteInfo[] {
   return out.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }
 
+function outOfDate(what: string): Error {
+  return new Error(
+    `surface-guard: ${what} — the extractor is out of date. Update scripts/surface-guard/config.ts to read where the ` +
+      "surface now lives. A missing source is never a pass.",
+  );
+}
+
 export function extractSurface(tree: SourceTree, config: GuardConfig, opts: { head: boolean }): Manifest {
   const notes: string[] = [];
   const entries = new Map<string, SurfaceEntry>();
@@ -382,22 +490,25 @@ export function extractSurface(tree: SourceTree, config: GuardConfig, opts: { he
 
   if (opts.head) {
     const missing = config.requiredAtHead.filter((f) => tree.read(f) === null);
-    if (missing.length) {
-      throw new Error(
-        `surface-guard: these surface sources are gone, so the extractor is out of date: ${missing.join(", ")}.\n` +
-          "Update scripts/surface-guard/config.ts to read where the surface now lives. A missing source is never a pass.",
-      );
-    }
+    if (missing.length) throw outOfDate(`these surface sources are gone: ${missing.join(", ")}`);
   }
 
   // ── routes ──
   const routes = listRoutes(tree, config.appDirs);
-  if (opts.head && routes.length < 3) throw new Error(`surface-guard: found only ${routes.length} routes — the walker is broken`);
+  if (opts.head && routes.length < 3) throw outOfDate(`found only ${routes.length} routes (the walker is broken)`);
   for (const r of routes) add({ id: `route:${r.path}`, kind: "route", polarity: "present", label: r.type, source: r.file });
 
-  const publicSet = config.publicRoutes ? config.publicRoutes(tree, routes) : null;
-  if (publicSet === null) notes.push("public tagging: no public list in this tree, so public→session changes are not compared from it");
-  else for (const p of publicSet) add({ id: `public:${p}`, kind: "public-route", polarity: "info", source: "public list" });
+  if (config.publicRoutes) {
+    const publicSet = config.publicRoutes(tree, routes);
+    if (publicSet === null) {
+      if (opts.head) throw outOfDate("the public route list could not be parsed at HEAD");
+      notes.push("public tagging: no public list in this tree");
+    } else {
+      for (const p of publicSet) add({ id: `public:${p}`, kind: "public-route", polarity: "info", source: "public list" });
+    }
+  } else {
+    notes.push("public tagging: this app has no public route list");
+  }
 
   if (config.routeRestrictions?.length) {
     const bodies = tree.readMany(routes.map((r) => r.file));
@@ -410,23 +521,48 @@ export function extractSurface(tree: SourceTree, config: GuardConfig, opts: { he
     }
   }
 
-  // ── menus ──
+  // ── menus (scoped by menu name), with each item's own lock / gate flags ──
   for (const spec of config.menus) {
-    const src = tree.read(spec.file);
-    if (src === null) {
-      notes.push(`menu source absent: ${spec.file}`);
+    const raw = tree.read(spec.file);
+    if (raw === null) {
+      notes.push(`menu ${spec.name}: source absent (${spec.file})`);
       continue;
     }
-    const found = allMatches(spec.item, stripComments(src));
-    if (opts.head && !found.length) throw new Error(`surface-guard: no menu entries parsed from ${spec.file} — the pattern is out of date`);
+    const whole = stripComments(raw);
+    let src = whole;
+    if (spec.block) {
+      const b = sliceBlock(whole, spec.block);
+      if (b === null) {
+        if (opts.head) throw outOfDate(`menu ${spec.name}: ${spec.block} not found in ${spec.file}`);
+        notes.push(`menu ${spec.name}: block absent in ${spec.file}`);
+        continue;
+      }
+      src = b;
+    }
+    const found = allMatches(spec.item, src);
+    if (opts.head && !found.length) throw outOfDate(`menu ${spec.name}: no entries parsed from ${spec.file}`);
+    // The same href twice in one menu source (a desktop and a mobile rendering) is two entries: `…#2` is the
+    // second, so removing either one is a removal.
+    const seen = new Map<string, number>();
     for (const m of found) {
-      add({
-        id: `menu:${m[1]}`,
-        kind: "menu",
-        polarity: "present",
-        label: spec.labelGroup ? m[spec.labelGroup] : undefined,
-        source: spec.file,
-      });
+      let value = m[1];
+      if (value === undefined && m[2] !== undefined) {
+        const c = new RegExp(`\\bconst\\s+${m[2]}\\s*=\\s*["'\`]([^"'\`]+)["'\`]`).exec(whole);
+        value = c ? c[1] : `const:${m[2]}`;
+      }
+      if (value === undefined) continue;
+      const n = (seen.get(value) ?? 0) + 1;
+      seen.set(value, n);
+      const id = `menu:${spec.name}:${value}${n > 1 ? `#${n}` : ""}`;
+      add({ id, kind: "menu", polarity: "present", source: spec.file });
+      const obj = enclosingObject(src, m.index);
+      if (obj) {
+        for (const fp of MENU_FLAG_PATTERNS) {
+          for (const f of allMatches(fp.re, obj)) {
+            add({ id: `gated:${id}:${fp.flag(f)}`, kind: "gated", polarity: "restriction", source: spec.file });
+          }
+        }
+      }
     }
   }
 
@@ -434,19 +570,20 @@ export function extractSurface(tree: SourceTree, config: GuardConfig, opts: { he
   for (const spec of config.lists) {
     const raw = tree.read(spec.file);
     if (raw === null) {
+      if (opts.head) throw outOfDate(`${spec.name}: source ${spec.file} is gone`);
       notes.push(`${spec.name}: source absent (${spec.file})`);
       continue;
     }
     const src = stripComments(raw);
     const block = spec.block ? sliceBlock(src, spec.block) : src;
     if (block === null) {
-      if (opts.head) throw new Error(`surface-guard: ${spec.name}: ${spec.block} not found in ${spec.file} — the extractor is out of date`);
+      if (opts.head) throw outOfDate(`${spec.name}: ${spec.block} not found in ${spec.file}`);
       notes.push(`${spec.name}: block absent in ${spec.file}`);
       continue;
     }
     const found = allMatches(spec.item, block);
     if (opts.head && !found.length && spec.polarity === "present" && !spec.mayBeEmpty) {
-      throw new Error(`surface-guard: ${spec.name}: nothing parsed from ${spec.file} — the extractor is out of date`);
+      throw outOfDate(`${spec.name}: nothing parsed from ${spec.file}`);
     }
     for (const m of found) {
       add({
@@ -475,7 +612,11 @@ export function extractSurface(tree: SourceTree, config: GuardConfig, opts: { he
     }
   }
 
-  for (const fn of config.custom ?? []) for (const e of fn(tree, notes)) add(e);
+  (config.custom ?? []).forEach((fn, i) => {
+    const out = fn(tree, { notes, head: opts.head });
+    if (opts.head && !out.length) throw outOfDate(`custom extractor #${i + 1} (${fn.name || "anonymous"}) found nothing at HEAD`);
+    for (const e of out) add(e);
+  });
 
   const sorted = [...entries.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   return { schema: "surface-guard/v1", app: config.app, version: "", rev: tree.label, notes, entries: sorted };
@@ -511,6 +652,18 @@ export function mergeRemovals(lists: Removal[][]): Removal[] {
   return [...m.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
+/**
+ * A kind that has entries in a committed manifest but none at HEAD means a parser stopped matching (or a whole
+ * class of surface vanished). For `present` kinds that shows up as removals anyway; for `restriction` kinds a
+ * drop to zero is legitimate only when its source block is still parsed (checked in extractSurface), so this
+ * returns the `present` kinds that vanished entirely, which the check reports as a failure of its own.
+ */
+export function vanishedKinds(bases: Manifest[], head: Manifest): string[] {
+  const at = new Set(head.entries.filter((e) => e.polarity === "present").map((e) => e.kind));
+  const before = new Set(bases.flatMap((b) => b.entries.filter((e) => e.polarity === "present").map((e) => e.kind)));
+  return [...before].filter((k) => !at.has(k)).sort();
+}
+
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 // Register + ledger (tsai-sitedocs)
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -532,6 +685,7 @@ export interface LedgerRow {
   capability: string;
   surfaces: string;
   decision: string;
+  commit: string;
 }
 
 export interface RegisterSource {
@@ -540,13 +694,38 @@ export interface RegisterSource {
   ledger: string;
 }
 
-function cells(line: string): string[] {
-  return line
-    .trim()
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split("|")
-    .map((c) => c.trim());
+/** Split one markdown table row into cells. `\|` and pipes inside backtick spans do not split. */
+export function cells(line: string): string[] {
+  const s = line.trim();
+  const out: string[] = [];
+  let cur = "";
+  let tick = 0;
+  let i = s.startsWith("|") ? 1 : 0;
+  for (; i < s.length; i++) {
+    const c = s[i];
+    if (c === "\\" && s[i + 1] === "|") {
+      cur += "|";
+      i++;
+      continue;
+    }
+    if (c === "`") {
+      let n = 0;
+      while (s[i + n] === "`") n++;
+      if (tick === 0) tick = n;
+      else if (tick === n) tick = 0;
+      cur += s.slice(i, i + n);
+      i += n - 1;
+      continue;
+    }
+    if (c === "|" && tick === 0) {
+      out.push(cur.trim());
+      cur = "";
+      continue;
+    }
+    cur += c;
+  }
+  if (cur.trim() !== "" || !s.endsWith("|")) out.push(cur.trim());
+  return out;
 }
 
 export function parseRegister(md: string): Map<string, RegisterRow> {
@@ -561,12 +740,14 @@ export function parseRegister(md: string): Map<string, RegisterRow> {
     return i;
   };
   const ci = { surface: col("surface"), capability: col("capability"), kind: col("kind"), status: col("status"), state: col("state") };
-  for (const line of lines.slice(headerIdx + 2)) {
-    if (!line.startsWith("|")) break;
+  lines.slice(headerIdx + 2).every((line, k) => {
+    if (!line.startsWith("|")) return false;
     const c = cells(line);
-    const idCell = c[0];
-    const ids = allMatches(/\b([A-Z]{1,2}-S?\d+)\b/g, idCell).map((m) => m[1]);
-    if (!ids.length) continue;
+    if (c.length !== header.length) {
+      throw new Error(`surface-guard: gap-register.md line ${headerIdx + 3 + k} has ${c.length} cells, the header has ${header.length}`);
+    }
+    const ids = allMatches(/\b([A-Z]{1,2}-S?\d+)\b/g, c[0]).map((m) => m[1]);
+    if (!ids.length) return true;
     const row: RegisterRow = {
       id: ids[0],
       aliases: ids.slice(1),
@@ -576,8 +757,12 @@ export function parseRegister(md: string): Map<string, RegisterRow> {
       status: c[ci.status],
       state: c[ci.state],
     };
-    for (const id of ids) rows.set(id, row);
-  }
+    for (const id of ids) {
+      if (rows.has(id)) throw new Error(`surface-guard: gap-register.md has two rows with id ${id}`);
+      rows.set(id, row);
+    }
+    return true;
+  });
   if (rows.size < 10) throw new Error(`surface-guard: parsed only ${rows.size} register rows — the parser or the file is broken`);
   return rows;
 }
@@ -586,12 +771,20 @@ export function parseLedger(md: string): LedgerRow[] {
   const lines = md.split("\n");
   const headerIdx = lines.findIndex((l) => /^\|\s*Capability\s*\|/.test(l));
   if (headerIdx === -1) throw new Error("surface-guard: retirement-ledger.md has no `| Capability |` table — its format changed");
+  const header = cells(lines[headerIdx]);
   const out: LedgerRow[] = [];
-  for (const line of lines.slice(headerIdx + 2)) {
+  const seen = new Set<string>();
+  for (const [k, line] of lines.slice(headerIdx + 2).entries()) {
     if (!line.startsWith("|")) break;
     const c = cells(line);
+    if (c.length !== header.length) {
+      throw new Error(`surface-guard: retirement-ledger.md line ${headerIdx + 3 + k} has ${c.length} cells, the header has ${header.length}`);
+    }
     if (!c[0] || /^_\(none/.test(c[0])) continue;
-    out.push({ capability: c[0], surfaces: c[1] ?? "", decision: c[2] ?? "" });
+    const key = c[0].toLowerCase();
+    if (seen.has(key)) throw new Error(`surface-guard: retirement-ledger.md has two rows for "${c[0]}"`);
+    seen.add(key);
+    out.push({ capability: c[0], surfaces: c[1] ?? "", decision: c[2] ?? "", commit: c[3] ?? "" });
   }
   return out;
 }
@@ -608,6 +801,7 @@ export function loadRegisterSource(repoRoot: string, env: Record<string, string 
     "Set TSAI_SITEDOCS_DIR to a tsai-sitedocs checkout (and TSAI_SITEDOCS_REF to a ref, or WORKTREE for the files on disk). " +
     "The guard never passes without reading the gap register and the retirement ledger.";
   if (!existsSync(dir)) throw new Error(`surface-guard: tsai-sitedocs checkout not found at ${dir}. ${hint}`);
+  if (ref !== "WORKTREE") assertSafeRef(ref, "TSAI_SITEDOCS_REF");
   const files = [`${EPIC_DIR}/gap-register.md`, `${EPIC_DIR}/retirement-ledger.md`];
   const read = (p: string): string => {
     if (ref === "WORKTREE") {
@@ -616,7 +810,7 @@ export function loadRegisterSource(repoRoot: string, env: Record<string, string 
       return readFileSync(full, "utf8");
     }
     try {
-      return execFileSync("git", ["-C", dir, "show", `${ref}:${p}`], { encoding: "utf8", maxBuffer: 1 << 26, stdio: ["ignore", "pipe", "pipe"] });
+      return git(dir, ["show", "--end-of-options", `${ref}:${p}`]).toString("utf8");
     } catch {
       throw new Error(`surface-guard: cannot read ${ref}:${p} in ${dir} (fetch tsai-sitedocs?). ${hint}`);
     }
@@ -629,7 +823,7 @@ export function loadRegisterSource(repoRoot: string, env: Record<string, string 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export interface RegisterMap {
-  /** surface id (exact, or a prefix ending in `*`) → register row id, or `ledger:<capability>`. */
+  /** One EXACT surface id → a register row id, or `ledger:<capability>`. No wildcards. */
   removals: Record<string, string>;
 }
 
@@ -641,13 +835,14 @@ export interface Verdict {
   stale: string[];
 }
 
-function mapKeyFor(id: string, keys: string[]): string | null {
-  if (keys.includes(id)) return id;
-  let best: string | null = null;
-  for (const k of keys) {
-    if (k.endsWith("*") && id.startsWith(k.slice(0, -1)) && (!best || k.length > best.length)) best = k;
-  }
-  return best;
+const DATED = /\b\d{4}-\d{2}-\d{2}\b/;
+const ALLOWED_STATE = /^(OPEN|AWAITING OWNER|RETIRED)\b/;
+
+function ledgerProblem(l: LedgerRow, app: string): string | null {
+  if (!DATED.test(l.decision)) return "the ledger row quotes no dated owner decision";
+  if (!l.surfaces.toLowerCase().includes(app.toLowerCase())) return `the ledger row's surfaces do not name ${app}`;
+  if (!l.commit || /^[—-]*$/.test(l.commit.trim())) return "the ledger row names no removing commit / PR";
+  return null;
 }
 
 export function judge(
@@ -656,7 +851,6 @@ export function judge(
   rows: Map<string, RegisterRow>,
   ledger: LedgerRow[],
   config: Pick<GuardConfig, "app" | "rowPrefixes" | "notRemovals">,
-  headIds: Set<string> = new Set(),
 ): Verdict {
   const keys = Object.keys(map.removals);
   const used = new Set<string>();
@@ -665,56 +859,68 @@ export function judge(
   for (const id of Object.keys(not)) {
     if (!removals.some((r) => r.id === id)) v.stale.push(`notRemovals ${id} (it is no longer extracted)`);
   }
+  for (const k of keys) {
+    if (k.includes("*")) v.invalid.push({ removal: { id: k, kind: "?", change: "removed", against: [] }, key: k, target: map.removals[k], why: "wildcard keys are not allowed: map each exact surface id" });
+  }
   for (const r of removals) {
     if (r.id in not) continue;
     v.removals.push(r);
-    const key = mapKeyFor(r.id, keys);
-    if (!key) {
+    if (!(r.id in map.removals)) {
       v.unmapped.push(r);
       continue;
     }
+    const key = r.id;
     used.add(key);
     const target = map.removals[key];
-    if (target.startsWith("renamed:")) {
-      // A move is a removal plus an addition (GA-029 §7.2): it is accepted when the new surface exists at HEAD.
-      const to = target.slice("renamed:".length);
-      if (!headIds.has(to)) v.invalid.push({ removal: r, key, target, why: `renamed to ${to}, which does not exist at HEAD` });
-      else v.mapped.push({ removal: r, key, target });
-      continue;
-    }
     if (target.startsWith("ledger:")) {
       const cap = target.slice("ledger:".length).trim().toLowerCase();
       const hit = ledger.find((l) => l.capability.toLowerCase() === cap);
-      if (!hit) v.invalid.push({ removal: r, key, target, why: "no retirement-ledger row has that capability" });
-      else if (!/\d{4}-\d{2}-\d{2}/.test(hit.decision)) v.invalid.push({ removal: r, key, target, why: "the ledger row quotes no dated owner decision" });
+      const why = hit ? ledgerProblem(hit, config.app) : "no retirement-ledger row has that capability";
+      if (why) v.invalid.push({ removal: r, key, target, why });
       else v.mapped.push({ removal: r, key, target });
       continue;
     }
     const row = rows.get(target);
     if (!row) {
-      v.invalid.push({ removal: r, key, target, why: "no such row in gap-register.md" });
+      v.invalid.push({
+        removal: r,
+        key,
+        target,
+        why: "no such row in gap-register.md (if the row is on a tsai-sitedocs branch not yet merged, it resolves when that branch merges)",
+      });
       continue;
     }
     if (row.surface !== config.app || !config.rowPrefixes.some((p) => row.id.startsWith(p))) {
       v.invalid.push({ removal: r, key, target, why: `row ${row.id} belongs to ${row.surface}, not ${config.app}` });
       continue;
     }
-    const state = row.state.toUpperCase();
-    if (state === "CLOSED" || state.startsWith("CLOSED ")) {
-      v.invalid.push({ removal: r, key, target, why: `row ${row.id} is CLOSED (rebuilt), yet the surface is still removed` });
+    const state = row.state.trim().toUpperCase();
+    if (!ALLOWED_STATE.test(state)) {
+      v.invalid.push({ removal: r, key, target, why: `row ${row.id} is "${row.state}": only OPEN, AWAITING OWNER or RETIRED rows approve a removal` });
+      continue;
+    }
+    if (r.change === "removed" && row.kind.trim().toUpperCase() === "STILL-FAKE") {
+      v.invalid.push({
+        removal: r,
+        key,
+        target,
+        why: `row ${row.id} is STILL-FAKE: containment keeps the surface, so a deletion needs a REMOVED row or a ledger row`,
+      });
       continue;
     }
     if (state.startsWith("RETIRED")) {
-      const cap = row.capability.toLowerCase();
-      const inLedger = ledger.some((l) => l.capability.toLowerCase().includes(row.id.toLowerCase()) || l.capability.toLowerCase() === cap || l.surfaces.includes(row.id));
-      if (!inLedger) {
-        v.invalid.push({ removal: r, key, target, why: `row ${row.id} says RETIRED but retirement-ledger.md has no row for it` });
+      const hit = ledger.find(
+        (l) => l.capability.toLowerCase() === row.capability.toLowerCase() || new RegExp(`\\b${row.id}\\b`).test(`${l.capability} ${l.surfaces}`),
+      );
+      const why = hit ? ledgerProblem(hit, config.app) : `row ${row.id} says RETIRED but retirement-ledger.md has no row for it`;
+      if (why) {
+        v.invalid.push({ removal: r, key, target, why });
         continue;
       }
     }
     v.mapped.push({ removal: r, key, target, row });
   }
-  v.stale.push(...keys.filter((k) => !used.has(k)).sort());
+  v.stale.push(...keys.filter((k) => !used.has(k) && !k.includes("*")).sort());
   return v;
 }
 
@@ -738,12 +944,16 @@ export function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-export function readVersion(repoRoot: string, versionFile: string): string {
-  const raw = readFileSync(join(repoRoot, versionFile), "utf8").trim().split("\n")[0].trim();
+export function parseVersion(raw: string, from: string): string {
+  const line = raw.trim().split("\n")[0].trim();
   // Portal writes `TSAI-PORTAL.v0.4.3.beta`; Spotlight `v0.1.23.beta`. The manifest name keeps the numbers.
-  const m = /v?(\d+\.\d+\.\d+(?:[.-][A-Za-z0-9]+)*)$/.exec(raw);
-  if (!m) throw new Error(`surface-guard: cannot read a version from ${versionFile}: ${raw}`);
+  const m = /v?(\d+\.\d+\.\d+(?:[.-][A-Za-z0-9]+)*)$/.exec(line);
+  if (!m) throw new Error(`surface-guard: cannot read a version from ${from}: ${line}`);
   return m[1];
+}
+
+export function readVersion(repoRoot: string, versionFile: string): string {
+  return parseVersion(readFileSync(join(repoRoot, versionFile), "utf8"), versionFile);
 }
 
 export function loadManifests(repoRoot: string): Manifest[] {
@@ -751,12 +961,44 @@ export function loadManifests(repoRoot: string): Manifest[] {
   if (!existsSync(dir)) throw new Error(`surface-guard: ${MANIFEST_DIR} is missing — the baseline manifest must be committed`);
   return readdirSync(dir)
     .filter((f) => f.endsWith(".json"))
-    .map((f) => JSON.parse(readFileSync(join(dir, f), "utf8")) as Manifest)
+    .map((f) => {
+      const m = JSON.parse(readFileSync(join(dir, f), "utf8")) as Manifest;
+      if (`${m.version}.json` !== f) throw new Error(`surface-guard: ${MANIFEST_DIR}/${f} records version ${m.version}`);
+      return m;
+    })
     .sort((a, b) => compareVersions(a.version, b.version));
 }
 
 export function manifestJson(m: Manifest): string {
   return JSON.stringify(m, null, 2) + "\n";
+}
+
+/** Extract the manifest of commit `ref`, with its version read from the version file at that commit. */
+export function snapshotAt(repoRoot: string, config: GuardConfig, ref: string): Manifest {
+  const tree = gitTree(repoRoot, ref);
+  const m = extractSurface(tree, config, { head: false });
+  const vf = tree.read(config.versionFile);
+  if (vf === null) throw new Error(`surface-guard: ${config.versionFile} is missing at ${ref}`);
+  m.version = parseVersion(vf, `${config.versionFile}@${ref}`);
+  return m;
+}
+
+/**
+ * Re-derive a committed manifest from git and refuse it unless it matches byte for byte. Its commit must be an
+ * ancestor of HEAD, so no manifest can describe a tree that never reached this branch.
+ */
+export function verifyManifest(repoRoot: string, config: GuardConfig, m: Manifest): void {
+  if (!/^[0-9a-f]{40}$/.test(m.rev)) throw new Error(`surface-guard: manifest ${m.version} records rev ${JSON.stringify(m.rev)}, not a full commit sha`);
+  if (!isAncestor(repoRoot, m.rev, "HEAD")) {
+    throw new Error(`surface-guard: manifest ${m.version} was taken at ${m.rev}, which is not an ancestor of HEAD`);
+  }
+  const fresh = m.rev === config.baseline.rev ? { ...snapshotAt(repoRoot, config, m.rev), version: config.baseline.version } : snapshotAt(repoRoot, config, m.rev);
+  if (manifestJson(fresh) !== manifestJson(m)) {
+    throw new Error(
+      `surface-guard: the committed manifest ${m.version} does not match a fresh extraction of ${m.rev}. ` +
+        "It was edited by hand, or the extractor changed: regenerate it with `surface-guard snapshot`.",
+    );
+  }
 }
 
 export function repoRootFrom(here: string): string {
@@ -777,6 +1019,7 @@ export interface CheckResult {
   verdict: Verdict;
   head: Manifest;
   against: string[];
+  vanished: string[];
   registerOrigin: string;
   ok: boolean;
 }
@@ -788,7 +1031,6 @@ export function runCheck(opts: {
   tree?: SourceTree;
   manifests?: Manifest[];
   registerSource?: RegisterSource;
-  verifyBaseline?: boolean;
 }): CheckResult {
   const { repoRoot, config } = opts;
   const tree = opts.tree ?? fsTree(repoRoot);
@@ -796,39 +1038,33 @@ export function runCheck(opts: {
   head.version = readVersion(repoRoot, config.versionFile);
 
   const manifests = opts.manifests ?? loadManifests(repoRoot);
-  const baseline = manifests.find((m) => m.rev === config.baseline.rev);
-  if (!baseline) throw new Error(`surface-guard: no committed manifest for the baseline ${config.baseline.rev} in ${MANIFEST_DIR}`);
-  if (opts.verifyBaseline !== false) {
-    // The baseline is re-extracted from git and must match byte for byte: editing it to hide a removal fails.
-    const fresh = extractSurface(gitTree(repoRoot, config.baseline.rev), config, { head: false });
-    fresh.version = baseline.version;
-    if (manifestJson(fresh) !== manifestJson(baseline)) {
-      throw new Error(
-        `surface-guard: the committed baseline manifest (${baseline.version}) does not match a fresh extraction of ${config.baseline.rev}. ` +
-          "Either it was edited by hand or the extractor changed: regenerate it with `surface-guard snapshot --baseline`.",
-      );
-    }
+  if (!manifests.some((m) => m.rev === config.baseline.rev)) {
+    throw new Error(`surface-guard: no committed manifest for the baseline ${config.baseline.rev} in ${MANIFEST_DIR}`);
   }
-  const latest = manifests[manifests.length - 1];
-  const bases = latest === baseline ? [baseline] : [baseline, latest];
-  const removals = mergeRemovals(bases.map((b) => diffRemovals(b, head)));
+  // Every committed manifest is re-derived from git; none is trusted as written.
+  for (const m of manifests) verifyManifest(repoRoot, config, m);
+  const removals = mergeRemovals(manifests.map((b) => diffRemovals(b, head)));
+  const vanished = vanishedKinds(manifests, head);
 
   const src = opts.registerSource ?? loadRegisterSource(repoRoot);
   const rows = parseRegister(src.register);
   const ledger = parseLedger(src.ledger);
-  const verdict = judge(removals, opts.map, rows, ledger, config, new Set(head.entries.map((e) => e.id)));
-  const ok = !verdict.unmapped.length && !verdict.invalid.length && !verdict.stale.length;
-  return { verdict, head, against: bases.map((b) => `${b.version}@${b.rev.slice(0, 10)}`), registerOrigin: src.origin, ok };
+  const verdict = judge(removals, opts.map, rows, ledger, config);
+  const ok = !verdict.unmapped.length && !verdict.invalid.length && !verdict.stale.length && !vanished.length;
+  return { verdict, head, against: manifests.map((b) => `${b.version}@${b.rev.slice(0, 10)}`), vanished, registerOrigin: src.origin, ok };
 }
 
 export function formatReport(r: CheckResult, app: string): string {
   const v = r.verdict;
   const lines: string[] = [];
   lines.push(
-    `surface-guard (${app}): ${r.head.entries.length} surface entries at HEAD; ${v.removals.length} removal(s) against ${r.against.join(" and ")}; ` +
+    `surface-guard (${app}): ${r.head.entries.length} surface entries at HEAD; ${v.removals.length} removal(s) against ${r.against.join(", ")}; ` +
       `${v.mapped.length} mapped to the register/ledger, ${v.unmapped.length} UNMAPPED, ${v.invalid.length} invalid, ${v.stale.length} stale mapping(s).`,
   );
   lines.push(`register: ${r.registerOrigin}`);
+  if (r.vanished.length) {
+    lines.push("", `A whole surface kind vanished at HEAD (a parser stopped matching?): ${r.vanished.join(", ")}`);
+  }
   if (v.unmapped.length) {
     lines.push("", "UNMAPPED removals (no gap-register or retirement-ledger row — add the row, then map the id in scripts/surface-guard/register-map.json):");
     for (const u of v.unmapped) lines.push(`  ${u.change === "removed" ? "-" : "+"} ${u.id}${u.label ? `  [${u.label}]` : ""}`);
@@ -838,7 +1074,11 @@ export function formatReport(r: CheckResult, app: string): string {
     for (const i of v.invalid) lines.push(`  ${i.removal.id} → ${i.target}: ${i.why}`);
   }
   if (v.stale.length) {
-    lines.push("", "STALE mappings (the surface is no longer removed — delete the line so it cannot hide a future removal):");
+    lines.push(
+      "",
+      "STALE mappings — the surface is not removed on this branch. Either it was rebuilt (delete the line, so it cannot " +
+        "hide a future removal), or this is a mapping for a marker not yet on this branch (it resolves when that branch merges):",
+    );
     for (const s of v.stale) lines.push(`  ${s}`);
   }
   return lines.join("\n");
