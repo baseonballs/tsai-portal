@@ -1,0 +1,135 @@
+{
+  "$comment": "Provenance sidecar (T2.1, GOV-REAL-DATA-001 rule 5). One entry per routed surface id that scripts/surface-guard extracts (every route and in-page tab): {endpoint, table, writer} with a REAL writer (user-action / importer / sync; never a seed, migration or fixture), or {register} naming an OPEN gap-register row of this app that explains why there is no live source yet, or {static} for a surface that renders no domain data. A surface with no entry is UNRESOLVED. Checked by `surface-guard provenance` (strict: the release preflight) and `provenance --report` (the test suite). Each entry was derived from the code path cited in `evidence`.",
+  "surfaces": {
+    "docs-tab:spotlight": {
+      "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses (the entitlement gate; the manual pages ship in the build)",
+      "table": "supabase:public.user_product_licenses",
+      "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
+      "evidence": "src/lib/auth/portal-entitlement.ts:53",
+      "writerSource": "tsai-periodical:src/app/licensing/actions.ts:53"
+    },
+    "route:/": {
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
+    },
+    "route:/api/beta-requests": {
+      "endpoint": "platform PostgREST POST /rest/v1/lead_submissions",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (BetaSignupForm) posting to this route",
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
+    },
+    "route:/api/telemetry/event": {
+      "endpoint": "platform PostgREST POST /rest/v1/user_telemetry_events (+ user_session_journeys)",
+      "table": "supabase:public.user_telemetry_events",
+      "writer": "user-action: the signed-in browser posting its own events to this route",
+      "evidence": "src/app/api/telemetry/event/route.ts:104",
+      "writerSource": "self:src/app/api/telemetry/event/route.ts:104"
+    },
+    "route:/auth/callback": {
+      "endpoint": "platform GoTrue POST /auth/v1/token (exchangeCodeForSession)",
+      "table": "auth.users",
+      "writer": "user-action: GoTrue sign-up / sign-in (Google through the platform OAuth edge, Apple id_token exchange, email+password)",
+      "evidence": "src/app/auth/callback/route.ts:30"
+    },
+    "route:/auth/entitlement": {
+      "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses (the entitlement gate; the manual pages ship in the build)",
+      "table": "supabase:public.user_product_licenses",
+      "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
+      "evidence": "src/app/auth/entitlement/route.ts (getEntitledPortalUser, src/lib/auth/portal-entitlement.ts:53)",
+      "writerSource": "tsai-periodical:src/app/licensing/actions.ts:53"
+    },
+    "route:/beta": {
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
+    },
+    "route:/byod-setup": {
+      "register": "O-09",
+      "via": "unavailable:testid:byod-pairing-unavailable",
+      "evidence": "src/components/vision/BYODSetupWizard.tsx:404"
+    },
+    "route:/club-revshare": {
+      "register": "O-08",
+      "via": "unavailable:testid:club-partner-unavailable",
+      "evidence": "src/components/billing/ClubRevShareDashboard.tsx:308"
+    },
+    "route:/coachs-corner": {
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
+    },
+    "route:/docs/*?": {
+      "endpoint": "platform GoTrue GET /auth/v1/user, then PostgREST GET /rest/v1/user_product_licenses (the entitlement gate; the manual pages ship in the build)",
+      "table": "supabase:public.user_product_licenses",
+      "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
+      "evidence": "src/lib/auth/portal-entitlement.ts:53",
+      "writerSource": "tsai-periodical:src/app/licensing/actions.ts:53"
+    },
+    "route:/legal/privacy": {
+      "endpoint": "platform GoTrue session (supabase.auth.getSession in the shared LandingHeader; the page reads no domain data)",
+      "table": "auth.users",
+      "writer": "user-action: GoTrue sign-up / sign-in (Google through the platform OAuth edge, Apple id_token exchange, email+password)",
+      "evidence": "src/components/landing/LandingHeader.tsx:29"
+    },
+    "route:/legal/terms": {
+      "endpoint": "platform GoTrue session (supabase.auth.getSession in the shared LandingHeader; the page reads no domain data)",
+      "table": "auth.users",
+      "writer": "user-action: GoTrue sign-up / sign-in (Google through the platform OAuth edge, Apple id_token exchange, email+password)",
+      "evidence": "src/components/landing/LandingHeader.tsx:29"
+    },
+    "route:/locker-room": {
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
+    },
+    "route:/login": {
+      "endpoint": "platform GoTrue POST /auth/v1/token (signInWithPassword) and /auth/v1/authorize (signInWithOAuth)",
+      "table": "auth.users",
+      "writer": "user-action: GoTrue sign-up / sign-in (Google through the platform OAuth edge, Apple id_token exchange, email+password)",
+      "evidence": "src/app/login/page.tsx:29"
+    },
+    "route:/players-development": {
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
+    },
+    "route:/pricing": {
+      "register": "O-05",
+      "via": "checkout buttons disabled (Stripe checkout removed)",
+      "evidence": "src/app/pricing/page.tsx:135"
+    },
+    "route:/spotlight-and-periodical": {
+      "register": "O-03",
+      "via": "unavailable:testid:engine-throughput-unavailable",
+      "evidence": "src/components/landing/TranscendEngineSubstrate.tsx:107"
+    },
+    "route:/supabase/*?": {
+      "endpoint": "platform GoTrue /auth/v1/* (same-origin proxy)",
+      "table": "auth.users",
+      "writer": "user-action: GoTrue sign-up / sign-in (Google through the platform OAuth edge, Apple id_token exchange, email+password)",
+      "evidence": "src/app/supabase/[[...path]]/route.ts:89"
+    },
+    "route:/technology-solutions": {
+      "register": "O-02",
+      "via": "unavailable:testid:rink-telemetry-unavailable",
+      "evidence": "src/components/landing/RinkTelemetryChart.tsx:295"
+    },
+    "route:/tournament/director": {
+      "register": "O-01",
+      "via": "unavailable:testid:tournament-director-unavailable",
+      "evidence": "src/components/tournaments/MultiSheetCommandCenter.tsx:86"
+    }
+  }
+}

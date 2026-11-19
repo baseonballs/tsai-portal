@@ -3,6 +3,11 @@
  *
  *   npx tsx scripts/surface-guard/cli.ts check              the guard (run by the test suite); exit 1 on any finding
  *   npx tsx scripts/surface-guard/cli.ts check --json       the same, as JSON
+ *   npx tsx scripts/surface-guard/cli.ts provenance         the provenance check, STRICT (`check:provenance`, the
+ *        release preflight): exit 1 on an invalid entry OR any routed surface with no stated provenance
+ *   npx tsx scripts/surface-guard/cli.ts provenance --report   the same in report mode (run by the test suite):
+ *        prints the UNRESOLVED count, exits 1 only on an invalid entry, a missing sidecar or an unreadable register
+ *   add --json to either for machine-readable output
  *   npx tsx scripts/surface-guard/cli.ts snapshot --baseline   (re)write the pre-cleanup baseline manifest from git
  *   npx tsx scripts/surface-guard/cli.ts snapshot --release [--rev <ref>]
  *        write docs/6-releases/surface/<version>.json for a RELEASED commit (default origin/main), extracted from
@@ -15,12 +20,14 @@ import { join } from "node:path";
 import { config } from "./config";
 import {
   MANIFEST_DIR,
+  formatProvenanceReport,
   formatReport,
   isAncestor,
   manifestJson,
   repoRootFrom,
   resolveCommit,
   runCheck,
+  runProvenanceCheck,
   snapshotAt,
   type RegisterMap,
 } from "./core";
@@ -88,6 +95,46 @@ function main(argv: string[]): number {
       return 1;
     }
     if (!argv.includes("--json")) console.log(`✅ surface-guard: every removal maps to an open register row or a ledger row`);
+    return 0;
+  }
+  if (cmd === "provenance") {
+    const strict = !argv.includes("--report");
+    const r = runProvenanceCheck({ repoRoot: ROOT, config });
+    const v = r.verdict;
+    if (argv.includes("--json")) {
+      console.log(
+        JSON.stringify(
+          {
+            ok: strict ? r.complete : r.valid,
+            mode: strict ? "strict" : "report",
+            register: r.registerOrigin,
+            surfaces: v.surfaces.length,
+            endpoint: v.endpoint.length,
+            registerRows: v.register.length,
+            static: v.static.length,
+            unresolved: v.unresolved.map((u) => u.id),
+            invalid: v.invalid,
+          },
+          null,
+          2,
+        ),
+      );
+    } else {
+      console.log(formatProvenanceReport(r, config.app, strict));
+    }
+    if (!r.valid || (strict && !r.complete)) {
+      if (!argv.includes("--json")) console.error(
+        `\n❌ surface-guard provenance: ${v.invalid.length} invalid entr${v.invalid.length === 1 ? "y" : "ies"}` +
+          (strict ? `, ${v.unresolved.length} routed surface(s) with no stated live source` : "") +
+          " (GOV-REAL-DATA-001 rule 5). A surface with no live source does not ship.",
+      );
+      return 1;
+    }
+    if (!argv.includes("--json")) console.log(
+      strict
+        ? "✅ surface-guard provenance: every routed surface states its live source or an open register row"
+        : `✅ surface-guard provenance (report mode): every entry is valid; ${v.unresolved.length} UNRESOLVED (strict: pnpm check:provenance)`,
+    );
     return 0;
   }
   console.error(`unknown command ${cmd}`);
