@@ -1,0 +1,13 @@
+{
+  "$comment": "Which gap-register row (or retirement-ledger capability, as 'ledger:<capability>', or a rename, as 'renamed:<new surface id>') each removed surface belongs to. This file approves nothing: surface-guard looks the row up in tsai-sitedocs PLAT-DATA-EPIC-REAL-DATA-FOUNDATION/gap-register.md and retirement-ledger.md, and refuses a missing, foreign or CLOSED row. A key ending in '*' covers every surface id with that prefix. Evidence for each mapping: the deleting PR and GA-030 appendix D.",
+  "removals": {
+    "docs-tab:periodical": "O-04",
+    "docs-tab:watson": "O-04",
+    "docs:periodical:*": "O-04",
+    "docs:watson:*": "O-04",
+    "route:/api/billing/hardware/checkout": "O-06",
+    "route:/api/billing/stripe/checkout": "O-05",
+    "route:/api/billing/stripe/connect": "O-06",
+    "route:/api/rosters/import": "O-07"
+  }
+}
