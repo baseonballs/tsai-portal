@@ -6,7 +6,7 @@
       "table": "supabase:public.user_product_licenses",
       "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
       "evidence": "src/lib/auth/portal-entitlement.ts:53",
-      "writerSource": "tsai-periodical:src/app/licensing/actions.ts:53"
+      "writerSource": "tsai-periodical:src/app/licensing/actions.ts#activateLicense"
     },
     "route:/": {
       "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
@@ -40,7 +40,7 @@
       "table": "supabase:public.user_product_licenses",
       "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
       "evidence": "src/app/auth/entitlement/route.ts (getEntitledPortalUser, src/lib/auth/portal-entitlement.ts:53)",
-      "writerSource": "tsai-periodical:src/app/licensing/actions.ts:53"
+      "writerSource": "tsai-periodical:src/app/licensing/actions.ts#activateLicense"
     },
     "route:/beta": {
       "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
@@ -71,7 +71,7 @@
       "table": "supabase:public.user_product_licenses",
       "writer": "user-action: licence activation in Periodical (tsai-periodical src/app/licensing/actions.ts:53 inserts the row)",
       "evidence": "src/lib/auth/portal-entitlement.ts:53",
-      "writerSource": "tsai-periodical:src/app/licensing/actions.ts:53"
+      "writerSource": "tsai-periodical:src/app/licensing/actions.ts#activateLicense"
     },
     "route:/legal/privacy": {
       "endpoint": "platform GoTrue session (supabase.auth.getSession in the shared LandingHeader; the page reads no domain data)",

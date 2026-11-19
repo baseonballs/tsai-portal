@@ -99,7 +99,7 @@ function main(argv: string[]): number {
   }
   if (cmd === "provenance") {
     const strict = !argv.includes("--report");
-    const r = runProvenanceCheck({ repoRoot: ROOT, config });
+    const r = runProvenanceCheck({ repoRoot: ROOT, config, strict });
     const v = r.verdict;
     if (argv.includes("--json")) {
       console.log(

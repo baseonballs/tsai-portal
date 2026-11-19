@@ -29,9 +29,10 @@
  * at git ref `TSAI_SITEDOCS_REF` (default `origin/main`; `WORKTREE` reads the files on disk). If the checkout,
  * the ref or either file is missing the guard fails loudly. It never passes without reading them.
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
+import ts from "typescript";
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 // git, safely
@@ -1099,7 +1100,8 @@ export function formatReport(r: CheckResult, app: string): string {
 //   { endpoint, table, writer }  the backend endpoint it reads, the table behind it, and the REAL writer that fills
 //                                that table: `user-action: …`, `importer: …` or `sync: …`. Seed scripts, migrations,
 //                                fixtures, and GET / HEAD / OPTIONS / DELETE endpoints never count; an audit table is
-//                                never the backing table. `writerSource` (<repo>:<path>:<line>) cites the handler, and
+//                                never the backing table. `writerSource` cites the handler as <repo>:<path>#<function>
+//                                (or `Class.method`; a `self` citation may still be <path>:<line>), and
 //                                the check reads it (sibling repos from TSAI_WORKSPACE_DIR) and refuses one that does
 //                                not INSERT / UPSERT into the named table. auth.users is written by GoTrue only.
 //   { register: "<row id>" }     an OPEN (or AWAITING OWNER) gap-register row of THIS app that explains why there is
@@ -1242,7 +1244,7 @@ export interface ProvenanceEntry {
   endpoint?: string;
   table?: string;
   writer?: string;
-  /** `<repo>:<path>:<line>` of the writer's handler (`self` = this app). Required unless the table is auth.users. */
+  /** `<repo>:<path>#<function>` of the writer's handler (`self` = this app; a `self` one may be `:<line>`). Required unless the table is auth.users. */
   writerSource?: string;
   register?: string;
   static?: string;
@@ -1326,6 +1328,144 @@ export function fsWorkspace(repoRoot: string, env: Record<string, string | undef
 
 const escRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/** A function symbol a writerSource may cite: `name` or `Class.method`. */
+const SYMBOL = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?$/;
+
+/** A parsed writerSource: `<repo>:<path>:<line>` (drifts on unrelated edits) or `<repo>:<path>#<symbol>` (does not). */
+export type WriterCitation = { repo: string; path: string; line: number } | { repo: string; path: string; symbol: string };
+
+export function parseWriterSource(writerSource: string): WriterCitation | null {
+  const s = writerSource.trim();
+  const sym = /^([a-z0-9-]+):([^#:]+)#([^#]+)$/.exec(s);
+  if (sym) return SYMBOL.test(sym[3]) ? { repo: sym[1], path: sym[2], symbol: sym[3] } : null;
+  const ln = /^([a-z0-9-]+):([^#]+?):(\d+)$/.exec(s);
+  return ln ? { repo: ln[1], path: ln[2], line: Number(ln[3]) } : null;
+}
+
+/**
+ * Resolves `name` / `Class.method` with Python's own parser (`ast`, run isolated with `-I`) and prints JSON: the def's
+ * `lineno` / `end_lineno` (decorators excluded) and its source lines with comments removed (`tokenize`), or why not.
+ * Only module-level defs, and defs directly in the body of one module-level class, count.
+ */
+const PY_RESOLVE = String.raw`
+import ast, io, json, re, sys, tokenize
+sym = sys.argv[1]
+src = sys.stdin.read()
+def out(**k):
+    print(json.dumps(k)); sys.exit(0)
+# ast and tokenize count lines only at \r\n, \r and \n; str.splitlines() also splits at these, so refuse them outright.
+if re.search("[\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029]", src):
+    out(problem="contains a form feed, vertical tab or Unicode line separator, so its lines cannot be counted unambiguously")
+try:
+    tree = ast.parse(src)
+except (SyntaxError, ValueError) as e:
+    out(problem="does not parse as Python (%s, line %s)" % (getattr(e, "msg", e), getattr(e, "lineno", "?")))
+F = (ast.FunctionDef, ast.AsyncFunctionDef)
+parts = sym.split(".")
+scope, name = tree.body, parts[0]
+if len(parts) == 2:
+    cls = [n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == parts[0]]
+    if len(cls) != 1:
+        out(problem=("defines class %s %d times (ambiguous)" % (parts[0], len(cls))) if cls else "defines no class %s" % parts[0])
+    scope, name = cls[0].body, parts[1]
+hits = [n for n in scope if isinstance(n, F) and n.name == name]
+if len(hits) != 1:
+    out(problem=("defines %s %d times (ambiguous)" % (sym, len(hits))) if hits else "defines no function %s" % sym)
+n = hits[0]
+seg = [list(l) for l in re.split(r"\r\n|\r|\n", src)]
+try:
+    # newline=None reads \r\n and \r as \n: the same line model as ast and the split above.
+    for t in tokenize.generate_tokens(io.StringIO(src, newline=None).readline):
+        if t.type == tokenize.COMMENT and n.lineno <= t.start[0] <= n.end_lineno:
+            r = t.start[0] - 1
+            for c in range(t.start[1], t.end[1]):
+                seg[r][c] = " "
+except (tokenize.TokenError, IndentationError, SyntaxError) as e:
+    out(problem="cannot be tokenized (%s)" % e)
+out(start=n.lineno, end=n.end_lineno, body="\n".join("".join(l) for l in seg[n.lineno - 1:n.end_lineno]))
+`;
+
+/** A function's region: TS = character offsets of its body; Python = 1-based first / last line of the def (decorators excluded). */
+export interface SymbolRegion {
+  body: string;
+  start: number;
+  end: number;
+}
+
+function pySymbolBody(src: string, symbol: string): SymbolRegion | { problem: string } {
+  const r = spawnSync("python3", ["-I", "-c", PY_RESOLVE, symbol], { input: src, encoding: "utf8", timeout: 30_000, maxBuffer: 64 * 1024 * 1024 });
+  if (r.error || r.status !== 0) return { problem: `could not be parsed by python3 (${r.error ? r.error.message : (r.stderr || `exit ${r.status}`).trim().split("\n").pop()})` };
+  try {
+    const j = JSON.parse(r.stdout) as { problem?: string; start?: number; end?: number; body?: string };
+    if (j.problem) return { problem: j.problem };
+    if (typeof j.body !== "string" || typeof j.start !== "number" || typeof j.end !== "number") return { problem: "python3 returned no region" };
+    return { body: j.body, start: j.start, end: j.end };
+  } catch {
+    return { problem: "python3 returned no region" };
+  }
+}
+
+/** An initializer that is a function, through parentheses and `as` / `satisfies`; else null (a call, an object, …). */
+function fnInitializer(e: ts.Expression | undefined): ts.ArrowFunction | ts.FunctionExpression | null {
+  while (e && (ts.isParenthesizedExpression(e) || ts.isAsExpression(e) || ts.isSatisfiesExpression(e))) e = e.expression;
+  return e && (ts.isArrowFunction(e) || ts.isFunctionExpression(e)) ? e : null;
+}
+
+/**
+ * Resolves `name` (a top-level FunctionDeclaration, or a top-level `const` / `let` / `var` whose initializer is an arrow
+ * or function expression) or `Class.method` (a MethodDeclaration of a top-level class) with the TypeScript parser.
+ * Nested functions never count. The region is the body, printed with comments removed.
+ */
+function tsSymbolBody(src: string, symbol: string, path: string): SymbolRegion | { problem: string } {
+  const kind = /\.(tsx|jsx)$/.test(path) ? ts.ScriptKind.TSX : /\.(js|mjs|cjs)$/.test(path) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(path || "cited.ts", src, ts.ScriptTarget.Latest, true, kind);
+  // The parser recovers from syntax errors (a missing `}` nests the next function inside this one): any error fails closed.
+  const diags = (sf as unknown as { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics;
+  if (!Array.isArray(diags)) return { problem: "cannot be checked for syntax errors (no parse diagnostics from the TypeScript parser)" };
+  if (diags.length) {
+    const d = diags[0];
+    const at = d.start === undefined ? "?" : sf.getLineAndCharacterOfPosition(d.start).line + 1;
+    return { problem: `does not parse cleanly as TypeScript (${ts.flattenDiagnosticMessageText(d.messageText, " ")}, line ${at})` };
+  }
+  const [a, b] = symbol.split(".");
+  type Hit = { body: ts.Node | undefined; what: string };
+  const hits: Hit[] = [];
+  if (b === undefined) {
+    for (const st of sf.statements) {
+      if (ts.isFunctionDeclaration(st) && st.name?.text === a) {
+        if (st.body) hits.push({ body: st.body, what: "function" });
+      } else if (ts.isVariableStatement(st)) {
+        for (const d of st.declarationList.declarations) {
+          if (!ts.isIdentifier(d.name) || d.name.text !== a) continue;
+          const f = fnInitializer(d.initializer);
+          hits.push({ body: f?.body, what: f ? "function" : "a value that is not a function" });
+        }
+      } else if (ts.isClassDeclaration(st) && st.name?.text === a) {
+        hits.push({ body: undefined, what: "a class (cite Class.method)" });
+      }
+    }
+  } else {
+    const classes = sf.statements.filter((st): st is ts.ClassDeclaration => ts.isClassDeclaration(st) && st.name?.text === a);
+    if (classes.length !== 1) return { problem: classes.length ? `defines class ${a} ${classes.length} times (ambiguous)` : `defines no class ${a}` };
+    for (const m of classes[0].members) {
+      if (ts.isMethodDeclaration(m) && m.name && (ts.isIdentifier(m.name) || ts.isStringLiteral(m.name)) && m.name.text === b && m.body) {
+        hits.push({ body: m.body, what: "method" });
+      }
+    }
+  }
+  if (hits.length !== 1) return { problem: hits.length ? `defines ${symbol} ${hits.length} times (ambiguous)` : `defines no ${b === undefined ? "function" : "method"} ${symbol}` };
+  const h = hits[0];
+  if (!h.body) return { problem: `binds ${symbol} to ${h.what}, not a function` };
+  const printer = ts.createPrinter({ removeComments: true });
+  return { body: printer.printNode(ts.EmitHint.Unspecified, h.body, sf), start: h.body.getStart(sf), end: h.body.getEnd() };
+}
+
+/** The region of the function `symbol` in `src`, resolved by a real parser (never by line number); or why it cannot be. */
+export function symbolBody(src: string, symbol: string, py: boolean, path = ""): SymbolRegion | { problem: string } {
+  if (!SYMBOL.test(symbol)) return { problem: `${JSON.stringify(symbol)} is not a function name (name or Class.method)` };
+  return py ? pySymbolBody(src, symbol) : tsSymbolBody(src, symbol, path);
+}
+
 /** The handler at `line` (1-based): a Python endpoint to the next top-level decorator/def, or a TS window around it. */
 function handlerBody(src: string, line: number, py: boolean): string {
   const lines = src.split("\n");
@@ -1360,6 +1500,9 @@ function modelsFor(ws: WorkspaceReader, repo: string, root: string, table: strin
 
 /**
  * Null when the handler cited by `writerSource` visibly INSERTs / UPSERTs into `table`; otherwise why not.
+ * `<repo>:<path>#<symbol>` names the function (`name` or `Class.method`), resolved by parsing the file: a symbol that is
+ * missing or defined twice fails, and only its own body counts. `<repo>:<path>:<line>` cites a line; a line into
+ * ANOTHER repo drifts on that repo's unrelated edits, so strict mode refuses it (a `self` line is still accepted).
  * TS: `.from("<table>")` followed by `.insert(` / `.upsert(`. Python: `INSERT INTO <table>`, or a model of that table
  * constructed and added (`db.add(`, `add_all(`, `insert(<Model>`, `pg_insert(<Model>`, `bulk_save`, `.merge(`).
  * A SELECT, an UPDATE or a cookie stamp is not a writer.
@@ -1370,19 +1513,30 @@ export function writerProblem(
   tree: SourceTree,
   ws: WorkspaceReader,
   cache: Map<string, string[]>,
+  opts: { strict?: boolean } = {},
 ): string | null {
-  const m = /^([a-z0-9-]+):(.+?):(\d+)$/.exec(writerSource.trim());
-  if (!m) return `writerSource must be "<repo>:<path>:<line>" (repo "self" for this app), not ${JSON.stringify(writerSource)}`;
-  const [, repo, path, ln] = m;
+  const c = parseWriterSource(writerSource);
+  if (!c) return `writerSource must be "<repo>:<path>#<function>" or "<repo>:<path>:<line>" (repo "self" for this app), not ${JSON.stringify(writerSource)}`;
+  const { repo, path } = c;
+  if ("line" in c && repo !== "self" && opts.strict) {
+    return `${writerSource} cites a line in another repo, which drifts on its unrelated edits: cite the function as ${repo}:${path}#<function>`;
+  }
+  const at = "line" in c ? `${repo}:${path}:${c.line}` : `${repo}:${path}#${c.symbol}`;
   const src = repo === "self" ? tree.read(path) : ws.read(repo, path);
   if (src === null) return `the writer's handler ${repo}:${path} cannot be read (workspace ${ws.origin}), so it cannot be verified`;
   const bare = table.replace(/^(hockey_db|supabase:public|public)\./, "");
   if (bare === table && !/^[a-z0-9_]+$/.test(bare)) return `the table ${JSON.stringify(table)} names no schema-qualified table`;
   const py = path.endsWith(".py");
-  const body = handlerBody(src, Number(ln), py);
+  let body: string;
+  if ("line" in c) body = handlerBody(src, c.line, py);
+  else {
+    const r = symbolBody(src, c.symbol, py, path);
+    if ("problem" in r) return `${repo}:${path} ${r.problem}, so ${at} cannot be verified`;
+    body = r.body;
+  }
   if (!py) {
     const re = new RegExp(`\\.from\\(\\s*["'\`]${escRe(bare)}["'\`]\\s*\\)[\\s\\S]{0,400}?\\.(?:insert|upsert)\\s*\\(`);
-    return re.test(body) ? null : `${repo}:${path}:${ln} does not .insert()/.upsert() into ${bare} (a select, an update or a stamp is not a writer)`;
+    return re.test(body) ? null : `${at} does not .insert()/.upsert() into ${bare} (a select, an update or a stamp is not a writer)`;
   }
   if (new RegExp(`\\bINSERT\\s+INTO\\s+["']?${escRe(bare)}\\b`, "i").test(body)) return null;
   const rootDir = path.includes("/app/") ? path.slice(0, path.indexOf("/app/") + 5) : path.split("/").slice(0, -1).join("/");
@@ -1394,7 +1548,7 @@ export function writerProblem(
     const stmt = new RegExp(`\\b(?:pg_insert|insert|sqlite_insert)\\s*\\(\\s*${M}\\b`).test(body);
     if (built || stmt) return null;
   }
-  return `${repo}:${path}:${ln} does not insert a ${models.join("/")} row into ${bare} in its own body (a select, an update, or an insert hidden in a helper is not verified)`;
+  return `${at} does not insert a ${models.join("/")} row into ${bare} in its own body (a select, an update, or an insert hidden in a helper is not verified)`;
 }
 
 export function judgeProvenance(
@@ -1404,6 +1558,7 @@ export function judgeProvenance(
   rows: Map<string, RegisterRow>,
   config: Pick<GuardConfig, "app" | "rowPrefixes">,
   ws: WorkspaceReader,
+  opts: { strict?: boolean } = {},
 ): ProvenanceVerdict {
   const modelCache = new Map<string, string[]>();
   const surfaces = head.entries.filter((e) => PROVENANCE_KINDS.includes(e.kind) && e.polarity === "present");
@@ -1468,10 +1623,10 @@ export function judgeProvenance(
         }
       } else {
         if (!filled(p.writerSource)) {
-          v.invalid.push({ id: e.id, why: "an endpoint entry must cite its writer's handler as writerSource (<repo>:<path>:<line>)" });
+          v.invalid.push({ id: e.id, why: "an endpoint entry must cite its writer's handler as writerSource (<repo>:<path>#<function>)" });
           continue;
         }
-        const wp = writerProblem(p.writerSource as string, p.table as string, tree, ws, modelCache);
+        const wp = writerProblem(p.writerSource as string, p.table as string, tree, ws, modelCache, opts);
         if (wp) {
           v.invalid.push({ id: e.id, why: `the cited writer does not fill the table: ${wp}` });
           continue;
@@ -1534,13 +1689,15 @@ export function runProvenanceCheck(opts: {
   sidecar?: ProvenanceSidecar;
   registerSource?: RegisterSource;
   workspace?: WorkspaceReader;
+  /** Strict (the release check): also refuses a `:line` citation into another repo. */
+  strict?: boolean;
 }): ProvenanceResult {
   const tree = opts.tree ?? fsTree(opts.repoRoot);
   const head = extractSurface(tree, opts.config, { head: true });
   const sidecar = opts.sidecar ?? loadProvenance(opts.repoRoot);
   const src = opts.registerSource ?? loadRegisterSource(opts.repoRoot);
   const ws = opts.workspace ?? fsWorkspace(opts.repoRoot);
-  const verdict = judgeProvenance(head, tree, sidecar, parseRegister(src.register), opts.config, ws);
+  const verdict = judgeProvenance(head, tree, sidecar, parseRegister(src.register), opts.config, ws, { strict: opts.strict });
   const valid = verdict.invalid.length === 0;
   return { verdict, registerOrigin: src.origin, valid, complete: valid && verdict.unresolved.length === 0 };
 }
