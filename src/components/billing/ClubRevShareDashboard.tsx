@@ -48,11 +48,21 @@ export function ClubRevShareDashboard() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold font-mono transition-all cursor-pointer">
-            <Download className="w-3.5 h-3.5" /> Export Ledger CSV
+          <button
+            type="button"
+            disabled
+            title="Not yet available: there is no payout ledger yet"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 text-zinc-500 text-xs font-semibold font-mono cursor-not-allowed"
+          >
+            <Download className="w-3.5 h-3.5" /> Export Ledger CSV (not yet available)
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 text-white text-xs font-bold shadow-lg shadow-cyan-950/40 hover:opacity-95 transition-all cursor-pointer">
-            <CreditCard className="w-3.5 h-3.5" /> Stripe Connect Payouts
+          <button
+            type="button"
+            disabled
+            title="Not yet available: no club payout account can be connected yet"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 text-zinc-500 text-xs font-bold cursor-not-allowed"
+          >
+            <CreditCard className="w-3.5 h-3.5" /> Club Payouts (not yet available)
           </button>
         </div>
       </div>
@@ -61,14 +71,14 @@ export function ClubRevShareDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6 backdrop-blur-md">
           <div className="flex items-center justify-between text-zinc-400 text-xs font-mono uppercase mb-2">
-            <span>Annual Projected Fundraising</span>
+            <span>Modelled Annual Fundraising</span>
             <DollarSign className="w-4 h-4 text-cyan-400" />
           </div>
           <div className="text-3xl font-mono font-bold text-white">
             ${calc.projectedAnnualTeamFundraising.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </div>
           <p className="text-[11px] text-cyan-400 mt-2 font-mono">
-            Direct deposit to team bank account
+            Calculator estimate, not a payout
           </p>
         </div>
 
@@ -87,14 +97,14 @@ export function ClubRevShareDashboard() {
 
         <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6 backdrop-blur-md">
           <div className="flex items-center justify-between text-zinc-400 text-xs font-mono uppercase mb-2">
-            <span>Active Family Subscribers</span>
+            <span>Modelled Family Subscribers</span>
             <Users className="w-4 h-4 text-sky-400" />
           </div>
           <div className="text-3xl font-mono font-bold text-white">
             {subscribersCount}
           </div>
           <p className="text-[11px] text-zinc-400 mt-2 font-mono">
-            Parents, grandparents &amp; relatives
+            Your calculator input below
           </p>
         </div>
 
@@ -216,7 +226,7 @@ export function ClubRevShareDashboard() {
                 ${calc.projectedAnnualTeamFundraising.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </div>
               <p className="text-xs text-zinc-300 leading-relaxed">
-                For a team with <strong className="text-white">{playerCount} skaters</strong> and <strong className="text-white">{subscribersCount} subscribing family members</strong>, Transcend delivers <strong className="text-cyan-400">${calc.projectedAnnualTeamFundraising.toFixed(2)}</strong> directly into your team&apos;s travel fund.
+                For a team with <strong className="text-white">{playerCount} skaters</strong> and <strong className="text-white">{subscribersCount} subscribing family members</strong>, Transcend delivers <strong className="text-cyan-400">${calc.projectedAnnualTeamFundraising.toFixed(2)}</strong> a year under this model. This is an estimate; no payout is made today.
               </p>
             </div>
 
@@ -227,7 +237,7 @@ export function ClubRevShareDashboard() {
               </div>
               <div className="flex items-center gap-2 text-emerald-400">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>Automated monthly direct deposit via Stripe Connect</span>
+                <span>Club payouts: not yet available</span>
               </div>
               <div className="flex items-center gap-2 text-emerald-400">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -291,19 +301,19 @@ export function ClubRevShareDashboard() {
         </div>
       </div>
 
-      {/* STRIPE CONNECT PAYOUT STATUS */}
+      {/* PARTNER PAYOUT STATUS — GA-030 O-08 (T0.4): no club is connected and there is no payout
+          product yet (OD-11 / OD-21). This block named a real youth club as a live partner with an
+          invented Stripe Connect account and payout schedule; that data was deleted. */}
       <div className="rounded-3xl border border-white/10 bg-zinc-900/40 p-6 md:p-8 backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-500/40 text-sky-400 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-4" data-testid="club-partner-unavailable">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-800/60 border border-white/10 text-zinc-500 flex items-center justify-center shrink-0">
             <Building2 className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="text-white font-semibold text-sm">San Jose Jr. Sharks Youth Hockey Club</h4>
-            <p className="text-xs text-zinc-400">Stripe Connect Account: <code className="text-cyan-400 font-mono">acct_sj_sharks_fundraising_01</code></p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <span className="text-[11px] font-mono text-emerald-400">Active Direct Deposit · Next Payout: 1st of Month</span>
-            </div>
+            <h4 className="text-white font-semibold text-sm">Club partner payouts: not yet available</h4>
+            <p className="text-xs text-zinc-400">
+              No club is connected and no payouts are made today. The figures above are a calculator, not account data.
+            </p>
           </div>
         </div>
 

@@ -8,10 +8,29 @@
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
-import {
-  DEFAULT_CLUB_TELEMETRY,
-  DEFAULT_SCOUT_ORDERS,
-} from "../src/components/commercial/ClubRevenueShareConsole";
+import type { ClubPayoutTelemetry, ScoutDownloadOrder } from "../src/types/club-revenue-share-types";
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const DEFAULT_CLUB_TELEMETRY: ClubPayoutTelemetry = {
+  clubId: "club-fixture",
+  clubName: "Fixture Youth Club",
+  activeFamilySubscribers: 420,
+  monthlySubscriptionRateUsd: 15.0,
+  clubRevSharePercent: 50.0,
+  pendingPayoutUsd: 3150.0,
+  lifetimePayoutUsd: 37800.0,
+  nextAchTransferDate: "2026-10-01",
+  stripeAccountId: "acct_fixture_001",
+  isStripeConnectActive: true,
+};
+
+const DEFAULT_SCOUT_ORDERS: ScoutDownloadOrder[] = [
+  { orderId: "ord-scout-801", matchId: "m-u16-championship", matchTitle: "Fixture U16 A vs Fixture U16 B", purchasedAt: "12m ago", scoutOrg: "Fixture Scout Org 1", priceUsd: 35.0, clubCutUsd: 17.5, status: "completed" },
+  { orderId: "ord-scout-802", matchId: "m-u18-showcase", matchTitle: "Fixture U18 A vs Fixture U18 B", purchasedAt: "2h ago", scoutOrg: "Fixture Scout Org 2", priceUsd: 35.0, clubCutUsd: 17.5, status: "completed" },
+  { orderId: "ord-scout-803", matchId: "m-u14-regional", matchTitle: "Fixture U14 A vs Fixture U14 B", purchasedAt: "5h ago", scoutOrg: "Fixture Scout Org 3", priceUsd: 35.0, clubCutUsd: 17.5, status: "completed" },
+];
+
 
 console.log("================================================================================");
 console.log("🏒 RUNNING CLUB REVENUE SHARE CONSOLE TESTS (HORIZON D)");

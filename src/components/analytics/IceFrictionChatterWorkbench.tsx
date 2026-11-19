@@ -13,66 +13,29 @@ import {
   IceCellData,
   IceFrictionChatterWorkbenchProps,
 } from "../../types/ice-friction-chatter-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-function generateDefaultGrid(floodMin: number, tempC: number): IceCellData[] {
-  const cells: IceCellData[] = [];
-  const cols = 6;
-  const rows = 3;
-  const lengthM = 60.96;
-  const widthM = 25.908;
-
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const id = `cell_${r}_${c}`;
-      const cx = (c + 0.5) * (lengthM / cols);
-      const cy = (r + 0.5) * (widthM / rows) - widthM / 2.0;
-
-      // Slot/crease cells have higher trench density and acoustic chatter
-      const isCreaseArea = (c === 0 || c === 5) && r === 1;
-      const trench = isCreaseArea ? 16.0 : (c === 2 || c === 3) ? 12.0 : 4.5;
-      const chatter = isCreaseArea ? 22.5 : 8.0;
-
-      const timeFactor = 0.012 * (floodMin / 60.0);
-      const tempFactor = 0.002 * Math.max(0.0, tempC - -5.0);
-      const incisionFactor = 0.0008 * trench;
-      const chatterBoost = chatter > 18.0 ? Math.min(0.015, (chatter - 18.0) * 0.001) : 0.0;
-
-      const rawMuk = 0.005 + timeFactor + tempFactor + incisionFactor + chatterBoost;
-      const muk = Math.max(0.003, Math.min(0.045, rawMuk));
-
-      cells.push({
-        id,
-        col: c,
-        row: r,
-        centerX: parseFloat(cx.toFixed(1)),
-        centerY: parseFloat(cy.toFixed(1)),
-        elapsedFloodMin: floodMin,
-        surfaceTempC: tempC,
-        trenchDensityMPerSqM: trench,
-        acousticChatterDb: chatter,
-        dynamicFrictionMuk: parseFloat(muk.toFixed(4)),
-        rutAlert: chatter > 18.0,
-      });
-    }
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function IceFrictionChatterWorkbench(props: IceFrictionChatterWorkbenchProps) {
+  if (!props.initialCells || props.initialCells.length === 0) {
+    return <NotYetAvailable feature="Ice surface friction review" detail="No ice surface measurement is connected." className={props.className ?? ""} />;
   }
-  return cells;
+  return <IceFrictionChatterWorkbenchView {...props} initialCells={props.initialCells} />;
 }
 
-export function IceFrictionChatterWorkbench({
+function IceFrictionChatterWorkbenchView({
   initialFloodMin = 35.0,
   initialTempC = -4.5,
   initialCells,
   onCellSelect,
   className = "",
-}: IceFrictionChatterWorkbenchProps) {
+}: IceFrictionChatterWorkbenchProps & { initialCells: IceCellData[] }) {
   const [floodMin, setFloodMin] = useState<number>(initialFloodMin);
   const [tempC, setTempC] = useState<number>(initialTempC);
-  const [selectedCellId, setSelectedCellId] = useState<string>("cell_1_0");
+  const [selectedCellId, setSelectedCellId] = useState<string>(initialCells[0].id);
 
-  const cells = useMemo(() => {
-    if (initialCells && initialCells.length > 0) return initialCells;
-    return generateDefaultGrid(floodMin, tempC);
-  }, [initialCells, floodMin, tempC]);
+  const cells = initialCells;
 
   const selectedCell = useMemo(
     () => cells.find((c) => c.id === selectedCellId) || cells[0],

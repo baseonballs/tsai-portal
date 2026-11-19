@@ -11,11 +11,70 @@
 
 import fs from "fs";
 import path from "path";
-import {
-  DEFAULT_STREAM_SOURCES,
-  DEFAULT_SCOREBUG,
-  DEFAULT_XG,
-} from "../src/components/broadcast/broadcast-player-types";
+import type { StreamSource, ScorebugState, XGTelemetryState } from "../src/components/broadcast/broadcast-player-types";
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const DEFAULT_STREAM_SOURCES: StreamSource[] = [
+  {
+    streamId: "stream-cam-center-01",
+    angle: "CENTER_ICE",
+    label: "Center Ice Broadcast",
+    resolution: "1080p60 HDR",
+    videoUrl: "https://www.youtube.com/embed/live_stream?channel=tsai_sample_center",
+    isLive: true,
+    latencyMs: 140,
+  },
+  {
+    streamId: "stream-cam-corner-02",
+    angle: "HIGH_CORNER",
+    label: "Tactical High Endzone",
+    resolution: "4K30 PTZ",
+    videoUrl: "https://www.youtube.com/embed/live_stream?channel=tsai_sample_corner",
+    isLive: true,
+    latencyMs: 165,
+  },
+  {
+    streamId: "stream-cam-crease-03",
+    angle: "GOALIE_CREASE_POV",
+    label: "Goaltender Crease POV",
+    resolution: "1080p60 Ultra-Wide",
+    videoUrl: "https://www.youtube.com/embed/live_stream?channel=tsai_sample_crease",
+    isLive: true,
+    latencyMs: 120,
+  },
+];
+
+const DEFAULT_SCOREBUG: ScorebugState = {
+  gameId: "game_fixture_u16_final",
+  rinkName: "Fixture Arena — Sheet 1",
+  homeTeam: {
+    name: "Fixture Home Club",
+    code: "FHC",
+    score: 3,
+  },
+  awayTeam: {
+    name: "Fixture Away Club",
+    code: "FAC",
+    score: 2,
+  },
+  period: 2,
+  clockSeconds: 842, // 14:02 remaining
+  isClockRunning: true,
+  isIntermission: false,
+  whistleDucked: false,
+};
+
+const DEFAULT_XG: XGTelemetryState = {
+  homeXG: 2.45,
+  awayXG: 1.88,
+  lastShotXG: 0.359,
+  lastShotDanger: "HIGH_DANGER",
+  lastShotTimestamp: "14:15 P2",
+  homeHighDangerChances: 5,
+  awayHighDangerChances: 3,
+};
+
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
@@ -69,8 +128,8 @@ async function runLiveBroadcastPlayerTests() {
   assert(DEFAULT_XG.lastShotDanger === "HIGH_DANGER", "Default last shot danger must be HIGH_DANGER.");
   assert(DEFAULT_XG.homeHighDangerChances === 5, "Home HDC must be 5.");
   assert(DEFAULT_XG.awayHighDangerChances === 3, "Away HDC must be 3.");
-  console.log(`  ✔ xG Battle: SJS ${DEFAULT_XG.homeXG} (${homePercent}%) vs LAK ${DEFAULT_XG.awayXG} (${awayPercent}%)`);
-  console.log(`  ✔ High Danger Chances: SJS ${DEFAULT_XG.homeHighDangerChances} - LAK ${DEFAULT_XG.awayHighDangerChances}`);
+  console.log(`  ✔ xG Battle: Home ${DEFAULT_XG.homeXG} (${homePercent}%) vs Away ${DEFAULT_XG.awayXG} (${awayPercent}%)`);
+  console.log(`  ✔ High Danger Chances: Home ${DEFAULT_XG.homeHighDangerChances} - Away ${DEFAULT_XG.awayHighDangerChances}`);
 
   // Test 5: Zero-Purple Design Rule Audit
   console.log("\n▶ [5/5] Auditing Zero-Purple Tailwind Design Rules...");

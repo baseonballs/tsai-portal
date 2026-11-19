@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import {
   ClubStripeConnectProfile,
-  DEFAULT_CLUB_STRIPE_PROFILE,
   KycStatus,
 } from '../../types/club-stripe-connect-types';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const ClubStripeConnectOnboarding: React.FC = () => {
-  const [profile, setProfile] = useState<ClubStripeConnectProfile>(DEFAULT_CLUB_STRIPE_PROFILE);
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const ClubStripeConnectOnboarding: React.FC<{ initialProfile?: ClubStripeConnectProfile }> = ({ initialProfile }) => {
+  if (!initialProfile) {
+    return <NotYetAvailable feature="Club payout onboarding" detail="There is no club payout product yet; no account is connected." />;
+  }
+  return <ClubStripeConnectOnboardingView initialProfile={initialProfile} />;
+};
+
+const ClubStripeConnectOnboardingView: React.FC<{ initialProfile: ClubStripeConnectProfile }> = ({ initialProfile }) => {
+  const [profile, setProfile] = useState<ClubStripeConnectProfile>(initialProfile);
   const [isConnectingStripe, setIsConnectingStripe] = useState<boolean>(false);
 
   // Revenue projection calculation
@@ -14,16 +23,11 @@ export const ClubStripeConnectOnboarding: React.FC = () => {
   const clubMonthlyShareUsd = grossMonthlyUsd * profile.revenueShareRatio;
   const annualClubPayoutUsd = clubMonthlyShareUsd * 12.0;
 
+  // There is no club payout product yet (OD-11 / OD-21). This used to mark KYC "VERIFIED" and
+  // attach an invented account id after a timer; it now does nothing and the button says so.
   const triggerStripeOnboarding = () => {
-    setIsConnectingStripe(true);
-    setTimeout(() => {
-      setIsConnectingStripe(false);
-      setProfile((prev) => ({
-        ...prev,
-        kycStatus: 'VERIFIED',
-        stripeConnectAccountId: 'acct_1TSAI_PLYMOUTH_01',
-      }));
-    }, 800);
+    void setProfile;
+    setIsConnectingStripe(false);
   };
 
   return (
@@ -82,14 +86,11 @@ export const ClubStripeConnectOnboarding: React.FC = () => {
           {/* Action Button */}
           <button
             onClick={triggerStripeOnboarding}
-            disabled={isConnectingStripe}
-            className="w-full py-2.5 px-4 rounded-lg text-xs font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 transition-all shadow-lg shadow-cyan-500/20"
+            disabled
+            title="Not yet available"
+            className="w-full py-2.5 px-4 rounded-lg text-xs font-bold bg-slate-800 text-slate-500 cursor-not-allowed"
           >
-            {isConnectingStripe
-              ? 'LAUNCHING STRIPE EXPRESS...'
-              : profile.kycStatus === 'VERIFIED'
-              ? 'UPDATE BANK ACCOUNT'
-              : 'CONNECT BANK ACCOUNT'}
+            CONNECT BANK ACCOUNT (NOT YET AVAILABLE)
           </button>
         </div>
 

@@ -12,10 +12,63 @@
 import fs from 'fs';
 import path from 'path';
 import {
-  INITIAL_PORTAL_MATCHES,
   formatMatchClock,
   PortalTournamentMatch,
 } from '../src/components/tournaments/bracket-highlight-slicer-types';
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const INITIAL_PORTAL_MATCHES: PortalTournamentMatch[] = [
+  {
+    matchId: 'match-qf-1',
+    tournamentId: 'state-championship-2026',
+    roundName: 'Quarterfinal 1',
+    sheetName: 'Rink A',
+    homeTeam: { id: 'team-north', name: 'North Stars', seed: 1, score: 4 },
+    awayTeam: { id: 'team-south', name: 'South Fixture Club', seed: 8, score: 3 },
+    status: 'COMPLETED',
+    winnerTeamId: 'team-north',
+    nextMatchId: 'match-semi-1',
+    period: 4,
+    gameClockSeconds: 0,
+    highlightReelUrl: 'https://cdn.transcend.tv/tournaments/state-championship-2026/highlights/reel-qf-1/master.m3u8',
+    highlightClips: [
+      {
+        clipId: 'clip-1',
+        title: 'North Stars Powerplay Goal',
+        eventType: 'GOAL',
+        period: 1,
+        gameClockSeconds: 840,
+        durationSeconds: 12.5,
+        thumbnailUrl: '/thumbnails/qf1_goal1.jpg',
+        clipUrl: 'https://cdn.transcend.tv/clips/clip-1.m3u8',
+      },
+      {
+        clipId: 'clip-2',
+        title: 'North Stars Sudden Death OT Winner',
+        eventType: 'OVERTIME_WINNER',
+        period: 4,
+        gameClockSeconds: 180,
+        durationSeconds: 18.0,
+        thumbnailUrl: '/thumbnails/qf1_ot.jpg',
+        clipUrl: 'https://cdn.transcend.tv/clips/clip-2.m3u8',
+      },
+    ],
+  },
+  {
+    matchId: 'match-semi-1',
+    tournamentId: 'state-championship-2026',
+    roundName: 'Semifinal A',
+    sheetName: 'Rink A',
+    homeTeam: { id: 'team-north', name: 'North Stars (Adv)', seed: 1, score: 0 },
+    awayTeam: { id: 'team-east', name: 'East Warriors', seed: 4, score: 0 },
+    status: 'IN_PROGRESS',
+    period: 1,
+    gameClockSeconds: 1020,
+    highlightClips: [],
+  },
+];
+
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
@@ -36,7 +89,7 @@ async function runBracketHighlightSlicerTests() {
   assert(qf1.matchId === 'match-qf-1', 'First match is QF1');
   assert(qf1.status === 'COMPLETED', 'QF1 is completed');
   assert(qf1.homeTeam.score === 4, 'North Stars score 4');
-  assert(qf1.awayTeam.score === 3, 'South Blades score 3');
+  assert(qf1.awayTeam.score === 3, 'South Fixture Club score 3');
   assert(qf1.highlightClips.length === 2, 'QF1 has 2 sliced highlight clips');
   console.log('  ✔ Verified tournament matches, scores, and sliced highlight clips.\n');
 

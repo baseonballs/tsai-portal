@@ -17,24 +17,26 @@ import {
   VoronoiPassingLaneMetrics,
   VoronoiPassingLaneWorkbenchProps,
 } from "../../types/voronoi-lane-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const DEFAULT_PASSER: VoronoiPoint = { x: 80, y: 220 };
-export const DEFAULT_RECEIVER: VoronoiPoint = { x: 440, y: 220 };
 
-export const DEFAULT_DEFENDERS: VoronoiDefenderNode[] = [
-  { id: "DEF-1", label: "Left D", jerseyNumber: "4", x: 220, y: 150, vxMps: 0.5, vyMps: 2.8, stickReachM: 1.6 },
-  { id: "DEF-2", label: "Right D", jerseyNumber: "27", x: 300, y: 290, vxMps: -0.2, vyMps: -1.5, stickReachM: 1.6 },
-  { id: "DEF-3", label: "Center F", jerseyNumber: "16", x: 260, y: 120, vxMps: 0.0, vyMps: 3.5, stickReachM: 1.6 },
-];
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function VoronoiPassingLaneWorkbench(props: VoronoiPassingLaneWorkbenchProps) {
+  if (!props.passer || !props.receiver || !props.defenders || props.defenders.length === 0) {
+    return <NotYetAvailable feature="Passing-lane analysis" detail="No tracked game positions are connected." className={props.className ?? ""} />;
+  }
+  return <VoronoiPassingLaneWorkbenchView {...props} passer={props.passer} receiver={props.receiver} defenders={props.defenders} />;
+}
 
-export function VoronoiPassingLaneWorkbench({
-  passer = DEFAULT_PASSER,
-  receiver = DEFAULT_RECEIVER,
-  defenders = DEFAULT_DEFENDERS,
+function VoronoiPassingLaneWorkbenchView({
+  passer,
+  receiver,
+  defenders,
   puckSpeedMps = 18.0,
   onLaneSelect,
   className = "",
-}: VoronoiPassingLaneWorkbenchProps) {
+}: VoronoiPassingLaneWorkbenchProps & Required<Pick<VoronoiPassingLaneWorkbenchProps, "passer" | "receiver" | "defenders">>) {
   const [activeSpeed, setActiveSpeed] = useState<number>(puckSpeedMps);
   const [selectedDefenderId, setSelectedDefenderId] = useState<string | null>(null);
 

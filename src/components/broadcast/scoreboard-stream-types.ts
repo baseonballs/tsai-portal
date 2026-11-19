@@ -44,36 +44,3 @@ export interface ArenaScoreboardBannerProps {
   className?: string;
 }
 
-export const SAMPLE_ARENA_SCOREBOARD: ArenaScoreboardData = {
-  gameId: "game-u18-championship",
-  period: 2,
-  clockFormatted: "14:22",
-  clockSecondsRemaining: 862,
-  isClockRunning: true,
-  isWhistleStoppage: false,
-  homeTeam: {
-    code: "BOS",
-    name: "Boston Jr. Bruins",
-    score: 2,
-    shots: 18,
-    xg: 2.15,
-  },
-  awayTeam: {
-    code: "CHI",
-    name: "Chicago Mission",
-    score: 1,
-    shots: 14,
-    xg: 1.48,
-  },
-  activePenalties: [
-    {
-      id: "pen-01",
-      teamCode: "CHI",
-      playerNumber: 22,
-      infraction: "Tripping",
-      remainingSeconds: 65,
-    },
-  ],
-  streamLatencyMs: 148,
-  arenaName: "Warrior Ice Arena - Rink A",
-};

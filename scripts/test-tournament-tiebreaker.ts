@@ -12,22 +12,216 @@
 import assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import {
-  DEFAULT_STANDINGS,
-  DEFAULT_BRACKET_SEEDS,
-} from "../src/components/tournaments/tournament-tiebreaker-constants";
+import type { RankedTeamStanding, BracketSeedMatch } from "../src/components/tournaments/tournament-tiebreaker-types";
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in data, so
+// the data these checks need lives here only. No real club, venue or person.
+const DEFAULT_STANDINGS: RankedTeamStanding[] = [
+  {
+    rank: 1,
+    seed: 1,
+    team: {
+      teamId: "team-fixture-a",
+      teamName: "Fixture Club A",
+      division: "16U AAA",
+      gamesPlayed: 4,
+      wins: 4,
+      losses: 0,
+      ties: 0,
+      otLosses: 0,
+      points: 8,
+      goalsFor: 18,
+      goalsAgainst: 4,
+      cappedGoalDifferential: 14,
+      periodWins: 11,
+      penaltyMinutes: 12,
+      earliestGoalSeconds: 42,
+    },
+    tiebreakerReason: "Outright points leader (8 pts)",
+    criterion: "POINTS",
+  },
+  {
+    rank: 2,
+    seed: 2,
+    team: {
+      teamId: "team-fixture-b",
+      teamName: "Fixture Club B AAA",
+      division: "16U AAA",
+      gamesPlayed: 4,
+      wins: 3,
+      losses: 1,
+      ties: 0,
+      otLosses: 0,
+      points: 6,
+      goalsFor: 15,
+      goalsAgainst: 7,
+      cappedGoalDifferential: 8,
+      periodWins: 8,
+      penaltyMinutes: 8,
+      earliestGoalSeconds: 84,
+    },
+    tiebreakerReason: "Won head-to-head vs Fixture Club C (4-3)",
+    criterion: "HEAD_TO_HEAD",
+  },
+  {
+    rank: 3,
+    seed: 3,
+    team: {
+      teamId: "team-fixture-c",
+      teamName: "Fixture Club C",
+      division: "16U AAA",
+      gamesPlayed: 4,
+      wins: 3,
+      losses: 1,
+      ties: 0,
+      otLosses: 0,
+      points: 6,
+      goalsFor: 22,
+      goalsAgainst: 8,
+      cappedGoalDifferential: 10,
+      periodWins: 9,
+      penaltyMinutes: 14,
+      earliestGoalSeconds: 55,
+    },
+    tiebreakerReason: "Lost head-to-head vs Fixture Club B (3-4)",
+    criterion: "HEAD_TO_HEAD",
+  },
+  {
+    rank: 4,
+    seed: 4,
+    team: {
+      teamId: "team-fixture-d",
+      teamName: "Fixture Club D",
+      division: "16U AAA",
+      gamesPlayed: 4,
+      wins: 2,
+      losses: 1,
+      ties: 1,
+      otLosses: 0,
+      points: 5,
+      goalsFor: 12,
+      goalsAgainst: 9,
+      cappedGoalDifferential: 3,
+      periodWins: 7,
+      penaltyMinutes: 16,
+      earliestGoalSeconds: 110,
+    },
+    tiebreakerReason: "Higher +/- 5 capped differential (+3 vs -1)",
+    criterion: "GOAL_DIFFERENTIAL_CAP_5",
+  },
+  {
+    rank: 5,
+    seed: 5,
+    team: {
+      teamId: "team-fixture-e",
+      teamName: "Fixture Club E",
+      division: "16U AAA",
+      gamesPlayed: 4,
+      wins: 2,
+      losses: 1,
+      ties: 1,
+      otLosses: 0,
+      points: 5,
+      goalsFor: 10,
+      goalsAgainst: 11,
+      cappedGoalDifferential: -1,
+      periodWins: 6,
+      penaltyMinutes: 10,
+      earliestGoalSeconds: 145,
+    },
+    tiebreakerReason: "Lower capped differential (-1 vs +3)",
+    criterion: "GOAL_DIFFERENTIAL_CAP_5",
+  },
+  {
+    rank: 6,
+    seed: 6,
+    team: {
+      teamId: "team-fixture-f",
+      teamName: "Fixture Club F",
+      division: "16U AAA",
+      gamesPlayed: 4,
+      wins: 1,
+      losses: 2,
+      ties: 1,
+      otLosses: 0,
+      points: 3,
+      goalsFor: 8,
+      goalsAgainst: 12,
+      cappedGoalDifferential: -4,
+      periodWins: 5,
+      penaltyMinutes: 6,
+      earliestGoalSeconds: 210,
+    },
+    tiebreakerReason: "Fewest goals against in 3-way tie (12 GA)",
+    criterion: "FEWEST_GOALS_AGAINST",
+  },
+  {
+    rank: 7,
+    seed: 7,
+    team: {
+      teamId: "team-fixture-g",
+      teamName: "Fixture Club G",
+      division: "16U AAA",
+      gamesPlayed: 4,
+      wins: 1,
+      losses: 2,
+      ties: 1,
+      otLosses: 0,
+      points: 3,
+      goalsFor: 9,
+      goalsAgainst: 14,
+      cappedGoalDifferential: -5,
+      periodWins: 4,
+      penaltyMinutes: 18,
+      earliestGoalSeconds: 180,
+    },
+    tiebreakerReason: "Won period tiebreaker vs Fixture Club H (4 vs 2)",
+    criterion: "PERIOD_WINS",
+  },
+  {
+    rank: 8,
+    seed: 8,
+    team: {
+      teamId: "team-fixture-h",
+      teamName: "Fixture Club H",
+      division: "16U AAA",
+      gamesPlayed: 4,
+      wins: 1,
+      losses: 2,
+      ties: 1,
+      otLosses: 0,
+      points: 3,
+      goalsFor: 7,
+      goalsAgainst: 16,
+      cappedGoalDifferential: -7,
+      periodWins: 2,
+      penaltyMinutes: 20,
+      earliestGoalSeconds: 310,
+    },
+    tiebreakerReason: "Final playoff qualifier (2 period wins)",
+    criterion: "PERIOD_WINS",
+  },
+];
+
+const DEFAULT_BRACKET_SEEDS: BracketSeedMatch[] = [
+  { seed1: 1, team1: "Fixture Club A", seed2: 8, team2: "Fixture Club H", round: "QUARTERFINALS", sheetName: "Sheet 1 (Main Arena)", scheduledTime: "Sun 08:00 AM" },
+  { seed1: 4, team1: "Fixture Club D", seed2: 5, team2: "Fixture Club E", round: "QUARTERFINALS", sheetName: "Sheet 2 (South Rink)", scheduledTime: "Sun 08:30 AM" },
+  { seed1: 2, team1: "Fixture Club B AAA", seed2: 7, team2: "Fixture Club G", round: "QUARTERFINALS", sheetName: "Sheet 3 (West Arena)", scheduledTime: "Sun 09:45 AM" },
+  { seed1: 3, team1: "Fixture Club C", seed2: 6, team2: "Fixture Club F", round: "QUARTERFINALS", sheetName: "Sheet 4 (Olympic)", scheduledTime: "Sun 10:15 AM" },
+];
+
 
 function runTests() {
   console.log("=== Running Tournament Tiebreaker Arbiter Tests ===");
 
   // 1. Data Contracts & Platform Invariant 6
   assert.equal(DEFAULT_STANDINGS.length, 8);
-  const mission = DEFAULT_STANDINGS[0];
-  assert.equal(mission.seed, 1);
-  assert.equal(mission.team.points, 8);
-  assert.equal(mission.team.cappedGoalDifferential, 14);
-  assert.equal(typeof mission.team.periodWins, "number");
-  assert.equal(typeof mission.team.penaltyMinutes, "number");
+  const topSeed = DEFAULT_STANDINGS[0];
+  assert.equal(topSeed.seed, 1);
+  assert.equal(topSeed.team.points, 8);
+  assert.equal(topSeed.team.cappedGoalDifferential, 14);
+  assert.equal(typeof topSeed.team.periodWins, "number");
+  assert.equal(typeof topSeed.team.penaltyMinutes, "number");
   console.log("✔ Test 1: Data contracts and Platform Invariant 6 validated.");
 
   // 2. USA Hockey +/- 5 Goal Differential Cap Logic
@@ -66,7 +260,6 @@ function runTests() {
   // 4. Zero-Purple Rule
   const filesToCheck = [
     path.join(__dirname, "../src/components/tournaments/tournament-tiebreaker-types.ts"),
-    path.join(__dirname, "../src/components/tournaments/tournament-tiebreaker-constants.ts"),
     path.join(__dirname, "../src/components/tournaments/TournamentTiebreakerArbiter.tsx"),
   ];
   const forbidden = new RegExp(["pur" + "ple", "indi" + "go", "vio" + "let"].join("|"), "i");

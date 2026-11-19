@@ -17,30 +17,22 @@ import {
   GoalieRVHCanvasProps,
   RVHPostSide,
 } from "../../types/goalie-rvh-canvas-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const DEFAULT_RVH_REVIEW_DATA: GoalieRVHReviewData = {
-  sampleId: "RVH-P394-001",
-  goalieIdentifier: "Goalie 35",
-  timestampSec: 842.0,
-  postSide: "left_post",
-  hipInternalRotationDeg: 39.5,
-  hipFlexionDeg: 74.0,
-  torsoLeanAngleDeg: 28.5,
-  skatePostCompressionForceN: 460.0,
-  dwellDurationSec: 3.4,
-  cumulativeImpulseNs: 1564.0,
-  jointImpingementRiskIndex: 0.86,
-  riskLevel: "ACUTE_FAI_HAZARD",
-  criticalIRThresholdDeg: 38.0,
-  criticalFlexionThresholdDeg: 70.0,
-  processingLatencyMs: 4,
-};
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function GoalieRVHJointLoadReviewCanvas(props: GoalieRVHCanvasProps) {
+  if (!props.data) {
+    return <NotYetAvailable feature="Goalie RVH review" detail="No reviewed game event is connected." className={props.className ?? ""} />;
+  }
+  return <GoalieRVHJointLoadReviewCanvasView {...props} data={props.data} />;
+}
 
-export function GoalieRVHJointLoadReviewCanvas({
-  data = DEFAULT_RVH_REVIEW_DATA,
+function GoalieRVHJointLoadReviewCanvasView({
+  data,
   onPostSideToggle,
   className = "",
-}: GoalieRVHCanvasProps) {
+}: GoalieRVHCanvasProps & { data: NonNullable<GoalieRVHCanvasProps["data"]> }) {
   const [selectedSide, setSelectedSide] = useState<RVHPostSide>(data.postSide);
 
   const handleSideToggle = (side: RVHPostSide) => {

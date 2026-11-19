@@ -28,6 +28,7 @@ export interface PowerplaySequenceMetrics {
 }
 
 export interface PowerplayUmbrellaCanvasProps {
+  nodes?: PowerplaySkaterNode[];
   activeSequence?: PowerplaySequenceMetrics;
   onRoleSelect?: (role: PowerplayPositionRole) => void;
   className?: string;

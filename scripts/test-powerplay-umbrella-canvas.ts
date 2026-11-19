@@ -1,7 +1,16 @@
 import fs from "fs";
 import path from "path";
 import assert from "assert";
-import { DEFAULT_131_NODES } from "../src/components/tactics/PowerplayUmbrellaCanvas";
+import type { PowerplaySkaterNode } from "../src/types/powerplay-umbrella-types";
+
+// Neutral in-test fixture (GA-030 O-10, T0.4): the component no longer ships built-in nodes.
+const DEFAULT_131_NODES: PowerplaySkaterNode[] = [
+  { role: "highPoint", label: "High Point", x: 260, y: 70, jerseyNumber: "8" },
+  { role: "leftFlank", label: "Left Flank", x: 90, y: 200, jerseyNumber: "19" },
+  { role: "rightFlank", label: "Right Flank", x: 430, y: 200, jerseyNumber: "88" },
+  { role: "bumperSlot", label: "Bumper", x: 260, y: 220, jerseyNumber: "97" },
+  { role: "netFront", label: "Net Front", x: 260, y: 350, jerseyNumber: "11" },
+];
 
 console.log("=== Running Powerplay 1-3-1 Umbrella Canvas Tests ===");
 

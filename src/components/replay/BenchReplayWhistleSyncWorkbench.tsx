@@ -8,6 +8,7 @@
  */
 
 import React, { useState } from 'react';
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
 export interface CameraAngleFeed {
   angleId: string;
@@ -34,25 +35,21 @@ interface BenchReplayWhistleSyncWorkbenchProps {
   onFreezeTrigger?: () => void;
 }
 
-export const BenchReplayWhistleSyncWorkbench: React.FC<BenchReplayWhistleSyncWorkbenchProps> = ({
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export const BenchReplayWhistleSyncWorkbench: React.FC<BenchReplayWhistleSyncWorkbenchProps> = (props) => {
+  if (!props.initialState) {
+    return <NotYetAvailable feature="Bench replay whistle sync" detail="No live game event is connected." />;
+  }
+  return <BenchReplayWhistleSyncWorkbenchView {...props} initialState={props.initialState} />;
+};
+
+const BenchReplayWhistleSyncWorkbenchView: React.FC<BenchReplayWhistleSyncWorkbenchProps & { initialState: WhistleSyncState }> = ({
   initialState,
   onFreezeTrigger,
 }) => {
   const [state] = useState<WhistleSyncState>(
-    initialState || {
-      whistleEventId: 'W-4821',
-      smpteTimecode: '01:24:18:14',
-      syncDriftMs: 0.85,
-      officialBeaconSec: 1726880024.12,
-      acousticBlastSec: 1726880024.1165,
-      isAllLocked: true,
-      angles: [
-        { angleId: 'cam-high-slot', label: 'High Slot 4K', fps: 60, resolution: '3840x2160', ptsSec: 24.1165, syncOffsetMs: 0.2, isLocked: true },
-        { angleId: 'cam-bench-side', label: 'Bench Side 1080p', fps: 60, resolution: '1920x1080', ptsSec: 24.1165, syncOffsetMs: 0.4, isLocked: true },
-        { angleId: 'cam-endzone-north', label: 'North Endzone 4K', fps: 60, resolution: '3840x2160', ptsSec: 24.1165, syncOffsetMs: 0.6, isLocked: true },
-        { angleId: 'cam-ref-crease', label: 'Crease Action 1080p', fps: 60, resolution: '1920x1080', ptsSec: 24.1165, syncOffsetMs: 0.85, isLocked: true },
-      ],
-    }
+    initialState
   );
 
   return (

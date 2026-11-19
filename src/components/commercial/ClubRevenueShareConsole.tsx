@@ -13,31 +13,22 @@
 import React, { useState } from "react";
 import { DollarSign, TrendingUp, Users, Download, ArrowUpRight, CheckCircle2, ShieldCheck, Clock, RefreshCw } from "lucide-react";
 import { ClubPayoutTelemetry, ClubRevenueShareConsoleProps, ScoutDownloadOrder } from "../../types/club-revenue-share-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const DEFAULT_CLUB_TELEMETRY: ClubPayoutTelemetry = {
-  clubId: "club-edina-hockey-assoc",
-  clubName: "Edina Hockey Association",
-  activeFamilySubscribers: 420,
-  monthlySubscriptionRateUsd: 15.0,
-  clubRevSharePercent: 50.0,
-  pendingPayoutUsd: 3150.0,
-  lifetimePayoutUsd: 37800.0,
-  nextAchTransferDate: "2026-10-01",
-  stripeAccountId: "acct_1TSAI_EDINA_001",
-  isStripeConnectActive: true,
-};
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function ClubRevenueShareConsole(props: ClubRevenueShareConsoleProps) {
+  if (!props.initialTelemetry) {
+    return <NotYetAvailable feature="Club revenue share" detail="No club is connected and no payouts are made." />;
+  }
+  return <ClubRevenueShareConsoleView {...props} initialTelemetry={props.initialTelemetry} />;
+}
 
-export const DEFAULT_SCOUT_ORDERS: ScoutDownloadOrder[] = [
-  { orderId: "ord-scout-801", matchId: "m-u16-championship", matchTitle: "Edina U16 vs Wayzata U16", purchasedAt: "12m ago", scoutOrg: "USHL Central Scouting", priceUsd: 35.0, clubCutUsd: 17.5, status: "completed" },
-  { orderId: "ord-scout-802", matchId: "m-u18-showcase", matchTitle: "Edina U18 vs Shattuck St. Mary's", purchasedAt: "2h ago", scoutOrg: "NCAA Div 1 Scout", priceUsd: 35.0, clubCutUsd: 17.5, status: "completed" },
-  { orderId: "ord-scout-803", matchId: "m-u14-regional", matchTitle: "Edina U14 vs Minnetonka U14", purchasedAt: "5h ago", scoutOrg: "WHL Western Scout", priceUsd: 35.0, clubCutUsd: 17.5, status: "completed" },
-];
-
-export function ClubRevenueShareConsole({
-  initialTelemetry = DEFAULT_CLUB_TELEMETRY,
-  initialScoutOrders = DEFAULT_SCOUT_ORDERS,
+function ClubRevenueShareConsoleView({
+  initialTelemetry,
+  initialScoutOrders = [],
   onTriggerPayout,
-}: ClubRevenueShareConsoleProps) {
+}: ClubRevenueShareConsoleProps & { initialTelemetry: ClubPayoutTelemetry }) {
   const [telemetry] = useState<ClubPayoutTelemetry>(initialTelemetry);
   const [scoutOrders] = useState<ScoutDownloadOrder[]>(initialScoutOrders);
   const [isTransferring, setIsTransferring] = useState(false);

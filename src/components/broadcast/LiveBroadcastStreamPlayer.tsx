@@ -20,10 +20,8 @@ import {
   type ScorebugState,
   type XGTelemetryState,
   type LiveBroadcastStreamPlayerProps,
-  DEFAULT_STREAM_SOURCES,
-  DEFAULT_SCOREBUG,
-  DEFAULT_XG,
 } from "./broadcast-player-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
 function formatClock(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -31,14 +29,30 @@ function formatClock(seconds: number): string {
   return `${m}:${s < 10 ? "0" : ""}${s}`;
 }
 
-export function LiveBroadcastStreamPlayer({
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function LiveBroadcastStreamPlayer(props: LiveBroadcastStreamPlayerProps) {
+  if (!props.sources || props.sources.length === 0 || !props.initialScorebug || !props.initialXG) {
+    return <NotYetAvailable feature="Live broadcast" detail="No live game stream is connected." />;
+  }
+  return (
+    <LiveBroadcastStreamPlayerView
+      {...props}
+      sources={props.sources}
+      initialScorebug={props.initialScorebug}
+      initialXG={props.initialXG}
+    />
+  );
+}
+
+function LiveBroadcastStreamPlayerView({
   initialAngle = "CENTER_ICE",
-  sources = DEFAULT_STREAM_SOURCES,
-  initialScorebug = DEFAULT_SCOREBUG,
-  initialXG = DEFAULT_XG,
+  sources,
+  initialScorebug,
+  initialXG,
   onAngleChange,
   onClipMarked,
-}: LiveBroadcastStreamPlayerProps) {
+}: LiveBroadcastStreamPlayerProps & Required<Pick<LiveBroadcastStreamPlayerProps, "sources" | "initialScorebug" | "initialXG">>) {
   const [activeAngle, setActiveAngle] = useState<CameraAngle>(initialAngle);
   const [scorebug] = useState<ScorebugState>(initialScorebug);
   const [xgState] = useState<XGTelemetryState>(initialXG);

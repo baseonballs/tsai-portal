@@ -20,9 +20,39 @@ import {
   parseICalDate,
   detectSheetScheduleConflicts,
   provisionTournamentSheetsFromICal,
-  generateSampleTournamentICal,
   type ICalEvent,
 } from "../src/lib/tournament/ical-tournament-provisioner";
+
+// Neutral in-test fixture (no real clubs, venues or people). GA-030 O-01: the app no longer ships
+// a sample calendar, so the fixture lives here and only here.
+const SHEET_LOCATIONS = [
+  "Sheet 1 - Main Center Arena",
+  "Olympic South Sheet (Sheet 2)",
+  "North Rink 3 (Sheet 3)",
+  "West Rink 4 (Sheet 4)",
+  "Sheet 5 (East Rink 5)",
+  "Sheet 6 (Training Sheet)",
+  "Sheet 7 (Community Rink)",
+  "Sheet 8 (Studio Pond)",
+];
+const STARTS = ["180000", "181500", "180000", "183000", "180000", "181500", "183000", "180000"];
+const ENDS = ["193000", "194500", "193000", "200000", "193000", "194500", "200000", "193000"];
+function neutralTournamentICal(): string {
+  const events = SHEET_LOCATIONS.map(
+    (loc, i) => `BEGIN:VEVENT
+UID:fixture-game-${i + 1}
+DTSTART:20260918T${STARTS[i]}Z
+DTEND:20260918T${ENDS[i]}Z
+SUMMARY:Fixture Home ${i + 1} vs Fixture Away ${i + 1} (16U AAA Quarterfinal ${i + 1})
+LOCATION:${loc}
+END:VEVENT`,
+  );
+  return `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//fixture//EN
+${events.join("\n")}
+END:VCALENDAR`;
+}
 
 async function runICalProvisionerTests() {
   console.log("─────────────────────────────────────────────────────────────────");
@@ -32,15 +62,15 @@ async function runICalProvisionerTests() {
 
   // TEST PILLAR 1: RFC 5545 Parsing & Summary Extraction
   console.log("1. Testing RFC 5545 iCalendar Parsing & Summary Extraction...");
-  const sampleIcs = generateSampleTournamentICal();
+  const sampleIcs = neutralTournamentICal();
   const events = parseICalFeed(sampleIcs);
 
   assert.equal(events.length, 8, "Expected exactly 8 tournament games parsed from sample");
 
   const qf1 = events[0];
-  assert.equal(qf1.uid, "ss-2026-qf1-sheet1");
-  assert.equal(qf1.homeTeam, "Jr Sharks AAA");
-  assert.equal(qf1.awayTeam, "Chicago Mission");
+  assert.equal(qf1.uid, "fixture-game-1");
+  assert.equal(qf1.homeTeam, "Fixture Home 1");
+  assert.equal(qf1.awayTeam, "Fixture Away 1");
   assert.equal(qf1.division, "16U AAA Quarterfinal 1");
   assert.equal(qf1.sheetNumber, 1);
   assert.ok(qf1.dtStart instanceof Date, "dtStart must be a Date instance");
@@ -48,9 +78,9 @@ async function runICalProvisionerTests() {
   assert.equal(qf1.dtStart.toISOString(), "2026-09-18T18:00:00.000Z");
 
   // Summary parse variations
-  const parsedAt = parseTeamsFromSummary("Toronto Marlboros @ Detroit HoneyBaked - Semifinal");
-  assert.equal(parsedAt.homeTeam, "Toronto Marlboros");
-  assert.equal(parsedAt.awayTeam, "Detroit HoneyBaked");
+  const parsedAt = parseTeamsFromSummary("Fixture Club A @ Fixture Club B - Semifinal");
+  assert.equal(parsedAt.homeTeam, "Fixture Club A");
+  assert.equal(parsedAt.awayTeam, "Fixture Club B");
   assert.equal(parsedAt.round, "Semifinal");
 
   console.log("   ✅ PASS: RFC 5545 VEVENT parsing and composite summary extraction verified.");
@@ -85,12 +115,12 @@ async function runICalProvisionerTests() {
     ...events,
     {
       uid: "conflict-match-sheet2",
-      summary: "Oakland Jr. Grizzlies vs LA Jr. Kings",
+      summary: "Fixture Club C vs Fixture Club D",
       location: "Sheet 2 (Olympic)",
       dtStart: new Date("2026-09-18T18:30:00.000Z"), // Overlaps with 18:15 to 19:45
       dtEnd: new Date("2026-09-18T20:00:00.000Z"),
-      homeTeam: "Oakland Jr. Grizzlies",
-      awayTeam: "LA Jr. Kings",
+      homeTeam: "Fixture Club C",
+      awayTeam: "Fixture Club D",
       sheetNumber: 2,
       rinkName: "Olympic South Sheet",
     },
@@ -102,8 +132,8 @@ async function runICalProvisionerTests() {
   assert.equal(detectedConflicts[0].conflictOverlapSeconds, 4500); // 75 minutes overlap (18:30 to 19:45)
   console.log("   ✅ PASS: Conflict auditor correctly identified 75-minute schedule collision on Sheet 2.");
 
-  // TEST PILLAR 4: Automated 8-Sheet YouTube Pipeline Provisioning
-  console.log("\n4. Testing Automated 8-Sheet YouTube Pipeline Provisioning...");
+  // TEST PILLAR 4: provisioning from a calendar invents nothing (GA-030 O-01, T0.4)
+  console.log("\n4. Testing that calendar provisioning invents no stream, score or clock...");
   const simulatedCurrentTime = new Date("2026-09-18T18:30:00.000Z");
   const report = provisionTournamentSheetsFromICal(events, {
     currentTime: simulatedCurrentTime,
@@ -114,24 +144,25 @@ async function runICalProvisionerTests() {
   assert.equal(report.conflictsDetected.length, 0);
   assert.equal(report.sheets.length, 8);
 
-  // Check Sheet 1 (Center Arena)
   const sheet1 = report.sheets[0];
   assert.equal(sheet1.sheetNumber, 1);
-  assert.equal(sheet1.isPublicShowcase, true, "Sheet 1 must be designated as Public Showcase");
-  assert.equal(sheet1.streamState, "LIVE", "Game active at 18:30 must be in LIVE state");
-  assert.equal(sheet1.matchInfo.homeTeam, "Jr Sharks AAA");
-  assert.equal(sheet1.matchInfo.awayTeam, "Chicago Mission");
-  assert.ok(sheet1.rtmpsIngestUrl.includes("rtmps://a.rtmps.youtube.com"), "Must have valid YouTube RTMPS ingest URL");
-  assert.ok(sheet1.youtubeStreamKey.length > 0, "Must have non-empty stream key");
-
-  // Check Sheets 2-8 (Unlisted Showcase Invariant)
-  for (let s = 1; s < 8; s++) {
-    const sheet = report.sheets[s];
-    assert.equal(sheet.isPublicShowcase, false, `Sheet ${sheet.sheetNumber} must remain unlisted`);
-    assert.ok(sheet.bitrateKbps >= 0, "Bitrate must be non-negative");
+  assert.equal(sheet1.matchInfo.homeTeam, "Fixture Home 1");
+  assert.equal(sheet1.matchInfo.awayTeam, "Fixture Away 1");
+  for (const sheet of report.sheets) {
+    assert.equal(sheet.streamState, "UNINITIALIZED", `Sheet ${sheet.sheetNumber}: a calendar never makes a stream LIVE`);
+    assert.equal(sheet.youtubeStreamKey, "", `Sheet ${sheet.sheetNumber}: no invented stream key`);
+    assert.equal(sheet.youtubeBroadcastId, "", `Sheet ${sheet.sheetNumber}: no invented broadcast id`);
+    assert.equal(sheet.rtmpsIngestUrl, "", `Sheet ${sheet.sheetNumber}: no invented RTMPS URL`);
+    assert.equal(sheet.playbackUrl, "", `Sheet ${sheet.sheetNumber}: no invented playback URL`);
+    assert.equal(sheet.isPublicShowcase, false, `Sheet ${sheet.sheetNumber}: never public by default`);
+    assert.equal(sheet.matchInfo.scoreHome + sheet.matchInfo.scoreAway, 0, "no invented score");
+    assert.equal(sheet.matchInfo.gameClockSeconds, 0, "no invented clock");
+    assert.equal(sheet.hardwareHealth.temperatureCelsius, 0, "no invented hardware reading");
   }
+  const idle = provisionTournamentSheetsFromICal([], { currentTime: simulatedCurrentTime });
+  assert.ok(idle.sheets.every((s) => s.matchInfo.homeTeam === "" && s.matchInfo.awayTeam === ""), "no placeholder teams");
 
-  console.log("   ✅ PASS: Automated 8-sheet YouTube stream pipelines provisioned with showcase invariant.");
+  console.log("   ✅ PASS: calendar provisioning carries schedule data only.");
 
   // TEST PILLAR 5: Director Controls State Integrity
   console.log("\n5. Testing Director Controls State Integrity...");

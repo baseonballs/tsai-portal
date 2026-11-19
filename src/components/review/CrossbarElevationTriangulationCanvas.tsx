@@ -14,27 +14,22 @@ import {
   PuckElevationReviewData,
   CrossbarElevationCanvasProps,
 } from "../../types/crossbar-elevation-canvas-types";
+import { NotYetAvailable } from "@/components/common/NotYetAvailable";
 
-export const DEFAULT_REVIEW_DATA: PuckElevationReviewData = {
-  reviewId: "REV-P390-001",
-  timestampSec: 1420.5,
-  puckX: 0.15,
-  puckY: 0.05,
-  puckZ: 1.2542, // +35mm above crossbar
-  crossbarElevationM: 1.2192,
-  elevationDeltaMm: 35.0,
-  uncertaintyMarginMm: 7.5,
-  decision: "ABOVE_CROSSBAR",
-  confidencePercent: 99.8,
-  cameraCount: 3,
-  processingLatencyMs: 12,
-};
+// GA-030 O-10 (T0.4): the built-in data this component shipped with was deleted. With no data
+// passed in it renders an honest "not yet available" state. Rebuilt on live data or retired (OD-17, T8.1).
+export function CrossbarElevationTriangulationCanvas(props: CrossbarElevationCanvasProps) {
+  if (!props.data) {
+    return <NotYetAvailable feature="Crossbar elevation review" detail="No reviewed game event is connected." className={props.className ?? ""} />;
+  }
+  return <CrossbarElevationTriangulationCanvasView {...props} data={props.data} />;
+}
 
-export function CrossbarElevationTriangulationCanvas({
-  data = DEFAULT_REVIEW_DATA,
+function CrossbarElevationTriangulationCanvasView({
+  data,
   onDecisionChange,
   className = "",
-}: CrossbarElevationCanvasProps) {
+}: CrossbarElevationCanvasProps & { data: NonNullable<CrossbarElevationCanvasProps["data"]> }) {
   const [activeDecision, setActiveDecision] = useState<CrossbarArbitrationDecision>(
     data.decision
   );
