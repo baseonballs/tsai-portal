@@ -22,6 +22,20 @@
       "evidence": "src/app/api/beta-requests/route.ts:63",
       "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
+    "route:/api/billing/stripe/checkout": {
+      "endpoint": "GET /api/billing/stripe/checkout (public.plans + public.subscriptions) and POST /api/billing/stripe/checkout (Stripe Checkout Session)",
+      "table": "supabase:public.subscriptions",
+      "writer": "sync: Stripe webhook delivery (POST /api/billing/stripe/webhook) upserts caller subscription status and active_plan on checkout.session.completed and customer.subscription.updated",
+      "writerSource": "self:src/lib/billing/stripe-webhook-sync.ts#syncSubscriptionRow",
+      "evidence": "src/app/api/billing/stripe/checkout/route.ts"
+    },
+    "route:/api/billing/stripe/webhook": {
+      "endpoint": "POST /api/billing/stripe/webhook (Stripe HMAC-verified event delivery)",
+      "table": "supabase:public.user_product_licenses",
+      "writer": "sync: Stripe webhook delivery (POST /api/billing/stripe/webhook) verifies stripe-signature and upserts stripe_customers, subscriptions, licenses, and user_product_licenses",
+      "writerSource": "self:src/lib/billing/stripe-webhook-sync.ts#syncUserProductLicenseRow",
+      "evidence": "src/app/api/billing/stripe/webhook/route.ts"
+    },
     "route:/api/telemetry/event": {
       "endpoint": "platform PostgREST POST /rest/v1/user_telemetry_events (+ user_session_journeys)",
       "table": "supabase:public.user_telemetry_events",
@@ -155,9 +169,11 @@
       "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/pricing": {
-      "register": "O-05",
-      "via": "checkout buttons disabled (Stripe checkout removed)",
-      "evidence": "src/app/pricing/page.tsx:135"
+      "endpoint": "GET /api/billing/stripe/checkout (public.plans + caller subscriptions) and POST /api/billing/stripe/checkout",
+      "table": "supabase:public.subscriptions",
+      "writer": "sync: Stripe webhook delivery (POST /api/billing/stripe/webhook) upserts caller subscription status and active_plan on checkout.session.completed and customer.subscription.updated",
+      "writerSource": "self:src/lib/billing/stripe-webhook-sync.ts#syncSubscriptionRow",
+      "evidence": "src/app/pricing/page.tsx"
     },
     "route:/spotlight-and-periodical": {
       "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",

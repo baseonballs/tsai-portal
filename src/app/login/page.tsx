@@ -38,8 +38,15 @@ function LoginContent() {
       }
 
       // Phase 156: a password sign-in must pass the same licence check as the OAuth callback.
-      // The server signs an unlicensed account out; we clear the local session as well.
-      const check = await fetch("/auth/entitlement", { method: "POST", cache: "no-store" });
+      // The server signs an unlicensed account out (unless entering an allowed buyer route);
+      // we clear the local session as well whenever access is refused.
+      const nextPath = resolveAuthRedirectPath(searchParams?.get("next"), "/");
+      const check = await fetch("/auth/entitlement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ next: nextPath }),
+        cache: "no-store",
+      });
       if (!check.ok) {
         await supabase.auth.signOut({ scope: "local" });
         setErrorMsg(
@@ -50,7 +57,7 @@ function LoginContent() {
         setIsLoading(false);
         return;
       }
-      window.location.href = resolveAuthRedirectPath(searchParams?.get("next"), "/");
+      window.location.href = nextPath;
     } catch (err) {
       setErrorMsg("An unexpected error occurred");
       setIsLoading(false);
@@ -97,7 +104,7 @@ function LoginContent() {
         return;
       }
 
-      const nextAfterAuth = searchParams?.get("next") ?? "/";
+      const nextAfterAuth = resolveAuthRedirectPath(searchParams?.get("next"), "/");
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

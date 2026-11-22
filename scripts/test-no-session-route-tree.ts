@@ -43,7 +43,7 @@ const PUBLIC_PAGES: Record<string, string> = {
   "/locker-room": "marketing page with the beta sign-up form, no account data",
   "/login": "sign-in",
   "/players-development": "marketing page, no account data",
-  "/pricing": "public pricing",
+  "/pricing": "public pricing catalog; checkout initiation requires a verified GoTrue session on POST /api/billing/stripe/checkout",
   "/spotlight-and-periodical": "marketing page, no account data",
   "/technology-solutions": "marketing page, no account data",
   "/tournament/director":
@@ -53,6 +53,7 @@ const PUBLIC_PAGES: Record<string, string> = {
 /** Route handlers with no session check, and why that is correct. */
 const PUBLIC_API: Record<string, string> = {
   "src/app/api/beta-requests/route.ts": "beta sign-up intake: writes a pending request, returns nothing about anyone",
+  "src/app/api/billing/stripe/webhook/route.ts": "Stripe webhook intake: authenticated by Stripe HMAC signature (stripe-signature + STRIPE_WEBHOOK_SECRET), never a browser session",
   "src/app/auth/callback/route.ts": "OAuth/PKCE code exchange: GoTrue verifies the code, then the licence check runs",
   "src/app/supabase/[[...path]]/route.ts": "same-origin GoTrue/PostgREST gateway; GoTrue + RLS authorise",
 };

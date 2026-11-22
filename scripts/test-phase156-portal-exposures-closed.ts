@@ -27,6 +27,7 @@ import path from "node:path";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { findDocsContentViolations } from "./check-docs-content.mjs";
 import { resolvePublishedSpotlightSlug, SPOTLIGHT_DOCS } from "../src/lib/docs/manifest";
+import { isAllowedUnlicensedNextPath } from "../src/lib/auth/buyer-session-paths";
 import { isUserEntitledToPortal } from "../src/lib/auth/portal-entitlement";
 
 const ROOT = process.cwd();
@@ -151,34 +152,75 @@ async function main() {
     assert.doesNotMatch(callback, /async function isUserEntitledToPortal/, "no second copy of the rule");
   });
 
-  await check("6. password sign-in passes the licence check or is signed out", () => {
+  await check("6. password sign-in passes the licence check or is signed out (except allowed buyer paths)", () => {
     const login = code("src/app/login/page.tsx");
     const signIn = login.indexOf("signInWithPassword(");
     const gate = login.indexOf('fetch("/auth/entitlement"');
     assert.ok(signIn > 0 && gate > signIn, "the licence check must follow the password sign-in");
     assert.match(login.slice(gate), /if \(!check\.ok\) \{\s*await supabase\.auth\.signOut\(/);
     assert.doesNotMatch(login, /window\.location\.href = "\/";/, "no unconditional redirect after sign-in");
+
     const route = code("src/app/auth/entitlement/route.ts");
     assert.match(route, /getEntitledPortalUser\(\)/);
+    assert.match(route, /isAllowedUnlicensedNextPath\(/);
     assert.match(route, /signOut\(\{ scope: "global" \}\)/);
+
+    const callback = code("src/app/auth/callback/route.ts");
+    assert.match(callback, /isAllowedUnlicensedNextPath\(/);
+    assert.match(callback, /signOut\(\{ scope: "global" \}\)/);
+
+    const docsPage = code("src/app/docs/[[...slug]]/page.tsx");
+    assert.doesNotMatch(docsPage, /isAllowedUnlicensedNextPath/, "/docs must stay strictly licence-gated");
+
+    for (const okPath of ["/pricing", "/pricing?checkout=canceled", "/tournament/director", "/tournament/director?tab=brackets"]) {
+      assert.equal(isAllowedUnlicensedNextPath(okPath), true, `${okPath} must be permitted for unlicensed buyers`);
+    }
+    for (const deniedPath of [
+      "/docs",
+      "/docs/spotlight",
+      "/",
+      "/login",
+      "/pricing/",
+      "/pricing-extra",
+      "/pricing/../docs",
+      "https://evil.example/pricing",
+      "//evil.example/pricing",
+      "/\t/pricing",
+      "/pricing\\evil",
+      "",
+    ]) {
+      assert.equal(isAllowedUnlicensedNextPath(deniedPath), false, `${deniedPath} must be refused for unlicensed buyers`);
+    }
   });
 
-  await check("7. open roster import and Stripe routes gone, with secret and simulations", () => {
+  await check("7. open roster import and O-06/O-07 Stripe routes gone; checkout requires auth & webhook verifies HMAC", () => {
     for (const f of [
       "src/app/api/rosters/import/route.ts",
       "src/lib/roster/gamesheet-roster-service.ts",
       "src/app/api/billing/stripe/connect/route.ts",
       "src/app/api/billing/hardware/checkout/route.ts",
-      "src/app/api/billing/stripe/checkout/route.ts",
       "src/components/commercial/ClubMonetizationWorkbench.tsx",
     ]) {
       assert.equal(exists(f), false, `${f} must not exist`);
     }
     assert.doesNotMatch(read("package.json"), /roster-import/);
+    assert.equal(exists("src/app/api/billing/stripe/checkout/route.ts"), true, "checkout route must exist");
+    assert.equal(exists("src/app/api/billing/stripe/webhook/route.ts"), true, "webhook route must exist");
     for (const f of CODE_SRC) {
       const c = code(f);
-      assert.doesNotMatch(c, /tsai-vpc-secret|acct_sim_|_sim_\$\{|isSimulation/, `${f}: simulated or committed-secret path`);
-      if (/route\.ts$/.test(f) && /stripe/i.test(c)) assert.fail(`${f}: a Stripe route needs auth and a webhook first`);
+      assert.doesNotMatch(c, /tsai-vpc-secret|acct_sim_|_sim_\$\{|isSimulation|price_mock_|price_fake_|price_demo_/, `${f}: simulated, fake price, or committed-secret path`);
+      if (/route\.ts$/.test(f) && /stripe/i.test(c)) {
+        if (f === "src/app/api/billing/stripe/checkout/route.ts") {
+          assert.match(c, /auth\.getUser\(\)/, `${f}: checkout route must verify GoTrue session`);
+          assert.match(c, /\b401\b/, `${f}: checkout route must reject unauthenticated callers`);
+        } else if (f === "src/app/api/billing/stripe/webhook/route.ts") {
+          assert.match(c, /STRIPE_WEBHOOK_SECRET/, `${f}: webhook must require STRIPE_WEBHOOK_SECRET`);
+          assert.match(c, /stripe-signature/, `${f}: webhook must verify stripe-signature`);
+          assert.match(c, /constructEvent\(/, `${f}: webhook must verify HMAC via constructEvent`);
+        } else {
+          assert.fail(`${f}: unexpected Stripe route without explicit auth/webhook verification`);
+        }
+      }
     }
   });
 
@@ -219,7 +261,23 @@ async function main() {
       });
       return hits.flatMap((r) => r.headers.filter((h) => h.key === "Cache-Control").map((h) => h.value));
     };
-    for (const p of ["/supabase/auth/v1/token", "/auth/callback", "/auth/entitlement", "/api/telemetry/event", "/api/beta-requests", "/api/tournaments", "/api/tournaments/teams", "/docs", "/docs/", "/docs/spotlight/roadmap", "/login", "/login/", "/tournament/director"]) {
+    for (const p of [
+      "/supabase/auth/v1/token",
+      "/auth/callback",
+      "/auth/entitlement",
+      "/api/telemetry/event",
+      "/api/beta-requests",
+      "/api/billing/stripe/checkout",
+      "/api/billing/stripe/webhook",
+      "/api/tournaments",
+      "/api/tournaments/teams",
+      "/docs",
+      "/docs/",
+      "/docs/spotlight/roadmap",
+      "/login",
+      "/login/",
+      "/tournament/director",
+    ]) {
       const values = cacheOf(p);
       assert.deepEqual(values, ["private, no-store"], `${p} must be private, no-store (got ${JSON.stringify(values)})`);
     }
