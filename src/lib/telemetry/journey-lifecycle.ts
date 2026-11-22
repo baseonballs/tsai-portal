@@ -63,9 +63,21 @@ function isForwardStage(stage: string): stage is ForwardLifecycleStage {
   return Object.prototype.hasOwnProperty.call(FORWARD_STAGE_RANK, stage);
 }
 
+function parseIsoTimestampParts(raw: string | null | undefined): { ms: number; subMs: number } {
+  if (!raw) return { ms: 0, subMs: 0 };
+  const ms = Date.parse(raw);
+  if (!Number.isFinite(ms)) return { ms: 0, subMs: 0 };
+  const fracMatch = raw.match(/\.(\d+)/);
+  const padded = fracMatch ? fracMatch[1].padEnd(6, "0") : "000000";
+  const subMs = Number(padded.slice(3, 6)) || 0;
+  return { ms, subMs };
+}
+
 function compareEventOrder(a: TelemetryEventSummary, b: TelemetryEventSummary): number {
-  const timeCmp = String(a.created_at ?? "").localeCompare(String(b.created_at ?? ""));
-  if (timeCmp !== 0) return timeCmp;
+  const pa = parseIsoTimestampParts(a.created_at);
+  const pb = parseIsoTimestampParts(b.created_at);
+  if (pa.ms !== pb.ms) return pa.ms - pb.ms;
+  if (pa.subMs !== pb.subMs) return pa.subMs - pb.subMs;
   return String(a.id ?? "").localeCompare(String(b.id ?? ""));
 }
 
@@ -141,22 +153,27 @@ export function computeNextJourneyState(opts: {
         ? Math.floor(rawExistingSessions)
         : 1;
 
+    const currentSid = currentEvent.session_id;
+    const isCanonicalFirst =
+      Boolean(currentSid) &&
+      firstEventBySession.get(currentSid as string) === currentEvent.id &&
+      !hasOlderMatchingSession;
+
     if (!windowExhausted) {
       const earliestEvent = sortedEvents[0];
       const earliestHadNoSession = Boolean(earliestEvent && !extractSessionIdFromProperties(earliestEvent.event_properties));
       const observedCount = seenSessions.size + (earliestHadNoSession ? 1 : 0);
-      totalSessions = Math.max(baseSessions, observedCount);
+      if (baseSessions > seenSessions.size && isCanonicalFirst && (earliestHadNoSession || baseSessions > 1)) {
+        totalSessions = baseSessions + 1;
+      } else {
+        totalSessions = Math.max(baseSessions, observedCount);
+      }
       shouldWriteTotalSessions =
         totalSessions > baseSessions ||
         typeof rawExistingSessions !== "number" ||
         !Number.isFinite(rawExistingSessions) ||
         rawExistingSessions < 1;
     } else {
-      const currentSid = currentEvent.session_id;
-      const isCanonicalFirst =
-        Boolean(currentSid) &&
-        firstEventBySession.get(currentSid as string) === currentEvent.id &&
-        !hasOlderMatchingSession;
       totalSessions = isCanonicalFirst ? baseSessions + 1 : baseSessions;
       shouldWriteTotalSessions =
         isCanonicalFirst ||

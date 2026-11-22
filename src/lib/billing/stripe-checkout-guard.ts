@@ -165,7 +165,18 @@ export async function prepareCheckoutSessionCreation(opts: {
     customer: customerId,
     limit: 1,
   });
-  const latestSessionId = recentSessions.data[0]?.id ?? "none";
+  const latestSession = recentSessions.data[0];
+  if (
+    latestSession?.status === "open" &&
+    latestSession.metadata?.userId === userId &&
+    latestSession.metadata?.planSku === planSku &&
+    latestSession.url &&
+    (typeof latestSession.expires_at !== "number" ||
+      latestSession.expires_at * 1000 > Date.now() + OPEN_SESSION_MIN_TTL_MS)
+  ) {
+    return { action: "reuse", url: latestSession.url };
+  }
+  const latestSessionId = latestSession?.id ?? "none";
 
   return {
     action: "create",

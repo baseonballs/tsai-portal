@@ -383,7 +383,14 @@ async function run() {
     expires_at?: number;
     metadata?: Record<string, string>;
   }> = [];
-  let mockRecentCheckoutSessions: Array<{ id: string; status: string }> = [];
+  let mockRecentCheckoutSessions: Array<{
+    id: string;
+    status: string;
+    url?: string | null;
+    expires_at?: number;
+    metadata?: Record<string, string>;
+  }> = [];
+  let mockSimulateRaceCompleteOnExpire = false;
   let mockStripeSubsListError: Error | null = null;
   let mockStripePortalCreateError: Error | null = null;
   let mockEntitlementThrow = false;
@@ -479,6 +486,10 @@ async function run() {
             expire: async (id: string) => {
               capturedExpiredSessionIds.push(id);
               const found = mockOpenCheckoutSessions.find((s) => s.id === id);
+              if (mockSimulateRaceCompleteOnExpire) {
+                if (found) found.status = "complete";
+                throw new Error("You cannot expire a Checkout Session whose status is complete.");
+              }
               if (found) found.status = "expired";
               return found ?? { id, status: "expired" };
             },
@@ -818,6 +829,23 @@ async function run() {
     assert.equal(capturedCheckoutParams.length, 0);
     mockLiveStripeSubPages = null;
 
+    // Exceeding MAX_SUBSCRIPTION_PAGES fails closed with sanitized 502 instead of silently allowing checkout
+    capturedCheckoutParams = [];
+    capturedSubsListParams = [];
+    mockLiveStripeSubPages = Array.from({ length: 11 }, (_, idx) => [
+      { id: `sub_canceled_page_${idx}`, status: "canceled" },
+    ]);
+    const exceededPagesRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(exceededPagesRes.status, 502);
+    assert.equal(capturedSubsListParams.length, 10);
+    assert.equal(capturedCheckoutParams.length, 0);
+    mockLiveStripeSubPages = null;
+
     // Live Stripe concurrency check blocks double-checkout across all EXISTING_ACTIVE_SUB_STATUSES
     for (const liveStatus of ["active", "trialing", "past_due", "paused", "incomplete"]) {
       capturedCheckoutParams = [];
@@ -872,6 +900,52 @@ async function run() {
       capturedCheckoutOptions[0]?.idempotencyKey,
       `checkout:${BUYER_USER_ID}:SPOT-TEAM-SEASON-24:cus_existing_sub:cs_open_same`,
     );
+
+    // Concurrent completion during expire fails safely with 409 Conflict instead of creating a second Checkout Session
+    capturedCheckoutParams = [];
+    mockOpenCheckoutSessions = [
+      {
+        id: "cs_open_completing",
+        status: "open",
+        url: "https://checkout.stripe.com/c/pay/cs_open_completing",
+        expires_at: Math.floor(Date.now() / 1000) + 1800,
+        metadata: { userId: BUYER_USER_ID, planSku: "SPOT-PRO-PLUS" },
+      },
+    ];
+    mockSimulateRaceCompleteOnExpire = true;
+    const expireRaceRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-TEAM-SEASON-24" }),
+      }),
+    );
+    mockSimulateRaceCompleteOnExpire = false;
+    assert.equal(expireRaceRes.status, 409);
+    assert.equal(capturedCheckoutParams.length, 0);
+
+    // Race fallback: if recentSessions[0] became open for same (userId, planSku), reuse instead of spawning duplicate
+    mockOpenCheckoutSessions = [];
+    mockRecentCheckoutSessions = [
+      {
+        id: "cs_recent_same_race",
+        status: "open",
+        url: "https://checkout.stripe.com/c/pay/cs_recent_same_race",
+        expires_at: Math.floor(Date.now() / 1000) + 1800,
+        metadata: { userId: BUYER_USER_ID, planSku: "SPOT-PRO-PLUS" },
+      },
+    ];
+    const recentReuseRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(recentReuseRes.status, 200);
+    assert.deepEqual(await recentReuseRes.json(), {
+      url: "https://checkout.stripe.com/c/pay/cs_recent_same_race",
+    });
+    assert.equal(capturedCheckoutParams.length, 0);
+
     mockOpenCheckoutSessions = [];
     mockRecentCheckoutSessions = [];
 

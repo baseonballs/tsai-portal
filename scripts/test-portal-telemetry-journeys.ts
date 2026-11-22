@@ -60,9 +60,19 @@ const VALID_LIFECYCLE_STAGES = new Set([
 
 type Row = Record<string, unknown>;
 
+type TelemetryTableName = "user_telemetry_events" | "user_session_journeys";
+
 interface TelemetryMockDb {
   user_telemetry_events: Row[];
   user_session_journeys: Row[];
+  fixedCreatedAt?: string | null;
+}
+
+function toPostgrestTimestamptz(raw: string): string {
+  return raw.replace(/\.(\d{3})Z$/, (_match, frac: string) => {
+    const trimmed = frac.replace(/0+$/, "");
+    return trimmed ? `.${trimmed}+00:00` : "+00:00";
+  });
 }
 
 function assertColumns(table: string, cols: string[]) {
@@ -86,7 +96,7 @@ function validateRowPayload(table: string, payload: Row) {
 
 function createFakeTelemetryDbClient(state: TelemetryMockDb) {
   return {
-    from(table: keyof TelemetryMockDb & string) {
+    from(table: TelemetryTableName) {
       const filters: Array<(r: Row) => boolean> = [];
       let op: "select" | "insert" | "update" = "select";
       let payload: Row | Row[] | null = null;
@@ -103,6 +113,13 @@ function createFakeTelemetryDbClient(state: TelemetryMockDb) {
           let list = rows.filter((r) => filters.every((fn) => fn(r)));
           if (orderCol) {
             list = [...list].sort((a, b) => {
+              if (orderCol === "created_at") {
+                const at = Date.parse(String(a[orderCol] ?? ""));
+                const bt = Date.parse(String(b[orderCol] ?? ""));
+                if (Number.isFinite(at) && Number.isFinite(bt) && at !== bt) {
+                  return orderAsc ? at - bt : bt - at;
+                }
+              }
               const av = String(a[orderCol!] ?? "");
               const bv = String(b[orderCol!] ?? "");
               return orderAsc ? av.localeCompare(bv) : bv.localeCompare(av);
@@ -113,7 +130,15 @@ function createFakeTelemetryDbClient(state: TelemetryMockDb) {
         };
 
         if (op === "select") {
-          return { data: matched().map((r) => ({ ...r })), error: null };
+          return {
+            data: matched().map((r) => ({
+              ...r,
+              ...(table === "user_telemetry_events" && typeof r.created_at === "string"
+                ? { created_at: toPostgrestTimestamptz(r.created_at) }
+                : {}),
+            })),
+            error: null,
+          };
         }
 
         if (op === "insert" && payload) {
@@ -126,13 +151,20 @@ function createFakeTelemetryDbClient(state: TelemetryMockDb) {
                 return { data: null, error: { code: "23505", message: "duplicate key value violates unique constraint" } };
               }
             }
+            const defaultCreatedAt =
+              state.fixedCreatedAt ?? new Date(1795000000000 + rows.length * 1000).toISOString();
             const created = {
               id: item.id ?? `row-${rows.length + 1}`,
-              created_at: item.created_at ?? new Date(1795000000000 + rows.length * 1000).toISOString(),
+              created_at: item.created_at ?? defaultCreatedAt,
               ...item,
             };
             rows.push(created);
-            inserted.push({ ...created });
+            inserted.push({
+              ...created,
+              ...(table === "user_telemetry_events" && typeof created.created_at === "string"
+                ? { created_at: toPostgrestTimestamptz(created.created_at) }
+                : {}),
+            });
           }
           return { data: wantSelect ? inserted : null, error: null };
         }
@@ -403,6 +435,51 @@ async function run() {
     assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_hist")?.total_sessions, 2);
     assert.equal((await postEvent({ visitor_id: "vid_hist", event_type: "page_view", session_id: "sid_brand_new" })).status, 200);
     assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_hist")?.total_sessions, 3);
+
+    // Same-millisecond concurrent beacons in windowExhausted (>200 events) under PostgREST +00:00 vs Z format
+    db.fixedCreatedAt = "2026-11-22T08:00:00.100Z";
+    const histRaceResponses = await Promise.all([
+      postEvent({ visitor_id: "vid_hist", event_type: "page_view", session_id: "sid_hist_race" }),
+      postEvent({ visitor_id: "vid_hist", event_type: "button_click", session_id: "sid_hist_race" }),
+    ]);
+    db.fixedCreatedAt = null;
+    assert.ok(histRaceResponses.every((r) => r.status === 200));
+    assert.equal(
+      db.user_session_journeys.find((j) => j.visitor_id === "vid_hist")?.total_sessions,
+      4,
+      "same-ms PostgREST +00:00 vs Z concurrent beacons in windowExhausted must increment total_sessions once",
+    );
+
+    // Pre-Wave-6 legacy journey (total_sessions > seenSessions.size, un-sessioned prior event) still increments cleanly
+    db.user_session_journeys.push({
+      id: "journey-legacy",
+      visitor_id: "vid_legacy",
+      lead_id: null,
+      user_id: null,
+      first_seen_at: "2026-01-01T00:00:00.000Z",
+      converted_at: null,
+      last_active_at: "2026-01-01T00:00:00.000Z",
+      total_sessions: 5,
+      total_duration_sec: 120,
+      acquisition_source: "direct",
+      current_lifecycle_stage: "engaged_prospect",
+      updated_at: "2026-01-01T00:00:00.000Z",
+    });
+    db.user_telemetry_events.push({
+      id: "ev-legacy-nosid",
+      visitor_id: "vid_legacy",
+      event_type: "page_view",
+      event_properties: {},
+      created_at: "2026-01-01T00:00:00.000Z",
+    });
+    const legacyRace = await Promise.all([
+      postEvent({ visitor_id: "vid_legacy", event_type: "page_view", session_id: "sid_leg_1" }),
+      postEvent({ visitor_id: "vid_legacy", event_type: "button_click", session_id: "sid_leg_1" }),
+    ]);
+    assert.ok(legacyRace.every((r) => r.status === 200));
+    assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_legacy")?.total_sessions, 6);
+    assert.equal((await postEvent({ visitor_id: "vid_legacy", event_type: "page_view", session_id: "sid_leg_2" })).status, 200);
+    assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_legacy")?.total_sessions, 7);
 
     db.user_session_journeys.push({
       id: "journey-risk",
