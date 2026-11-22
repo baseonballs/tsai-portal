@@ -597,6 +597,79 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
   assert.ok(judgeOn(empty, sbase).invalid.some((i) => i.id === page.id), "a static entry with no reason is invalid");
   checks += 2;
 
+  // ── 6b. ops entries: real infra/ops connector + verified AST handlerSource without fake literals, import-hop stubs, or unguarded HTTP handlers ──
+  const opsHandlerPath = "app/api/surface-guard-ops-probe/route.ts";
+  const fakeOpsHandlerPath = "app/api/surface-guard-fake-ops-probe/route.ts";
+  const commentOnlyOpsPath = "app/api/surface-guard-comment-ops-probe/route.ts";
+  const hopOpsHelperPath = "app/api/surface-guard-hop-ops-probe/helper.ts";
+  const hopOpsHandlerPath = "app/api/surface-guard-hop-ops-probe/route.ts";
+  const unauthOpsHandlerPath = "app/api/surface-guard-unauth-ops-probe/route.ts";
+  const arrowUnauthOpsPath = "app/api/surface-guard-arrow-unauth-ops-probe/route.ts";
+  const reexportUnauthOpsPath = "app/api/surface-guard-reexport-unauth-ops-probe/route.ts";
+  const deepChainOverlay: Record<string, string> = {};
+  for (let d = 0; d <= 13; d++) {
+    const p = `app/api/surface-guard-deep-ops-probe/${d === 0 ? "route" : `hop-${d}`}.ts`;
+    const nextImp = d < 13 ? `import { v${d + 1} } from "./hop-${d + 1}";\n` : "";
+    deepChainOverlay[p] =
+      d === 0
+        ? `${nextImp}export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: v1 });\n}\n`
+        : `${nextImp}export const v${d} = ${d < 13 ? `v${d + 1}` : "1"};\n`;
+  }
+  const opsTree = overlayTree(base, {
+    ...deepChainOverlay,
+    [opsHandlerPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true, metric: "prometheus" });\n}\nexport async function POST() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true });\n}\n',
+    [commentOnlyOpsPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  const endpoint = "https://prom.internal"; // never Math.random()\n  return Response.json({ endpoint });\n}\n',
+    [fakeOpsHandlerPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ value: Math.random() });\n}\n',
+    [hopOpsHelperPath]: "export const issuedTokens: string[] = [];\n",
+    [hopOpsHandlerPath]:
+      'import { issuedTokens } from "./helper";\nexport async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ tokens: issuedTokens });\n}\n',
+    [unauthOpsHandlerPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true });\n}\nexport async function POST() {\n  return Response.json({ ok: false });\n}\n',
+    [arrowUnauthOpsPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true });\n}\nexport const POST = async () => Response.json({ ok: true });\n',
+    [reexportUnauthOpsPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true });\n}\nasync function unguardedPatch() {\n  return Response.json({ ok: true });\n}\nexport { unguardedPatch as PATCH };\n',
+  });
+  for (const cleanPath of [opsHandlerPath, commentOnlyOpsPath]) {
+    const okOps = judgeOn(
+      withEntry({ ops: "prometheus CPU query", connector: "prometheus:node_cpu", handlerSource: `self:${cleanPath}#GET` }),
+      opsTree,
+      true,
+    );
+    assert.ok(okOps.ops.includes(target.id) && !okOps.invalid.length, `a valid ops entry (${cleanPath}) must pass: ${JSON.stringify(okOps.invalid)}`);
+    checks++;
+  }
+  for (const [entry, why, what] of [
+    [{ ops: "x", connector: "prometheus:up" }, /must name handlerSource/, "ops without handlerSource"],
+    [{ ops: "x", handlerSource: `self:${opsHandlerPath}#GET` }, /must name connector/, "ops without connector"],
+    [{ ops: "x", connector: "madeup:thing", handlerSource: `self:${opsHandlerPath}#GET` }, /allowlisted prefix/, "ops with unknown connector prefix"],
+    [{ ops: "x", connector: "prometheus:", handlerSource: `self:${opsHandlerPath}#GET` }, /allowlisted prefix/, "ops with empty connector target"],
+    [{ ops: "x", connector: "prometheus:up", handlerSource: "self:app/api/no-such-ops/route.ts#GET" }, /cannot be read/, "ops with nonexistent handlerSource file"],
+    [{ ops: "x", connector: "prometheus:up", handlerSource: `self:${opsHandlerPath}#DELETE` }, /defines no function DELETE/, "ops with nonexistent handler symbol"],
+    [{ ops: "x", connector: "prometheus:up", handlerSource: `self:${opsHandlerPath}:1` }, /cites a line number/, "ops handlerSource using line number"],
+    [{ ops: "x", connector: "prometheus:up", handlerSource: `self:${fakeOpsHandlerPath}#GET` }, /forbidden fake\/stub literal/, "ops handler carrying Math.random"],
+    [{ ops: "x", connector: "prometheus:up", handlerSource: `self:${hopOpsHandlerPath}#GET` }, /forbidden fake\/stub literal/, "ops handler hiding in-memory stub via local import"],
+    [{ ops: "x", connector: "prometheus:up", handlerSource: `self:${unauthOpsHandlerPath}#GET` }, /no recognized ops auth\/HMAC guard/, "ops route with unauthenticated sibling POST"],
+    [{ ops: "x", connector: "prometheus:up", handlerSource: `self:${arrowUnauthOpsPath}#GET` }, /no recognized ops auth\/HMAC guard/, "ops route with unauthenticated arrow const POST"],
+    [{ ops: "x", connector: "prometheus:up", handlerSource: `self:${reexportUnauthOpsPath}#GET` }, /no recognized ops auth\/HMAC guard/, "ops route with unauthenticated re-exported PATCH"],
+    [{ ops: "x", connector: "prometheus:up", handlerSource: "self:app/api/surface-guard-deep-ops-probe/route.ts#GET" }, /deeper than 12 hops/, "ops route exceeding import walk depth"],
+    [
+      { ops: "x", connector: "prometheus:up", handlerSource: `self:${opsHandlerPath}#GET`, endpoint: "x", table: "t", writer: "user-action: y" },
+      /exactly one/,
+      "combining ops + endpoint",
+    ],
+  ] as const) {
+    const v = judgeOn(withEntry(entry), opsTree, true);
+    assert.ok(
+      v.invalid.some((i) => i.id === target.id && why.test(i.why)),
+      `ops negative check failed (${what}): ${JSON.stringify(v.invalid)}`,
+    );
+    checks++;
+  }
+
   assert.deepEqual(JSON.parse(jsonc('{"a": "**/*.ts", /* c */ "b": [1,], // d\n}')), { a: "**/*.ts", b: [1] }, "tsconfig globs are not comments");
   checks++;
 

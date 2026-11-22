@@ -112,6 +112,7 @@ function main(argv: string[]): number {
             endpoint: v.endpoint.length,
             registerRows: v.register.length,
             static: v.static.length,
+            ops: v.ops.length,
             unresolved: v.unresolved.map((u) => u.id),
             invalid: v.invalid,
           },
