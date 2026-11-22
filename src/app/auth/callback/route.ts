@@ -1,3 +1,4 @@
+import { isAllowedUnlicensedNextPath } from "@/lib/auth/buyer-session-paths";
 import { resolveAuthRedirectPath } from "@/lib/auth/safe-internal-next-path";
 import { createPortalAdminClient, isUserEntitledToPortal } from "@/lib/auth/portal-entitlement";
 import { NextResponse } from 'next/server'
@@ -51,16 +52,28 @@ export async function GET(request: Request) {
         if (profileId && profileId !== user.id) {
           await adminClient.from('profiles').update({ id: user.id }).eq('email', userEmail)
         }
-        return NextResponse.redirect(new URL(next, publicOrigin))
+        return NextResponse.redirect(new URL(next, publicOrigin), {
+          headers: { "Cache-Control": "private, no-store" },
+        })
+      }
+
+      if (isAllowedUnlicensedNextPath(next)) {
+        return NextResponse.redirect(new URL(next, publicOrigin), {
+          headers: { "Cache-Control": "private, no-store" },
+        })
       }
 
       // Unlicensed user / shadow profile / unauthorized account: terminate session
       // GLOBAL, deliberately. An unlicensed or unauthorized account is an account-
       // level denial, not a browser-level one.
       await supabase.auth.signOut({ scope: "global" })
-      return NextResponse.redirect(new URL('/login?error=unauthorized', publicOrigin))
+      return NextResponse.redirect(new URL('/login?error=unauthorized', publicOrigin), {
+        headers: { "Cache-Control": "private, no-store" },
+      })
     }
   }
 
-  return NextResponse.redirect(new URL('/login?error=auth-callback-failed', publicOrigin))
+  return NextResponse.redirect(new URL('/login?error=auth-callback-failed', publicOrigin), {
+    headers: { "Cache-Control": "private, no-store" },
+  })
 }

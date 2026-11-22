@@ -66,18 +66,15 @@ async function runClubRevShareDashboardTests() {
   assert.ok(cradle.safetyRating.includes("350ms"));
   console.log("   ✓ All 7 BOM components verified ($78.99 total, 180 lbs vacuum safety, 350ms settling)");
 
-  // Phase 156: the Stripe Connect and hardware-checkout routes are gone. They were open to
-  // anyone, created real Stripe Express accounts from a body-supplied club id and email, and
-  // answered "success" with a simulated account when the key was missing. Nothing mounted them.
-  console.log("\n3. Confirming the unauthenticated billing routes are gone...");
+  // Phase 156 / O-06: the unauthenticated Stripe Connect and hardware-checkout routes remain gone.
+  console.log("\n3. Confirming the unauthenticated O-06 billing routes are gone...");
   for (const route of [
     "src/app/api/billing/stripe/connect/route.ts",
     "src/app/api/billing/hardware/checkout/route.ts",
-    "src/app/api/billing/stripe/checkout/route.ts",
   ]) {
     assert.equal(fs.existsSync(path.join(process.cwd(), route)), false, `${route} must not exist`);
   }
-  console.log("   ✓ No open Stripe Connect, hardware or subscription checkout route");
+  console.log("   ✓ No open Stripe Connect or hardware checkout route");
 
   // TEST 5: Canonical Annual Pass Fundraising ($987.50 / yr)
   console.log("\n5. Testing Canonical Team Fundraising Calculation ($987.50 / yr)...");

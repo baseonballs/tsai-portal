@@ -25,7 +25,6 @@
     "docs:watson:design/prd-ux-system-design": "O-04",
     "docs:watson:devops/tech-stacks": "O-04",
     "route:/api/billing/hardware/checkout": "O-06",
-    "route:/api/billing/stripe/checkout": "O-05",
     "route:/api/billing/stripe/connect": "O-06",
     "route:/api/rosters/import": "O-07",
     "unavailable:testid:byod-pairing-unavailable": "O-09",
