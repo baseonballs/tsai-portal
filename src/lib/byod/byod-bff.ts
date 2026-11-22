@@ -130,6 +130,10 @@ async function sanitizeUpstreamFailure(response: NextResponse): Promise<NextResp
       ? "BYOD service temporarily unavailable."
       : rawMessage === "Tournament service is not configured."
       ? "BYOD service is not configured."
+      : rawMessage === "Tournament service error."
+      ? "BYOD service error."
+      : rawMessage === "Request conflicts with current tournament state."
+      ? "Request conflicts with current BYOD device state."
       : rawMessage;
 
   const redacted = redactByodSecrets(normalized);
@@ -151,5 +155,15 @@ export async function forwardByodHockeyApi(opts: UpstreamCallOptions): Promise<U
 export function mapByodResponse<T>(
   fn: () => T,
 ): { ok: true; data: T } | { ok: false; response: NextResponse } {
-  return mapUpstreamResponse(fn);
+  const res = mapUpstreamResponse(fn);
+  if (!res.ok) {
+    return {
+      ok: false,
+      response: jsonNoStore(
+        { error: "Upstream BYOD response violated expected contract." },
+        res.response.status,
+      ),
+    };
+  }
+  return res;
 }

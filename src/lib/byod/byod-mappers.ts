@@ -49,27 +49,27 @@ const VALID_PELTIER_STATES = new Set<ByodPeltierState>([
 
 const FORBIDDEN_SECRET_KEYS = new Set<string>([
   "rtmps_stream_key",
-  "rtmpsStreamKey",
+  "rtmpsstreamkey",
   "stream_key",
-  "streamKey",
+  "streamkey",
   "rtmp_url",
-  "rtmpUrl",
+  "rtmpurl",
   "rtmps_url",
-  "rtmpsUrl",
+  "rtmpsurl",
   "rtmps_ingest_url",
-  "rtmpsIngestUrl",
+  "rtmpsingesturl",
   "youtube_stream_key",
-  "youtubeStreamKey",
+  "youtubestreamkey",
   "pairing_secret",
-  "pairingSecret",
+  "pairingsecret",
   "pairing_code",
-  "pairingCode",
+  "pairingcode",
   "pairing_code_hmac",
-  "pairingCodeHmac",
+  "pairingcodehmac",
   "device_token",
-  "deviceToken",
+  "devicetoken",
   "device_token_hmac",
-  "deviceTokenHmac",
+  "devicetokenhmac",
 ]);
 
 const RTMPS_URL_VALUE_RE = /\brtmps?:\/\//i;
@@ -77,7 +77,7 @@ const RTMPS_URL_EXTRACT_RE = /\brtmps?:\/\/[^\s"'`,;)}\]]+/gi;
 const SECRET_KV_RE =
   /\b(?:rtmps_stream_key|rtmpsStreamKey|stream_key|streamKey|rtmp_url|rtmpUrl|rtmps_url|rtmpsUrl|rtmps_ingest_url|rtmpsIngestUrl|youtube_stream_key|youtubeStreamKey|pairing_secret|pairingSecret|pairing_code_hmac|pairingCodeHmac|pairing_code|pairingCode|device_token_hmac|deviceTokenHmac|device_token|deviceToken)\s*[:=]\s*(?:"[^"]*"|'[^']*'|\S+)/gi;
 const SECRET_KEY_MENTION_RE =
-  /\b(?:rtmps_stream_key|rtmpsStreamKey|stream_key|streamKey|rtmp_url|rtmpUrl|rtmps_url|rtmpsUrl|rtmps_ingest_url|rtmpsIngestUrl|youtube_stream_key|youtubeStreamKey|pairing_secret|pairingSecret|pairing_code_hmac|pairingCodeHmac|device_token_hmac|deviceTokenHmac)\b/gi;
+  /\b(?:rtmps_stream_key|rtmpsStreamKey|stream_key|streamKey|rtmp_url|rtmpUrl|rtmps_url|rtmpsUrl|rtmps_ingest_url|rtmpsIngestUrl|youtube_stream_key|youtubeStreamKey|pairing_secret|pairingSecret|pairing_code_hmac|pairingCodeHmac|pairing_code|pairingCode|device_token_hmac|deviceTokenHmac|device_token|deviceToken)\b/gi;
 const YOUTUBE_LIVE_KEY_RE = /\blive_[A-Za-z0-9_-]{6,}\b/g;
 const YOUTUBE_DASH_KEY_RE = /(?<![0-9a-f-])\b[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}\b(?![0-9a-f-])/gi;
 const AUTH_HEADER_VALUE_RE = /\b(?:Bearer|Device)\s+[A-Za-z0-9._~+/=-]{6,}/gi;
@@ -114,7 +114,7 @@ export function findForbiddenRtmpsSecretField(payload: unknown, depth = 0): stri
   }
   if (typeof payload === "object") {
     for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
-      if (FORBIDDEN_SECRET_KEYS.has(key)) return key;
+      if (FORBIDDEN_SECRET_KEYS.has(key.trim().toLowerCase())) return key;
       const hit = findForbiddenRtmpsSecretField(value, depth + 1);
       if (hit) return hit;
     }

@@ -29,6 +29,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { NextRequest } from "next/server";
 
 import {
+  createDeviceEditState,
+  formatWhistlePassband,
+  parseManualCalibrationInputs,
+  resolveSelectedDeviceAfterLoad,
+} from "../src/lib/byod/byod-form";
+import {
   findForbiddenRtmpsSecretField,
   mapByodCalibration,
   mapByodDevice,
@@ -38,6 +44,7 @@ import {
 import { playByodReferenceTone } from "../src/lib/byod/webaudio-tone";
 import { BYODSetupWizard } from "../src/components/vision/BYODSetupWizard";
 import { ByodCalibrationReadout } from "../src/components/vision/ByodCalibrationReadout";
+import { ByodDeviceFleetPanel } from "../src/components/vision/ByodDeviceFleetPanel";
 
 function runTest(name: string, fn: () => void | Promise<void>): Promise<void> {
   return Promise.resolve()
@@ -79,13 +86,105 @@ async function main() {
     assert.match(cleaned, /\[REDACTED_CREDENTIAL\]/);
   });
 
-  await runTest("findForbiddenRtmpsSecretField catches stream keys and rtmps:// values but allows hint_last4", () => {
+  await runTest("findForbiddenRtmpsSecretField catches stream keys, mixed-case keys, and rtmps:// values but allows hint_last4", () => {
     assert.equal(findForbiddenRtmpsSecretField({ rtmps_egress_configured: true, rtmps_key_hint_last4: "A1B2" }), null);
     assert.equal(findForbiddenRtmpsSecretField({ rtmps_stream_key: "live_abc" }), "rtmps_stream_key");
+    assert.equal(findForbiddenRtmpsSecretField({ Stream_Key: "live_mixed" }), "Stream_Key");
+    assert.equal(findForbiddenRtmpsSecretField({ RTMPS_URL: "rtmps://host/app/k" }), "RTMPS_URL");
+    assert.equal(findForbiddenRtmpsSecretField({ "  pairing_secret ": "abc" }), "  pairing_secret ");
     assert.equal(findForbiddenRtmpsSecretField({ streamKey: "xyz" }), "streamKey");
     assert.equal(findForbiddenRtmpsSecretField({ rtmp_url: "rtmp://host/app/key" }), "rtmp_url");
     assert.equal(findForbiddenRtmpsSecretField({ pairing_secret: "abc" }), "pairing_secret");
     assert.equal(findForbiddenRtmpsSecretField({ notes: "rtmps://a.rtmps.youtube.com/live2/k" }), "rtmps_url_value");
+  });
+
+  await runTest("BYOD form helpers sync auto-selected devices, validate manual inputs, and format one-sided whistle bands", () => {
+    const firstDevice = mapByodDevice({
+      id: deviceId,
+      team_id: teamId,
+      registered_by_user_id: "user-1",
+      device_label: "rink-north-pod-01",
+      device_model: "custom-rtmps-encoder",
+      glass_type: "none",
+      pairing_status: "paired",
+      effective_status: "paired",
+      pairing_attempts: 0,
+      pairing_code_expires_at: null,
+      rtmps_egress_configured: true,
+      rtmps_key_hint_last4: "Z9Y8",
+      mesh_service_name: "rink-north._tsai-mesh._tcp.local",
+      paired_at: "2026-11-22T12:00:00Z",
+      last_seen_at: "2026-11-22T12:04:00Z",
+      revoked_at: null,
+      created_at: "2026-11-22T11:55:00Z",
+      updated_at: "2026-11-22T12:04:00Z",
+      latest_calibration: null,
+    });
+    const resolved = resolveSelectedDeviceAfterLoad([firstDevice], "");
+    assert.equal(resolved.nextSelectedId, deviceId);
+    const edit = createDeviceEditState(resolved.nextSelectedDevice);
+    assert.equal(edit.deviceLabel, "rink-north-pod-01");
+    assert.equal(edit.glassType, "none");
+    assert.equal(edit.meshServiceName, "rink-north._tsai-mesh._tcp.local");
+    assert.equal(edit.rtmpsEgressConfigured, true);
+    assert.equal(edit.rtmpsKeyHintLast4, "Z9Y8");
+
+    const badInt = parseManualCalibrationInputs({
+      tiltInput: "",
+      horizonLocked: null,
+      vacuumKpaInput: "",
+      dieTempInput: "",
+      powerWattsInput: "",
+      peltierState: "",
+      whistleLowInput: "2800.5",
+      whistleHighInput: "",
+      notesInput: "",
+    });
+    assert.equal(badInt.ok, false);
+    if (!badInt.ok) {
+      assert.match(badInt.error, /Whistle filter low \(Hz\).*integer/);
+    }
+
+    const badFloat = parseManualCalibrationInputs({
+      tiltInput: "0.5deg",
+      horizonLocked: null,
+      vacuumKpaInput: "",
+      dieTempInput: "",
+      powerWattsInput: "",
+      peltierState: "",
+      whistleLowInput: "",
+      whistleHighInput: "",
+      notesInput: "",
+    });
+    assert.equal(badFloat.ok, false);
+    if (!badFloat.ok) {
+      assert.match(badFloat.error, /Optical tilt.*decimal/);
+    }
+
+    const validParsed = parseManualCalibrationInputs({
+      tiltInput: "",
+      horizonLocked: null,
+      vacuumKpaInput: "68.5",
+      dieTempInput: "31.4",
+      powerWattsInput: "",
+      peltierState: "",
+      whistleLowInput: "2800",
+      whistleHighInput: "",
+      notesInput: "  pre-game check  ",
+    });
+    assert.equal(validParsed.ok, true);
+    if (validParsed.ok) {
+      assert.equal(validParsed.payload.opticalTiltDeg, null);
+      assert.equal(validParsed.payload.mountVacuumKpa, 68.5);
+      assert.equal(validParsed.payload.whistleFilterHzLow, 2800);
+      assert.equal(validParsed.payload.whistleFilterHzHigh, null);
+      assert.equal(validParsed.payload.acousticSnrDb, null);
+    }
+
+    assert.equal(formatWhistlePassband(2800, 3800), "2800–3800 Hz");
+    assert.equal(formatWhistlePassband(2800, null), ">= 2800 Hz");
+    assert.equal(formatWhistlePassband(null, 3800), "<= 3800 Hz");
+    assert.equal(formatWhistlePassband(null, null), null);
   });
 
   await runTest("strict BYOD mappers reject unknown enums and never leak HMAC fields", () => {
@@ -150,16 +249,26 @@ async function main() {
       assert.match(unavailable.error, /AudioContext is unavailable/);
     }
 
-    let oscType = "";
+    interface CapturedOsc {
+      type: string;
+      frequency: { value: number | null; setValueAtTime: (val: number) => void };
+      connect: () => void;
+      disconnect: () => void;
+      start: (when?: number) => void;
+      stop: (when?: number) => void;
+      onended: (() => void) | null;
+    }
+
+    let lastOsc: CapturedOsc | null = null;
     let setFreq: number | null = null;
     let setGain: number | null = null;
     let startedAt: number | null = null;
     let stoppedAt: number | null = null;
+    let manualStopCount = 0;
     let ctxClosed = 0;
     let endedCallbackFired = 0;
     let oscConnected = false;
     let gainConnected = false;
-    let oscOnEnded: (() => void) | null = null;
 
     class FakeAudioContext {
       state = "suspended";
@@ -173,11 +282,13 @@ async function main() {
         this.state = "closed";
       }
       createOscillator() {
-        return {
-          type: "sine",
+        const osc: CapturedOsc = {
+          type: "triangle",
           frequency: {
+            value: null,
             setValueAtTime: (val: number) => {
               setFreq = val;
+              osc.frequency.value = val;
             },
           },
           connect: () => {
@@ -191,14 +302,12 @@ async function main() {
           },
           stop: (when?: number) => {
             if (when !== undefined) stoppedAt = when;
+            else manualStopCount += 1;
           },
-          set onended(fn: () => void) {
-            oscOnEnded = fn;
-          },
-          get onended() {
-            return oscOnEnded as () => void;
-          },
+          onended: null,
         };
+        lastOsc = osc;
+        return osc;
       }
       createGain() {
         return {
@@ -225,6 +334,10 @@ async function main() {
       },
     });
     assert.equal(res.ok, true);
+    assert.ok(lastOsc);
+    const createdOsc = lastOsc as CapturedOsc;
+    assert.equal(createdOsc.type, "sine");
+    assert.equal(createdOsc.frequency.value, 3200);
     assert.equal(setFreq, 3200);
     assert.equal(setGain, 0.15);
     assert.equal(startedAt, 1.0);
@@ -232,14 +345,23 @@ async function main() {
     assert.equal(oscConnected, true);
     assert.equal(gainConnected, true);
 
-    assert.ok(oscOnEnded);
-    (oscOnEnded as () => void)();
+    assert.ok(createdOsc.onended);
+    createdOsc.onended();
     assert.equal(ctxClosed, 1);
     assert.equal(endedCallbackFired, 1);
     assert.equal(oscConnected, false);
     assert.equal(gainConnected, false);
-    oscType = "verified";
-    assert.equal(oscType, "verified");
+
+    // Also verify manual stop() teardown closes AudioContext cleanly
+    const res2 = await playByodReferenceTone({
+      ctor: FakeAudioContext as unknown as new () => AudioContext,
+    });
+    assert.equal(res2.ok, true);
+    if (res2.ok) {
+      res2.handle.stop();
+      assert.equal(manualStopCount, 1);
+      assert.equal(ctxClosed, 2);
+    }
   });
 
   // ── BFF HTTP Proxy Integration Tests ──────────────────────────────────────────────────────
@@ -525,6 +647,8 @@ async function main() {
 
       const forbiddenPayloads = [
         { teamId, deviceLabel: "pod-1", deviceModel: "iphone-16-pro", rtmps_stream_key: "live_secret_123" },
+        { teamId, deviceLabel: "pod-1", deviceModel: "iphone-16-pro", Stream_Key: "live_mixed_case_99" },
+        { teamId, deviceLabel: "pod-1", deviceModel: "iphone-16-pro", RTMPS_URL: "rtmps://a.rtmps.youtube.com/live2/mixed" },
         { teamId, deviceLabel: "pod-1", deviceModel: "iphone-16-pro", stream_key: "abcd-efgh-ijkl-mnop" },
         { teamId, deviceLabel: "pod-1", deviceModel: "iphone-16-pro", rtmp_url: "rtmps://a.rtmps.youtube.com/live2/secret" },
         { teamId, deviceLabel: "pod-1", deviceModel: "iphone-16-pro", pairing_secret: "raw_secret_val" },
@@ -539,18 +663,21 @@ async function main() {
         );
         assert.equal(res.status, 422);
         const json = await res.json();
-        assert.doesNotMatch(JSON.stringify(json), /live_secret_123|abcd-efgh|youtube\.com|raw_secret_val/);
+        assert.doesNotMatch(
+          JSON.stringify(json),
+          /live_secret_123|live_mixed_case_99|abcd-efgh|youtube\.com|raw_secret_val/,
+        );
       }
       assert.equal(captured.length, 0, "raw RTMPS secret payloads must never reach upstream");
 
-      // Now simulate upstream returning an error that leaked an RTMPS URL / stream_key / pairing_secret
+      // Simulate upstream returning string detail leaking RTMPS URL / stream_key / pairing_secret / pairing_code / device_token
       upstreamHandler = (_req, res) => {
         res.writeHead(422, { "content-type": "application/json" });
         res.end(
           JSON.stringify({
             detail:
               "Invalid payload near rtmps://a.rtmps.youtube.com/live2/secret_yt_9876 " +
-              "stream_key=live_hidden_555 pairing_secret=secret_code_444",
+              "stream_key=live_hidden_555 pairing_secret=secret_code_444 pairing_code=ZXCV1234 device_token=dt_secret_888",
           }),
         );
       };
@@ -564,8 +691,42 @@ async function main() {
       );
       assert.equal(upstreamErrRes.status, 422);
       const bodyText = await upstreamErrRes.text();
-      assert.doesNotMatch(bodyText, /secret_yt_9876|live_hidden_555|secret_code_444|youtube\.com/);
+      assert.doesNotMatch(
+        bodyText,
+        /secret_yt_9876|live_hidden_555|secret_code_444|ZXCV1234|dt_secret_888|youtube\.com/,
+      );
       assert.match(bodyText, /REDACTED_RTMPS_URL/);
+
+      // Also simulate upstream returning Pydantic validation array detail: [{ loc, msg, input }]
+      upstreamHandler = (_req, res) => {
+        res.writeHead(422, { "content-type": "application/json" });
+        res.end(
+          JSON.stringify({
+            detail: [
+              {
+                type: "extra_forbidden",
+                loc: ["body", "stream_key"],
+                msg: "Extra inputs near rtmps://a.rtmps.youtube.com/live2/arr_secret_111 stream_key=arr_sk_222 pairing_code=ARR34567 device_token=arr_tok_888",
+                input: "arr_raw_input_999",
+              },
+            ],
+          }),
+        );
+      };
+      const upstreamArrErrRes = await devicesRoute.POST(
+        new NextRequest("http://localhost/api/byod/devices", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ teamId, deviceLabel: "pod-1", deviceModel: "iphone-16-pro" }),
+        }),
+      );
+      assert.equal(upstreamArrErrRes.status, 422);
+      const arrBodyText = await upstreamArrErrRes.text();
+      assert.doesNotMatch(
+        arrBodyText,
+        /arr_secret_111|arr_sk_222|ARR34567|arr_tok_888|arr_raw_input_999|youtube\.com/,
+      );
+      assert.match(arrBodyText, /REDACTED_RTMPS_URL/);
     });
 
     await runTest("BFF happy-path proxies all 4 routes, multi-page GET /devices/[deviceId], and strips HMACs", async () => {
@@ -784,13 +945,15 @@ async function main() {
         assert.equal(res.status, status);
       }
 
-      // Contract drift -> 502
+      // Contract drift -> 502 with BYOD-specific error message
       upstreamHandler = (_req, res) => {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ wrong_shape: true }));
       };
       const driftRes = await teamsRoute.GET();
       assert.equal(driftRes.status, 502);
+      const driftJson = await driftRes.json();
+      assert.equal(driftJson.error, "Upstream BYOD response violated expected contract.");
 
       // Unreachable upstream -> 503
       await new Promise<void>((resolve) => server.close(() => resolve()));
@@ -812,6 +975,7 @@ async function main() {
       "src/lib/byod/byod-mappers.ts",
       "src/lib/byod/byod-bff.ts",
       "src/lib/byod/byod-api-client.ts",
+      "src/lib/byod/byod-form.ts",
       "src/lib/byod/webaudio-tone.ts",
       "src/components/vision/BYODSetupWizard.tsx",
       "src/components/vision/ByodDeviceFleetPanel.tsx",
@@ -840,9 +1004,91 @@ async function main() {
     assert.match(wizardSrc, /Open Director Console/);
     assert.match(wizardSrc, /Back to Team Devices/);
     assert.match(wizardSrc, /\/login\?next=\/byod-setup/);
+    assert.match(wizardSrc, /selectedDevice\??\.effectiveStatus === "offline"/);
+    assert.match(wizardSrc, /selectedDevice\??\.effectiveStatus === "revoked"/);
+
+    const fleetSrc = fs.readFileSync(path.join(process.cwd(), "src/components/vision/ByodDeviceFleetPanel.tsx"), "utf8");
+    assert.match(fleetSrc, /isEditing && !isRevoked/);
 
     const emptyReadout = renderToStaticMarkup(React.createElement(ByodCalibrationReadout, { calibration: null }));
     assert.equal((emptyReadout.match(/data-testid="byod-not-measured"/g) ?? []).length, 9);
+
+    const lowOnlyHtml = renderToStaticMarkup(
+      React.createElement(ByodCalibrationReadout, {
+        calibration: {
+          id: calId,
+          deviceId,
+          teamId,
+          recordedBySubject: "user:1",
+          calibrationSource: "manual_check",
+          opticalTiltDeg: null,
+          opticalHorizonLocked: null,
+          mountVacuumKpa: null,
+          dieTempC: null,
+          powerDeliveryWatts: null,
+          peltierState: null,
+          acousticSnrDb: null,
+          whistleFilterHzLow: 2800,
+          whistleFilterHzHigh: null,
+          notes: null,
+          measuredAt: "2026-11-22T12:00:00Z",
+        },
+      }),
+    );
+    assert.match(lowOnlyHtml, /&gt;= 2800 Hz/);
+
+    const highOnlyFleetHtml = renderToStaticMarkup(
+      React.createElement(ByodDeviceFleetPanel, {
+        devices: [
+          {
+            id: deviceId,
+            teamId,
+            registeredByUserId: "user-1",
+            deviceLabel: "rink-north-pod-01",
+            deviceModel: "iphone-16-pro",
+            glassType: "tempered",
+            pairingStatus: "operator_registered",
+            effectiveStatus: "operator_registered",
+            pairingAttempts: 0,
+            pairingCodeExpiresAt: null,
+            rtmpsEgressConfigured: false,
+            rtmpsKeyHintLast4: null,
+            meshServiceName: null,
+            pairedAt: null,
+            lastSeenAt: null,
+            revokedAt: null,
+            createdAt: "2026-11-22T11:55:00Z",
+            updatedAt: "2026-11-22T12:00:00Z",
+            latestCalibration: null,
+          },
+        ],
+        total: 1,
+        selectedDeviceId: deviceId,
+        calibrations: [
+          {
+            id: calId,
+            deviceId,
+            teamId,
+            recordedBySubject: "user:1",
+            calibrationSource: "manual_check",
+            opticalTiltDeg: null,
+            opticalHorizonLocked: null,
+            mountVacuumKpa: null,
+            dieTempC: null,
+            powerDeliveryWatts: null,
+            peltierState: null,
+            acousticSnrDb: null,
+            whistleFilterHzLow: null,
+            whistleFilterHzHigh: 3800,
+            notes: null,
+            measuredAt: "2026-11-22T12:00:00Z",
+          },
+        ],
+        calibrationsTotal: 1,
+        onSelectDevice: () => {},
+      }),
+    );
+    assert.match(highOnlyFleetHtml, /Passband: &lt;= 3800 Hz/);
   });
 
   console.log("\n=== ALL BYOD T6.3 / O-09 CHECKS PASSED ===\n");

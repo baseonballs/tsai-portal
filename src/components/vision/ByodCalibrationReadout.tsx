@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { formatWhistlePassband } from "@/lib/byod/byod-form";
 import type { ByodCalibration } from "@/types/byod-types";
 
 export function NotYetMeasured() {
@@ -28,12 +29,9 @@ export function ByodCalibrationReadout({
   calibration,
   title = "Latest Calibration & Telemetry Snapshot",
 }: ByodCalibrationReadoutProps) {
-  const whistleBand =
-    calibration &&
-    calibration.whistleFilterHzLow !== null &&
-    calibration.whistleFilterHzHigh !== null
-      ? `${calibration.whistleFilterHzLow}–${calibration.whistleFilterHzHigh} Hz`
-      : null;
+  const whistleBand = calibration
+    ? formatWhistlePassband(calibration.whistleFilterHzLow, calibration.whistleFilterHzHigh)
+    : null;
 
   return (
     <div className="rounded-2xl border border-white/10 bg-zinc-950/50 p-4 space-y-3">

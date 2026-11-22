@@ -41,6 +41,13 @@ import {
   updateByodDevice,
   type UpdateByodDeviceInput,
 } from "@/lib/byod/byod-api-client";
+import {
+  createDeviceEditState,
+  formatWhistlePassband,
+  parseManualCalibrationInputs,
+  resolveSelectedDeviceAfterLoad,
+  type ByodDeviceEditState,
+} from "@/lib/byod/byod-form";
 import { playByodReferenceTone, type WebAudioToneHandle } from "@/lib/byod/webaudio-tone";
 import { ByodCalibrationReadout, NotYetMeasured } from "@/components/vision/ByodCalibrationReadout";
 import { ByodDeviceFleetPanel, formatByodStatusBadge } from "@/components/vision/ByodDeviceFleetPanel";
@@ -62,20 +69,6 @@ const STEPS: StepConfig[] = [
 
 type ByodAuthState = "loading" | "signed-out" | "not-entitled" | "ready";
 
-function parseOptionalFloat(raw: string): number | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  const num = Number(trimmed);
-  return Number.isFinite(num) ? num : null;
-}
-
-function parseOptionalInt(raw: string): number | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  if (!/^-?\d+$/.test(trimmed)) return null;
-  return Number(trimmed);
-}
-
 export function BYODSetupWizard() {
   const [authState, setAuthState] = useState<ByodAuthState>("loading");
   const [teams, setTeams] = useState<ByodTeamSummary[]>([]);
@@ -86,6 +79,7 @@ export function BYODSetupWizard() {
   const [devicesTotal, setDevicesTotal] = useState(0);
   const [loadedDevicesTeamId, setLoadedDevicesTeamId] = useState<string | null>(null);
   const [selectedDeviceId, setSelectedDeviceId] = useState("");
+  const selectedDeviceIdRef = useRef("");
 
   const [calibrations, setCalibrations] = useState<ByodCalibration[]>([]);
   const [calibrationsTotal, setCalibrationsTotal] = useState(0);
@@ -103,13 +97,16 @@ export function BYODSetupWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isComplete, setIsComplete] = useState(false);
 
-  // Device registration / configuration form state (strictly non-PII hardware fields)
-  const [deviceModel, setDeviceModel] = useState<ByodDeviceModel>("iphone-16-pro");
-  const [deviceLabel, setDeviceLabel] = useState("");
-  const [glassType, setGlassType] = useState<ByodGlassType>("tempered");
-  const [meshServiceName, setMeshServiceName] = useState("");
-  const [rtmpsEgressConfigured, setRtmpsEgressConfigured] = useState(false);
-  const [rtmpsKeyHintLast4, setRtmpsKeyHintLast4] = useState("");
+  // Step 1 new-device registration state (strictly non-PII hardware fields)
+  const [newDeviceModel, setNewDeviceModel] = useState<ByodDeviceModel>("iphone-16-pro");
+  const [newDeviceLabel, setNewDeviceLabel] = useState("");
+  const [newGlassType, setNewGlassType] = useState<ByodGlassType>("tempered");
+  const [newMeshServiceName, setNewMeshServiceName] = useState("");
+  const [newRtmpsEgressConfigured, setNewRtmpsEgressConfigured] = useState(false);
+  const [newRtmpsKeyHintLast4, setNewRtmpsKeyHintLast4] = useState("");
+
+  // Selected persisted device configuration edit state (synced whenever selectedDevice changes)
+  const [editForm, setEditForm] = useState<ByodDeviceEditState>(() => createDeviceEditState(null));
 
   // Optional operator manual rigging check fields (blank stays SQL NULL / unmeasured)
   const [manualTiltInput, setManualTiltInput] = useState("");
@@ -170,11 +167,17 @@ export function BYODSetupWizard() {
     };
   }, [reloadSeq.teams]);
 
-  const refreshDevices = useCallback(async (teamId: string) => {
+  const applyDeviceSelection = useCallback((deviceId: string, device: ByodDevice | null) => {
+    selectedDeviceIdRef.current = deviceId;
+    setSelectedDeviceId(deviceId);
+    setEditForm(createDeviceEditState(device));
+  }, []);
+
+  const refreshDevices = useCallback(async (teamId: string, preferredId?: string) => {
     if (!teamId) {
       setDevices([]);
       setDevicesTotal(0);
-      setSelectedDeviceId("");
+      applyDeviceSelection("", null);
       setLoadedDevicesTeamId(null);
       return;
     }
@@ -184,9 +187,12 @@ export function BYODSetupWizard() {
       const page = await fetchTeamByodDevices(teamId, 25, 0);
       setDevices(page.items);
       setDevicesTotal(page.total);
-      setSelectedDeviceId((prev) =>
-        prev && page.items.some((d) => d.id === prev) ? prev : page.items[0]?.id ?? "",
+      const { nextSelectedId, nextSelectedDevice } = resolveSelectedDeviceAfterLoad(
+        page.items,
+        selectedDeviceIdRef.current,
+        preferredId,
       );
+      applyDeviceSelection(nextSelectedId, nextSelectedDevice);
     } catch (err) {
       if (err instanceof ByodApiError && err.status === 401) {
         setAuthState("signed-out");
@@ -198,7 +204,7 @@ export function BYODSetupWizard() {
     } finally {
       setLoadedDevicesTeamId(teamId);
     }
-  }, []);
+  }, [applyDeviceSelection]);
 
   useEffect(() => {
     if (authState !== "ready" || !selectedTeamId) return;
@@ -209,9 +215,11 @@ export function BYODSetupWizard() {
         setActionError(null);
         setDevices(page.items);
         setDevicesTotal(page.total);
-        setSelectedDeviceId((prev) =>
-          prev && page.items.some((d) => d.id === prev) ? prev : page.items[0]?.id ?? "",
+        const { nextSelectedId, nextSelectedDevice } = resolveSelectedDeviceAfterLoad(
+          page.items,
+          selectedDeviceIdRef.current,
         );
+        applyDeviceSelection(nextSelectedId, nextSelectedDevice);
         setLoadedDevicesTeamId(selectedTeamId);
       })
       .catch((err) => {
@@ -228,7 +236,7 @@ export function BYODSetupWizard() {
     return () => {
       cancelled = true;
     };
-  }, [authState, selectedTeamId, reloadSeq.devices]);
+  }, [authState, selectedTeamId, reloadSeq.devices, applyDeviceSelection]);
 
   const refreshCalibrations = useCallback(async (teamId: string, deviceId: string) => {
     if (!teamId || !deviceId) {
@@ -291,19 +299,9 @@ export function BYODSetupWizard() {
   const selectedDevice = visibleDevices.find((d) => d.id === selectedDeviceId) ?? null;
   const activeCal = selectedDevice?.latestCalibration ?? null;
 
-  const syncFormFromDevice = (device: ByodDevice) => {
-    setDeviceModel(device.deviceModel);
-    setDeviceLabel(device.deviceLabel);
-    setGlassType(device.glassType);
-    setMeshServiceName(device.meshServiceName ?? "");
-    setRtmpsEgressConfigured(device.rtmpsEgressConfigured);
-    setRtmpsKeyHintLast4(device.rtmpsKeyHintLast4 ?? "");
-  };
-
   const handleSelectDevice = (deviceId: string) => {
-    setSelectedDeviceId(deviceId);
-    const hit = visibleDevices.find((d) => d.id === deviceId);
-    if (hit) syncFormFromDevice(hit);
+    const hit = visibleDevices.find((d) => d.id === deviceId) ?? null;
+    applyDeviceSelection(deviceId, hit);
   };
 
   const handleRegisterDevice = async () => {
@@ -314,12 +312,12 @@ export function BYODSetupWizard() {
     setCodeCopied(false);
     try {
       const result = await registerByodDevice(selectedTeamId, {
-        deviceLabel: deviceLabel.trim(),
-        deviceModel,
-        glassType,
-        meshServiceName: meshServiceName.trim() || null,
-        rtmpsEgressConfigured,
-        rtmpsKeyHintLast4: rtmpsKeyHintLast4.trim() || null,
+        deviceLabel: newDeviceLabel.trim(),
+        deviceModel: newDeviceModel,
+        glassType: newGlassType,
+        meshServiceName: newMeshServiceName.trim() || null,
+        rtmpsEgressConfigured: newRtmpsEgressConfigured,
+        rtmpsKeyHintLast4: newRtmpsKeyHintLast4.trim() || null,
         initiatePairing: true,
       });
       if (result.pairingCode) {
@@ -331,8 +329,10 @@ export function BYODSetupWizard() {
         });
       }
       setActionSuccess(`Registered "${result.device.deviceLabel}". Hardware handshake is pending.`);
-      await refreshDevices(selectedTeamId);
-      setSelectedDeviceId(result.device.id);
+      setNewDeviceLabel("");
+      setNewMeshServiceName("");
+      setNewRtmpsKeyHintLast4("");
+      await refreshDevices(selectedTeamId, result.device.id);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Device registration failed.");
     } finally {
@@ -395,23 +395,31 @@ export function BYODSetupWizard() {
 
   const handleLogManualCheck = async (overrideNotes?: string) => {
     if (!selectedTeamId || !selectedDeviceId) return;
-    setBusy(true);
     setActionError(null);
     setActionSuccess(null);
+
+    const parsed = parseManualCalibrationInputs(
+      {
+        tiltInput: manualTiltInput,
+        horizonLocked: manualHorizonLocked,
+        vacuumKpaInput: manualVacuumKpaInput,
+        dieTempInput: manualDieTempInput,
+        powerWattsInput: manualPowerWattsInput,
+        peltierState: manualPeltierState,
+        whistleLowInput: manualWhistleLowInput,
+        whistleHighInput: manualWhistleHighInput,
+        notesInput: manualNotes,
+      },
+      overrideNotes,
+    );
+    if (!parsed.ok) {
+      setActionError(parsed.error);
+      return;
+    }
+
+    setBusy(true);
     try {
-      const notes = (overrideNotes ?? manualNotes).trim() || null;
-      await recordByodManualCalibration(selectedTeamId, selectedDeviceId, {
-        opticalTiltDeg: parseOptionalFloat(manualTiltInput),
-        opticalHorizonLocked: manualHorizonLocked,
-        mountVacuumKpa: parseOptionalFloat(manualVacuumKpaInput),
-        dieTempC: parseOptionalFloat(manualDieTempInput),
-        powerDeliveryWatts: parseOptionalFloat(manualPowerWattsInput),
-        peltierState: manualPeltierState || null,
-        acousticSnrDb: null, // Unmeasured unless supplied by device hardware telemetry
-        whistleFilterHzLow: parseOptionalInt(manualWhistleLowInput),
-        whistleFilterHzHigh: parseOptionalInt(manualWhistleHighInput),
-        notes,
-      });
+      await recordByodManualCalibration(selectedTeamId, selectedDeviceId, parsed.payload);
       setActionSuccess(
         "Operator manual rigging check logged (calibration_source: manual_check). Hardware handshake remains pending until device connects.",
       );
@@ -474,6 +482,38 @@ export function BYODSetupWizard() {
   };
 
   const selectedBadge = selectedDevice ? formatByodStatusBadge(selectedDevice.effectiveStatus) : null;
+  const activeGlassType = selectedDevice ? editForm.glassType : newGlassType;
+  const activeMeshServiceName = selectedDevice ? editForm.meshServiceName : newMeshServiceName;
+  const activeRtmpsEgressConfigured = selectedDevice
+    ? editForm.rtmpsEgressConfigured
+    : newRtmpsEgressConfigured;
+  const activeRtmpsKeyHintLast4 = selectedDevice
+    ? editForm.rtmpsKeyHintLast4
+    : newRtmpsKeyHintLast4;
+
+  const setActiveGlassType = (next: ByodGlassType) => {
+    if (selectedDevice) {
+      setEditForm((prev) => ({ ...prev, glassType: next }));
+    } else {
+      setNewGlassType(next);
+    }
+  };
+
+  const setActiveRtmpsEgressConfigured = (next: boolean) => {
+    if (selectedDevice) {
+      setEditForm((prev) => ({ ...prev, rtmpsEgressConfigured: next }));
+    } else {
+      setNewRtmpsEgressConfigured(next);
+    }
+  };
+
+  const setActiveRtmpsKeyHintLast4 = (next: string) => {
+    if (selectedDevice) {
+      setEditForm((prev) => ({ ...prev, rtmpsKeyHintLast4: next }));
+    } else {
+      setNewRtmpsKeyHintLast4(next);
+    }
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
@@ -549,7 +589,7 @@ export function BYODSetupWizard() {
                   value={selectedTeamId}
                   onChange={(e) => {
                     setSelectedTeamId(e.target.value);
-                    setSelectedDeviceId("");
+                    applyDeviceSelection("", null);
                     setLoadedDevicesTeamId(null);
                     setLoadedCalKey(null);
                     setMintedCode(null);
@@ -733,14 +773,14 @@ export function BYODSetupWizard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {BYOD_HARDWARE_PROFILES.map((profile) => {
-                  const selected = deviceModel === profile.id;
+                  const selected = newDeviceModel === profile.id;
                   return (
                     <button
                       key={profile.id}
                       type="button"
                       onClick={() => {
-                        setDeviceModel(profile.id);
-                        setGlassType(profile.recommendedGlass);
+                        setNewDeviceModel(profile.id);
+                        setNewGlassType(profile.recommendedGlass);
                       }}
                       className={`text-left cursor-pointer rounded-2xl p-5 border transition-all ${
                         selected
@@ -772,8 +812,8 @@ export function BYODSetupWizard() {
                   <input
                     id="byod-device-label"
                     type="text"
-                    value={deviceLabel}
-                    onChange={(e) => setDeviceLabel(e.target.value)}
+                    value={newDeviceLabel}
+                    onChange={(e) => setNewDeviceLabel(e.target.value)}
                     placeholder="rink-north-pod-01"
                     maxLength={64}
                     className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3.5 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
@@ -790,8 +830,8 @@ export function BYODSetupWizard() {
                   <input
                     id="byod-mesh-service"
                     type="text"
-                    value={meshServiceName}
-                    onChange={(e) => setMeshServiceName(e.target.value)}
+                    value={newMeshServiceName}
+                    onChange={(e) => setNewMeshServiceName(e.target.value)}
                     placeholder="rink-north._tsai-mesh._tcp.local"
                     maxLength={160}
                     className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3.5 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
@@ -808,7 +848,7 @@ export function BYODSetupWizard() {
                     </span>
                     <button
                       type="button"
-                      disabled={busy || deviceLabel.trim().length < 3}
+                      disabled={busy || newDeviceLabel.trim().length < 3}
                       onClick={() => void handleRegisterDevice()}
                       className="rounded-xl bg-cyan-500 hover:bg-cyan-400 px-4 py-2 text-xs font-bold text-zinc-950 disabled:opacity-50 cursor-pointer"
                     >
@@ -850,17 +890,24 @@ export function BYODSetupWizard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-2xl border border-white/10 bg-zinc-950/40 p-5 space-y-3">
-                  <label className="text-xs font-mono font-semibold uppercase text-zinc-400 block">
-                    Arena Glass Substrate
-                  </label>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="text-xs font-mono font-semibold uppercase text-zinc-400 block">
+                      Arena Glass Substrate
+                    </label>
+                    {selectedDevice && (
+                      <span className="text-[11px] font-mono text-cyan-300">
+                        Device: {selectedDevice.deviceLabel}
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {BYOD_GLASS_OPTIONS.map((opt) => (
                       <button
                         key={opt.id}
                         type="button"
-                        onClick={() => setGlassType(opt.id)}
+                        onClick={() => setActiveGlassType(opt.id)}
                         className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                          glassType === opt.id
+                          activeGlassType === opt.id
                             ? "bg-cyan-500 text-zinc-950 border-cyan-400 font-bold"
                             : "border-white/10 text-zinc-400 hover:text-white"
                         }`}
@@ -870,7 +917,7 @@ export function BYODSetupWizard() {
                     ))}
                   </div>
                   <p className="text-[11px] text-zinc-500">
-                    {BYOD_GLASS_OPTIONS.find((g) => g.id === glassType)?.guidance}
+                    {BYOD_GLASS_OPTIONS.find((g) => g.id === activeGlassType)?.guidance}
                   </p>
                 </div>
 
@@ -1106,15 +1153,19 @@ export function BYODSetupWizard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-400">Whistle Recognition Passband (target 2800–3800 Hz):</span>
-                  {activeCal &&
-                  activeCal.whistleFilterHzLow !== null &&
-                  activeCal.whistleFilterHzHigh !== null ? (
-                    <span className="font-mono font-semibold text-white">
-                      {activeCal.whistleFilterHzLow}–{activeCal.whistleFilterHzHigh} Hz
-                    </span>
-                  ) : (
-                    <NotYetMeasured />
-                  )}
+                  {(() => {
+                    const passband = activeCal
+                      ? formatWhistlePassband(
+                          activeCal.whistleFilterHzLow,
+                          activeCal.whistleFilterHzHigh,
+                        )
+                      : null;
+                    return passband ? (
+                      <span className="font-mono font-semibold text-white">{passband}</span>
+                    ) : (
+                      <NotYetMeasured />
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -1139,10 +1190,10 @@ export function BYODSetupWizard() {
                         : "Play 3.2 kHz Local Reference Tone (Browser Speaker)"}
                     </button>
 
-                    {authState === "ready" && selectedDeviceId && (
+                    {authState === "ready" && selectedDevice && (
                       <button
                         type="button"
-                        disabled={busy}
+                        disabled={busy || selectedDevice.pairingStatus === "revoked"}
                         onClick={() =>
                           void handleLogManualCheck(
                             manualNotes.trim() ||
@@ -1241,12 +1292,17 @@ export function BYODSetupWizard() {
                     <p className="text-xs text-zinc-400">
                       Operator confirmation that the capture device holds its own local RTMPS broadcast destination.
                     </p>
+                    {selectedDevice && (
+                      <p className="text-[11px] font-mono text-cyan-300 mt-1">
+                        Configuring device: {selectedDevice.deviceLabel}
+                      </p>
+                    )}
                   </div>
                   <input
                     id="rtmps-readiness-toggle"
                     type="checkbox"
-                    checked={rtmpsEgressConfigured}
-                    onChange={(e) => setRtmpsEgressConfigured(e.target.checked)}
+                    checked={activeRtmpsEgressConfigured}
+                    onChange={(e) => setActiveRtmpsEgressConfigured(e.target.checked)}
                     className="h-5 w-5 accent-cyan-500 cursor-pointer"
                   />
                 </div>
@@ -1260,8 +1316,8 @@ export function BYODSetupWizard() {
                       id="rtmps-hint-last4"
                       type="text"
                       maxLength={4}
-                      value={rtmpsKeyHintLast4}
-                      onChange={(e) => setRtmpsKeyHintLast4(e.target.value)}
+                      value={activeRtmpsKeyHintLast4}
+                      onChange={(e) => setActiveRtmpsKeyHintLast4(e.target.value)}
                       placeholder="A1B2"
                       className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3.5 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
                     />
@@ -1272,8 +1328,8 @@ export function BYODSetupWizard() {
 
                   <div className="space-y-1.5">
                     <div className="text-xs font-mono uppercase text-zinc-400">Arena Local WebRTC Mesh</div>
-                    <div className="rounded-xl border border-white/10 bg-zinc-900/70 px-3.5 py-2.5 text-xs font-mono text-zinc-200 flex items-center justify-between">
-                      <span>{meshServiceName.trim() || selectedDevice?.meshServiceName || "_tsai-mesh._tcp"}</span>
+                    <div className="rounded-xl border border-white/10 bg-zinc-900/70 px-3.5 py-2.5 text-xs font-mono text-zinc-200 flex items-center justify-between gap-2">
+                      <span>{activeMeshServiceName.trim() || "_tsai-mesh._tcp"}</span>
                       {selectedBadge ? (
                         <span className="text-cyan-300">{selectedBadge.label}</span>
                       ) : (
@@ -1283,18 +1339,18 @@ export function BYODSetupWizard() {
                   </div>
                 </div>
 
-                {authState === "ready" && selectedDeviceId && (
+                {authState === "ready" && selectedDevice && (
                   <div className="flex flex-wrap items-center justify-end gap-3 pt-3 border-t border-white/5">
                     <button
                       type="button"
-                      disabled={busy}
+                      disabled={busy || selectedDevice.pairingStatus === "revoked"}
                       onClick={() =>
-                        void handleUpdateDevice(selectedDeviceId, {
-                          deviceLabel: deviceLabel.trim() || undefined,
-                          glassType,
-                          meshServiceName: meshServiceName.trim() || null,
-                          rtmpsEgressConfigured,
-                          rtmpsKeyHintLast4: rtmpsKeyHintLast4.trim() || null,
+                        void handleUpdateDevice(selectedDevice.id, {
+                          deviceLabel: editForm.deviceLabel.trim() || selectedDevice.deviceLabel,
+                          glassType: editForm.glassType,
+                          meshServiceName: editForm.meshServiceName.trim() || null,
+                          rtmpsEgressConfigured: editForm.rtmpsEgressConfigured,
+                          rtmpsKeyHintLast4: editForm.rtmpsKeyHintLast4.trim() || null,
                         })
                       }
                       className="rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 cursor-pointer"
@@ -1303,7 +1359,7 @@ export function BYODSetupWizard() {
                     </button>
                     <button
                       type="button"
-                      disabled={busy}
+                      disabled={busy || selectedDevice.pairingStatus === "revoked"}
                       onClick={() => void handleLogManualCheck()}
                       className="rounded-xl bg-cyan-500 hover:bg-cyan-400 px-4 py-2 text-xs font-bold text-zinc-950 disabled:opacity-50 cursor-pointer"
                     >
@@ -1327,8 +1383,10 @@ export function BYODSetupWizard() {
             <div className="py-6 space-y-6">
               <div className="text-center space-y-3">
                 <div className="w-14 h-14 rounded-full bg-zinc-800/70 border border-white/10 text-cyan-300 flex items-center justify-center mx-auto">
-                  {selectedDevice?.pairingStatus === "paired" ? (
+                  {selectedDevice?.effectiveStatus === "paired" ? (
                     <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+                  ) : selectedDevice?.effectiveStatus === "revoked" ? (
+                    <AlertTriangle className="w-7 h-7 text-rose-400" />
                   ) : (
                     <AlertTriangle className="w-7 h-7 text-amber-300" />
                   )}
@@ -1347,8 +1405,12 @@ export function BYODSetupWizard() {
                       </div>
                     )}
                     <p className="text-sm text-zinc-400 max-w-lg mx-auto">
-                      {selectedDevice.pairingStatus === "paired"
+                      {selectedDevice.effectiveStatus === "paired"
                         ? "Hardware handshake verified and live device telemetry is active."
+                        : selectedDevice.effectiveStatus === "offline"
+                        ? "Device was previously paired, but no heartbeat or telemetry has been received in over 5 minutes."
+                        : selectedDevice.effectiveStatus === "revoked"
+                        ? "This BYOD device has been revoked and its credentials invalidated. Revoked devices cannot be modified or re-paired."
                         : "Only an authenticated hardware handshake from BenchHub or your capture daemon transitions this pod to paired."}
                     </p>
                   </>

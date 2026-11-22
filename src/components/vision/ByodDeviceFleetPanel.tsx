@@ -11,6 +11,7 @@ import {
   type ByodGlassType,
 } from "@/types/byod-types";
 import type { UpdateByodDeviceInput } from "@/lib/byod/byod-api-client";
+import { formatWhistlePassband } from "@/lib/byod/byod-form";
 import {
   ByodCalibrationReadout,
   formatCalibrationSourceLabel,
@@ -224,7 +225,10 @@ export function ByodDeviceFleetPanel({
                         <button
                           type="button"
                           disabled={busy}
-                          onClick={() => void onRevokeDevice(device.id)}
+                          onClick={() => {
+                            if (editingId === device.id) setEditingId(null);
+                            void onRevokeDevice(device.id);
+                          }}
                           className="inline-flex items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-950/30 px-2.5 py-1.5 text-xs text-rose-300 hover:bg-rose-900/40 disabled:opacity-50 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -235,7 +239,7 @@ export function ByodDeviceFleetPanel({
                   )}
                 </div>
 
-                {isEditing && (
+                {isEditing && !isRevoked && (
                   <div className="rounded-xl border border-white/10 bg-zinc-900/80 p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                     <div className="space-y-1">
                       <label className="font-mono text-zinc-400 block">Device Label (non-PII)</label>
@@ -359,11 +363,13 @@ export function ByodDeviceFleetPanel({
                       <span>
                         SNR: {cal.acousticSnrDb !== null ? `${cal.acousticSnrDb.toFixed(1)} dB` : "unmeasured"}
                       </span>
-                      {cal.whistleFilterHzLow !== null && cal.whistleFilterHzHigh !== null && (
-                        <span>
-                          Passband: {cal.whistleFilterHzLow}–{cal.whistleFilterHzHigh} Hz
-                        </span>
-                      )}
+                      {(() => {
+                        const passband = formatWhistlePassband(
+                          cal.whistleFilterHzLow,
+                          cal.whistleFilterHzHigh,
+                        );
+                        return passband ? <span>Passband: {passband}</span> : null;
+                      })()}
                     </div>
                     {cal.notes && <div className="text-zinc-400">{cal.notes}</div>}
                   </div>
