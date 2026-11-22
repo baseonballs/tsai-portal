@@ -43,6 +43,34 @@
       "writerSource": "self:src/lib/billing/stripe-webhook-sync.ts#syncUserProductLicenseRow",
       "evidence": "src/app/api/billing/stripe/webhook/route.ts"
     },
+    "route:/api/byod/devices": {
+      "endpoint": "hockey-api GET/POST /api/v1/teams/{teamId}/byod/devices",
+      "table": "hockey_db.byod_edge_devices",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/byod/devices",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/byod.py#register_byod_device",
+      "evidence": "src/app/api/byod/devices/route.ts"
+    },
+    "route:/api/byod/devices/:param": {
+      "endpoint": "hockey-api GET /api/v1/teams/{teamId}/byod/devices + PATCH/DELETE /api/v1/teams/{teamId}/byod/devices/{deviceId}",
+      "table": "hockey_db.byod_edge_devices",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/byod/devices",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/byod.py#register_byod_device",
+      "evidence": "src/app/api/byod/devices/[deviceId]/route.ts"
+    },
+    "route:/api/byod/devices/:param/calibrations": {
+      "endpoint": "hockey-api GET/POST /api/v1/teams/{teamId}/byod/devices/{deviceId}/calibrations",
+      "table": "hockey_db.byod_device_calibrations",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/byod/devices/{deviceId}/calibrations (manual_check) and POST /api/v1/byod/devices/{deviceId}/telemetry (device_telemetry)",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/byod.py#record_byod_calibration",
+      "evidence": "src/app/api/byod/devices/[deviceId]/calibrations/route.ts"
+    },
+    "route:/api/byod/teams": {
+      "endpoint": "hockey-api GET /api/v1/byod/teams",
+      "table": "hockey_db.teams",
+      "writer": "user-action: POST /api/v1/teams/",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/teams.py#create_team",
+      "evidence": "src/app/api/byod/teams/route.ts"
+    },
     "route:/api/telemetry/event": {
       "endpoint": "platform PostgREST POST /rest/v1/user_telemetry_events (+ user_session_journeys)",
       "table": "supabase:public.user_telemetry_events",
@@ -120,9 +148,11 @@
       "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/byod-setup": {
-      "register": "O-09",
-      "via": "unavailable:testid:byod-pairing-unavailable",
-      "evidence": "src/components/vision/BYODSetupWizard.tsx:404"
+      "endpoint": "GET /api/byod/teams + GET/POST /api/byod/devices + PATCH/DELETE /api/byod/devices/{deviceId} + GET/POST /api/byod/devices/{deviceId}/calibrations -> hockey-api /api/v1/teams/{teamId}/byod/*",
+      "table": "hockey_db.byod_edge_devices",
+      "writer": "user-action: POST /api/v1/teams/{team_id}/byod/devices",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/byod.py#register_byod_device",
+      "evidence": "src/app/byod-setup/page.tsx"
     },
     "route:/club-revshare": {
       "register": "O-06",

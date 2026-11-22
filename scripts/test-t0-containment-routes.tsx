@@ -18,6 +18,8 @@ import { NameMatcher, loadRealNameList } from "./lib/real-names";
 import ClubRevSharePage from "../src/app/club-revshare/page";
 import TournamentDirectorPage from "../src/app/tournament/director/page";
 import BYODSetupPage from "../src/app/byod-setup/page";
+import { ByodCalibrationReadout } from "../src/components/vision/ByodCalibrationReadout";
+import { ByodDeviceFleetPanel } from "../src/components/vision/ByodDeviceFleetPanel";
 import { ICalProvisioningModal } from "../src/components/tournaments/ICalProvisioningModal";
 import { LiveTournamentBracketView } from "../src/components/tournaments/LiveTournamentBracketView";
 import { TranscendEngineSubstrate } from "../src/components/landing/TranscendEngineSubstrate";
@@ -214,31 +216,116 @@ check("iCal modal applies to BFF without sample calendar, stream keys, or unavai
   assert.match(code("src/components/tournaments/ICalProvisioningModal.tsx"), /createTournamentSheet/);
 });
 
-console.log("O-09 /byod-setup");
-check("wizard claims no pairing or calibration", () => {
+console.log("O-09 /byod-setup (live T6.3 wiring)");
+check("SSR setup guide renders honest empty state, 4th encoder profile, and zero fake telemetry", () => {
   const html = render(<BYODSetupPage />);
-  assert.ok(html.includes("Device check: not yet available"), "step 1 says the device check is not yet available");
+  assert.doesNotMatch(html, /byod-pairing-unavailable/, "O-09 unavailable pin must be removed");
+  assert.doesNotMatch(html, /\/club-revshare/, "dead /club-revshare CTA must be removed");
+  assert.ok(html.includes("Custom RTMPS Hardware Encoder"), "4th hardware profile card must render");
   assert.ok(html.includes("Optical sensor check:"), "step 1 sensor check is present");
+  assert.match(html, /data-testid="byod-not-measured"/, "unmeasured sensor defaults to byod-not-measured");
   assert.equal(realNameHits(html), 0);
-  assert.doesNotMatch(html, /A18 Pro \/ M4 Ready|acceleration verified/);
-  const s = code("src/components/vision/BYODSetupWizard.tsx");
-  for (const claim of [
-    "BenchHub iPad Paired",
-    "fully calibrated",
-    "LOCKED",
-    "(Passed)",
-    "NOMINAL",
-    "CONNECTED (",
-    "28.4 dB",
-    "99.4% Precision",
-    "Zero YouTube Strikes",
-    "Online &amp; Armed",
-    "live_yt_",
+  assert.doesNotMatch(html, /A18 Pro \/ M4 Ready|acceleration verified|Sub-180ms Latency/);
+  for (const file of [
+    "src/components/vision/BYODSetupWizard.tsx",
+    "src/components/vision/ByodDeviceFleetPanel.tsx",
+    "src/components/vision/ByodCalibrationReadout.tsx",
   ]) {
-    assert.ok(!s.includes(claim), `BYODSetupWizard must not claim "${claim}"`);
+    const s = code(file);
+    for (const claim of [
+      "BenchHub iPad Paired",
+      "fully calibrated",
+      "LOCKED",
+      "(Passed)",
+      "NOMINAL",
+      "CONNECTED (",
+      "28.4 dB",
+      "99.4% Precision",
+      "Zero YouTube Strikes",
+      "Online &amp; Armed",
+      "live_yt_",
+      "/club-revshare",
+    ]) {
+      assert.ok(!s.includes(claim), `${file} must not contain "${claim}"`);
+    }
   }
-  assert.match(s, /Nothing was paired, measured or calibrated/);
-  assert.ok((s.match(/data-testid="byod-not-measured"/g) ?? []).length >= 10, "each reading is marked not yet available");
+});
+check("paired and manual BYOD states render measured values while keeping null fields unmeasured", () => {
+  const deviceId = "55555555-5555-4555-8555-555555555555";
+  const teamId = "66666666-6666-4666-8666-666666666666";
+  const manualCal = {
+    id: "77777777-7777-4777-8777-777777777777",
+    deviceId,
+    teamId,
+    recordedBySubject: "user:coach-1",
+    calibrationSource: "manual_check" as const,
+    opticalTiltDeg: null,
+    opticalHorizonLocked: null,
+    mountVacuumKpa: 68.5,
+    dieTempC: 31.4,
+    powerDeliveryWatts: null,
+    peltierState: null,
+    acousticSnrDb: null,
+    whistleFilterHzLow: 2800,
+    whistleFilterHzHigh: 3800,
+    notes: "Pre-skate rigging check",
+    measuredAt: "2026-11-22T12:00:00Z",
+  };
+  const manualHtml = render(<ByodCalibrationReadout calibration={manualCal} />);
+  assert.match(manualHtml, /Operator Check — Handshake Pending/);
+  assert.match(manualHtml, /31\.4°C/);
+  assert.match(manualHtml, /68\.5 kPa/);
+  assert.match(manualHtml, /2800–3800 Hz/);
+  assert.equal(
+    (manualHtml.match(/data-testid="byod-not-measured"/g) ?? []).length,
+    5,
+    "all 5 null metrics stay marked byod-not-measured",
+  );
+
+  const pairedHtml = render(
+    <ByodDeviceFleetPanel
+      devices={[
+        {
+          id: deviceId,
+          teamId,
+          registeredByUserId: "coach-1",
+          deviceLabel: "rink-north-pod-01",
+          deviceModel: "custom-rtmps-encoder",
+          glassType: "none",
+          pairingStatus: "paired",
+          effectiveStatus: "paired",
+          pairingAttempts: 0,
+          pairingCodeExpiresAt: null,
+          rtmpsEgressConfigured: true,
+          rtmpsKeyHintLast4: "A1B2",
+          meshServiceName: "rink-north._tsai-mesh._tcp.local",
+          pairedAt: "2026-11-22T12:01:00Z",
+          lastSeenAt: "2026-11-22T12:05:00Z",
+          revokedAt: null,
+          createdAt: "2026-11-22T11:55:00Z",
+          updatedAt: "2026-11-22T12:05:00Z",
+          latestCalibration: {
+            ...manualCal,
+            calibrationSource: "device_telemetry",
+            opticalTiltDeg: 0.25,
+            opticalHorizonLocked: true,
+            acousticSnrDb: 22.5,
+          },
+        },
+      ]}
+      total={1}
+      selectedDeviceId={deviceId}
+      calibrations={[]}
+      calibrationsTotal={0}
+      onSelectDevice={() => {}}
+    />,
+  );
+  assert.match(pairedHtml, /Paired \(Hardware Handshake Verified\)/);
+  assert.match(pairedHtml, /Device Telemetry/);
+  assert.match(pairedHtml, /0\.25°/);
+  assert.match(pairedHtml, /Horizon Locked/);
+  assert.match(pairedHtml, /22\.5 dB/);
+  assert.match(pairedHtml, /data-testid="byod-not-measured"/, "still-null power/peltier keep byod-not-measured");
 });
 
 console.log("O-02 retired RinkTelemetryChart (OD-17)");
