@@ -14,18 +14,27 @@ export interface CheckoutCatalogResponse {
   authenticated: boolean;
   checkoutConfigured: boolean;
   activePlan: string | null;
+  subscriptionStatus?: string | null;
   hasActiveSubscription?: boolean;
   plans: CheckoutCatalogPlan[];
 }
 
-export function isAllowedStripeCheckoutUrl(raw: unknown): raw is string {
+function isAllowedStripeHostUrl(raw: unknown, allowedHost: string): raw is string {
   if (typeof raw !== "string" || !raw.trim()) return false;
   try {
     const parsed = new URL(raw);
-    return parsed.protocol === "https:" && parsed.hostname === "checkout.stripe.com";
+    return parsed.protocol === "https:" && parsed.hostname === allowedHost;
   } catch {
     return false;
   }
+}
+
+export function isAllowedStripeCheckoutUrl(raw: unknown): raw is string {
+  return isAllowedStripeHostUrl(raw, "checkout.stripe.com");
+}
+
+export function isAllowedStripePortalUrl(raw: unknown): raw is string {
+  return isAllowedStripeHostUrl(raw, "billing.stripe.com");
 }
 
 export function formatPlanPrice(cents: number | null | undefined, currency = "USD"): string {

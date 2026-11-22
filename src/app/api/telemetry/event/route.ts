@@ -8,6 +8,12 @@ import {
   createServerTimingRecorder,
   matchesIfNoneMatch,
 } from "@/lib/perf/server-timing";
+import {
+  nextMonotonicEventCreatedAt,
+  resolveSessionIdFromEvent,
+  type ExistingJourneyRecord,
+} from "@/lib/telemetry/journey-lifecycle";
+import { persistSessionJourneyWithRetry } from "@/lib/telemetry/journey-persistence";
 import { resolveServerAuthUrl } from "@/utils/supabase/resolve-server-auth-url";
 import { createClient as createSessionClient } from "@/utils/supabase/server";
 
@@ -47,7 +53,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const timing = createServerTimingRecorder();
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { error: "Request body must be a JSON object." },
+        { status: 400, headers: { "Server-Timing": timing.toHeaderValue() } },
+      );
+    }
+
     const {
       visitor_id,
       event_type,
@@ -55,6 +68,7 @@ export async function POST(req: NextRequest) {
       page_path = "/",
       session_duration_sec = 0,
       event_properties = {},
+      session_id,
     } = body;
 
     // Phase 156: `user_id` and `lead_id` used to be taken from the request body, so any
@@ -67,13 +81,14 @@ export async function POST(req: NextRequest) {
     const user_id: string | null = sessionUser?.id ?? null;
     const lead_id: string | null = null;
 
-    if (!visitor_id || !event_type) {
+    if (typeof visitor_id !== "string" || !visitor_id.trim() || typeof event_type !== "string" || !event_type.trim()) {
       return NextResponse.json(
         { error: "visitor_id and event_type are required." },
         { status: 400, headers: { "Server-Timing": timing.toHeaderValue() } },
       );
     }
 
+    const normalizedVisitorId = visitor_id.trim();
     const PORTAL_ALLOWED_EVENT_TYPES = new Set([
       "page_view",
       "section_view",
@@ -83,11 +98,22 @@ export async function POST(req: NextRequest) {
       "feature_use",
       "bounce",
     ]);
-    const isAllowedEventType = PORTAL_ALLOWED_EVENT_TYPES.has(String(event_type));
-    const normalizedEventType = isAllowedEventType ? String(event_type) : "feature_use";
-    const normalizedEventProperties = isAllowedEventType
-      ? event_properties
-      : { custom_event_type: String(event_type), ...(event_properties || {}) };
+    const rawEventType = event_type.trim();
+    const isAllowedEventType = PORTAL_ALLOWED_EVENT_TYPES.has(rawEventType);
+    const normalizedEventType = isAllowedEventType ? rawEventType : "custom";
+    const safeProps =
+      event_properties && typeof event_properties === "object" && !Array.isArray(event_properties)
+        ? (event_properties as Record<string, unknown>)
+        : {};
+    // Strip caller-supplied custom_event_type so standard events cannot spoof custom types.
+    const { custom_event_type: _ignoredCustomType, ...sanitizedProps } = safeProps;
+    void _ignoredCustomType;
+    const resolvedSessionId = resolveSessionIdFromEvent(session_id, sanitizedProps);
+    const normalizedEventProperties: Record<string, unknown> = {
+      ...sanitizedProps,
+      ...(isAllowedEventType ? {} : { custom_event_type: rawEventType }),
+      ...(resolvedSessionId ? { session_id: resolvedSessionId } : {}),
+    };
 
     // IP Anonymization (SHA-256 hash first 16 chars)
     const rawIp = req.headers.get("x-forwarded-for")?.split(",")[0] || req.headers.get("x-real-ip") || "127.0.0.1";
@@ -96,6 +122,9 @@ export async function POST(req: NextRequest) {
 
     const supabase = getTelemetryAdminClient();
     const nowIso = new Date().toISOString();
+    const eventCreatedAt = nextMonotonicEventCreatedAt();
+    const eventId = crypto.randomUUID();
+    const durationSec = Math.max(0, Math.floor(Number(session_duration_sec) || 0));
 
     const dbStartedAt = performance.now();
     // PORT-PERF-TELEM-001: Execute telemetry event insert and session journey lookup in parallel
@@ -103,22 +132,24 @@ export async function POST(req: NextRequest) {
     const [eventRes, journeyRes] = await Promise.all([
       supabase.from("user_telemetry_events").insert([
         {
-          visitor_id,
+          id: eventId,
+          visitor_id: normalizedVisitorId,
           user_id,
           lead_id,
           event_type: normalizedEventType,
-          event_category,
-          page_path,
-          session_duration_sec,
+          event_category: typeof event_category === "string" && event_category.trim() ? event_category.trim() : "landing",
+          page_path: typeof page_path === "string" && page_path.trim() ? page_path.trim() : "/",
+          session_duration_sec: durationSec,
           event_properties: normalizedEventProperties,
           ip_hash: ipHash,
           user_agent: userAgent,
+          created_at: eventCreatedAt,
         },
       ]),
       supabase
         .from("user_session_journeys")
-        .select("lead_id, user_id, total_duration_sec, current_lifecycle_stage")
-        .eq("visitor_id", visitor_id)
+        .select("lead_id, user_id, total_sessions, total_duration_sec, current_lifecycle_stage, converted_at, updated_at")
+        .eq("visitor_id", normalizedVisitorId)
         .maybeSingle(),
     ]);
 
@@ -129,51 +160,22 @@ export async function POST(req: NextRequest) {
       throw new Error(`session journey lookup failed: ${journeyRes.error.message}`);
     }
 
-    // The journey row follows the LIVE schema (tsai-spotlight
-    // supabase/migrations/20260725160000_create_telemetry_and_retention.sql). Phase 156 found this
-    // block writing columns that do not exist (total_pageviews, total_session_sec, funnel_stage,
-    // first_touch_source, first_landing_page) and stage values outside the lifecycle_stage enum;
-    // every write failed and the errors were dropped, so no journey was ever recorded.
-    const existingJourney = journeyRes.data;
-    const durationSec = Math.max(0, Math.floor(Number(session_duration_sec) || 0));
-    // Only the stages this route can actually observe. A stage set elsewhere (beta_applicant,
-    // power_user, …) is never downgraded by a page view.
-    const observedStage = user_id ? "activated_user" : "anonymous_visitor";
-
-    if (existingJourney) {
-      const { error: journeyUpdateError } = await supabase
-        .from("user_session_journeys")
-        .update({
-          user_id: user_id || existingJourney.user_id,
-          total_duration_sec: (existingJourney.total_duration_sec || 0) + durationSec,
-          last_active_at: nowIso,
-          current_lifecycle_stage:
-            existingJourney.current_lifecycle_stage === "anonymous_visitor" ? observedStage : existingJourney.current_lifecycle_stage,
-          updated_at: nowIso,
-        })
-        .eq("visitor_id", visitor_id);
-      if (journeyUpdateError) {
-        throw new Error(`session journey update failed: ${journeyUpdateError.message}`);
-      }
-    } else {
-      const referrer = (normalizedEventProperties as Record<string, unknown> | null)?.referrer;
-      const { error: journeyInsertError } = await supabase.from("user_session_journeys").insert([
-        {
-          visitor_id,
-          lead_id,
-          user_id,
-          acquisition_source: typeof referrer === "string" && referrer ? referrer : "direct",
-          total_sessions: 1,
-          total_duration_sec: durationSec,
-          current_lifecycle_stage: observedStage,
-          first_seen_at: nowIso,
-          last_active_at: nowIso,
-        },
-      ]);
-      if (journeyInsertError) {
-        throw new Error(`session journey insert failed: ${journeyInsertError.message}`);
-      }
-    }
+    await persistSessionJourneyWithRetry({
+      supabase,
+      visitorId: normalizedVisitorId,
+      initialJourney: journeyRes.data as ExistingJourneyRecord | null,
+      currentEvent: {
+        id: eventId,
+        event_type: normalizedEventType,
+        event_properties: normalizedEventProperties,
+        session_id: resolvedSessionId,
+        duration_sec: durationSec,
+        user_id,
+        created_at: eventCreatedAt,
+      },
+      leadId: lead_id,
+      nowIso,
+    });
     timing.record("db", performance.now() - dbStartedAt, "Telemetry persistence");
 
     return NextResponse.json(
@@ -188,4 +190,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

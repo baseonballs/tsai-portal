@@ -213,6 +213,9 @@ async function main() {
         if (f === "src/app/api/billing/stripe/checkout/route.ts") {
           assert.match(c, /auth\.getUser\(\)/, `${f}: checkout route must verify GoTrue session`);
           assert.match(c, /\b401\b/, `${f}: checkout route must reject unauthenticated callers`);
+        } else if (f === "src/app/api/billing/stripe/portal/route.ts") {
+          assert.match(c, /auth\.getUser\(\)/, `${f}: billing portal route must verify GoTrue session`);
+          assert.match(c, /\b401\b/, `${f}: billing portal route must reject unauthenticated callers`);
         } else if (f === "src/app/api/billing/stripe/webhook/route.ts") {
           assert.match(c, /STRIPE_WEBHOOK_SECRET/, `${f}: webhook must require STRIPE_WEBHOOK_SECRET`);
           assert.match(c, /stripe-signature/, `${f}: webhook must verify stripe-signature`);
@@ -268,6 +271,7 @@ async function main() {
       "/api/telemetry/event",
       "/api/beta-requests",
       "/api/billing/stripe/checkout",
+      "/api/billing/stripe/portal",
       "/api/billing/stripe/webhook",
       "/api/tournaments",
       "/api/tournaments/teams",

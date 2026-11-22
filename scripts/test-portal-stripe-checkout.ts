@@ -205,6 +205,11 @@ function validateLiveTableWrite(table: string, payload: Row) {
       throw new Error(`Unexpected product_id: ${String(payload.product_id)}`);
     }
   }
+  if (table === "stripe_customers") {
+    if (!["stripe_webhook", "checkout_session", "admin"].includes(String(payload.bound_via))) {
+      throw new Error(`stripe_customers_bound_via_check violation: ${String(payload.bound_via)}`);
+    }
+  }
 }
 
 function createFakeAdminClient(state: MockDbState) {
@@ -229,6 +234,14 @@ function createFakeAdminClient(state: MockDbState) {
 
         if (op === "insert" && writePayload) {
           validateLiveTableWrite(table, writePayload);
+          if (table === "stripe_customers") {
+            const exists = rows.some(
+              (r) =>
+                r.user_id === writePayload!.user_id ||
+                r.stripe_customer_id === writePayload!.stripe_customer_id,
+            );
+            if (exists) return { data: null, error: { code: "23505", message: "duplicate stripe_customers key" } };
+          }
           if (table === "stripe_webhook_events") {
             const exists = rows.some((r) => r.event_id === writePayload!.event_id);
             if (exists) return { data: null, error: { code: "23505", message: "duplicate key value" } };
@@ -352,9 +365,37 @@ async function run() {
   let mockUser: { id: string; email?: string; app_metadata?: Record<string, unknown> } | null = null;
   let globalSignOutCalls = 0;
   let capturedCheckoutParams: Record<string, unknown>[] = [];
+  let capturedCheckoutOptions: Array<Record<string, unknown> | undefined> = [];
+  let capturedCustomerCreates: Array<{ params: Record<string, unknown>; options?: Record<string, unknown> }> = [];
+  let capturedExpiredSessionIds: string[] = [];
+  let capturedPortalParams: Record<string, unknown>[] = [];
+  let capturedSubsListParams: Record<string, unknown>[] = [];
   const nextCheckoutUrl = "https://checkout.stripe.com/c/pay/cs_test_portal_123";
+  const nextPortalUrl = "https://billing.stripe.com/p/session/bps_test_portal_123";
   let mockCanonicalSubStatus: string = "active";
+  let mockLiveStripeSubscriptions: Array<{ id: string; status: string }> = [];
+  let mockLiveStripeSubPages: Array<Array<{ id: string; status: string }>> | null = null;
+  let mockStripeCustomers: Array<{ id: string; metadata?: Record<string, string>; deleted?: boolean }> = [];
+  let mockOpenCheckoutSessions: Array<{
+    id: string;
+    status: string;
+    url: string | null;
+    expires_at?: number;
+    metadata?: Record<string, string>;
+  }> = [];
+  let mockRecentCheckoutSessions: Array<{
+    id: string;
+    status: string;
+    url?: string | null;
+    expires_at?: number;
+    metadata?: Record<string, string>;
+  }> = [];
+  let mockSimulateRaceCompleteOnExpire = false;
+  let mockStripeSubsListError: Error | null = null;
+  let mockStripePortalCreateError: Error | null = null;
   let mockEntitlementThrow = false;
+  let customerSeq = 0;
+  const seenSessionIdempotency = new Map<string, { paramsHash: string; res: { id: string; url: string } }>();
 
   const MI = Module as unknown as { _load: (r: string, p: unknown, m: boolean) => unknown };
   const origLoad = MI._load;
@@ -402,14 +443,85 @@ async function run() {
       const realStripe = new Stripe(REAL_STRIPE_KEY, { apiVersion: "2026-07-29.dahlia" });
       return class MockedStripe {
         webhooks = realStripe.webhooks;
+        customers = {
+          search: async ({ query }: { query: string }) => {
+            const match = query.match(/metadata\['userId'\]:'([^']+)'/);
+            const uid = match?.[1];
+            return {
+              data: mockStripeCustomers.filter((c) => !c.deleted && c.metadata?.userId === uid),
+            };
+          },
+          create: async (params: Record<string, unknown>, options?: Record<string, unknown>) => {
+            capturedCustomerCreates.push({ params, options });
+            const meta = (params.metadata ?? {}) as Record<string, string>;
+            const existing = mockStripeCustomers.find((c) => !c.deleted && c.metadata?.userId === meta.userId);
+            if (existing) return existing;
+            customerSeq += 1;
+            const created = { id: `cus_created_${customerSeq}`, metadata: meta };
+            mockStripeCustomers.push(created);
+            return created;
+          },
+        };
         subscriptions = {
           retrieve: async (id: string) => ({ id, status: mockCanonicalSubStatus }),
+          list: async (params: Record<string, unknown>) => {
+            capturedSubsListParams.push(params);
+            if (mockStripeSubsListError) throw mockStripeSubsListError;
+            if (mockLiveStripeSubPages) {
+              const idx = capturedSubsListParams.length - 1;
+              const page = mockLiveStripeSubPages[idx] ?? [];
+              return { data: page, has_more: idx + 1 < mockLiveStripeSubPages.length };
+            }
+            return { data: mockLiveStripeSubscriptions, has_more: false };
+          },
         };
         checkout = {
           sessions: {
-            create: async (params: Record<string, unknown>) => {
+            list: async (params: Record<string, unknown>) => {
+              if (params.status === "open") {
+                return { data: mockOpenCheckoutSessions.filter((s) => s.status === "open") };
+              }
+              return { data: mockRecentCheckoutSessions };
+            },
+            expire: async (id: string) => {
+              capturedExpiredSessionIds.push(id);
+              const found = mockOpenCheckoutSessions.find((s) => s.id === id);
+              if (mockSimulateRaceCompleteOnExpire) {
+                if (found) found.status = "complete";
+                throw new Error("You cannot expire a Checkout Session whose status is complete.");
+              }
+              if (found) found.status = "expired";
+              return found ?? { id, status: "expired" };
+            },
+            retrieve: async (id: string) => {
+              return mockOpenCheckoutSessions.find((s) => s.id === id) ?? { id, status: "expired" };
+            },
+            create: async (params: Record<string, unknown>, options?: Record<string, unknown>) => {
+              const key = typeof options?.idempotencyKey === "string" ? options.idempotencyKey : null;
+              const paramsHash = JSON.stringify(params);
+              if (key && seenSessionIdempotency.has(key)) {
+                const prev = seenSessionIdempotency.get(key)!;
+                if (prev.paramsHash !== paramsHash) {
+                  throw new Error(`Stripe IdempotencyError: mismatched params for key ${key}`);
+                }
+                capturedCheckoutParams.push(params);
+                capturedCheckoutOptions.push(options);
+                return prev.res;
+              }
               capturedCheckoutParams.push(params);
-              return { id: "cs_test_123", url: nextCheckoutUrl };
+              capturedCheckoutOptions.push(options);
+              const res = { id: `cs_test_${capturedCheckoutParams.length}`, url: nextCheckoutUrl };
+              if (key) seenSessionIdempotency.set(key, { paramsHash, res });
+              return res;
+            },
+          },
+        };
+        billingPortal = {
+          sessions: {
+            create: async (params: Record<string, unknown>) => {
+              capturedPortalParams.push(params);
+              if (mockStripePortalCreateError) throw mockStripePortalCreateError;
+              return { id: "bps_test_123", url: nextPortalUrl };
             },
           },
         };
@@ -426,6 +538,8 @@ async function run() {
       "src/app/auth/entitlement/route.ts",
       "src/app/login/page.tsx",
       "src/lib/billing/stripe-client.ts",
+      "src/lib/billing/stripe-checkout-guard.ts",
+      "src/lib/billing/stripe-origin.ts",
       "src/lib/billing/stripe-plans.ts",
       "src/lib/billing/stripe-webhook-claim.ts",
       "src/lib/billing/stripe-webhook-handlers.ts",
@@ -435,6 +549,7 @@ async function run() {
       "src/components/pricing/PricingCheckoutButton.tsx",
       "src/components/pricing/PricingStatusBanner.tsx",
       "src/app/api/billing/stripe/checkout/route.ts",
+      "src/app/api/billing/stripe/portal/route.ts",
       "src/app/api/billing/stripe/webhook/route.ts",
     ];
     for (const rel of runtimeFiles) {
@@ -444,7 +559,9 @@ async function run() {
     console.log(`✓ 1. All ${runtimeFiles.length} new/updated runtime modules are strictly < 300 lines`);
 
     const { isAllowedUnlicensedNextPath } = await import("../src/lib/auth/buyer-session-paths");
-    const { isAllowedStripeCheckoutUrl } = await import("../src/lib/billing/pricing-catalog-client");
+    const { isAllowedStripeCheckoutUrl, isAllowedStripePortalUrl } = await import(
+      "../src/lib/billing/pricing-catalog-client"
+    );
 
     for (const p of ["/pricing", "/pricing?checkout=canceled", "/tournament/director", "/tournament/director?team=1"]) {
       assert.equal(isAllowedUnlicensedNextPath(p), true, `buyer path allowed: ${p}`);
@@ -456,7 +573,11 @@ async function run() {
     assert.equal(isAllowedStripeCheckoutUrl("http://checkout.stripe.com/c/pay/cs_test_1"), false);
     assert.equal(isAllowedStripeCheckoutUrl("https://checkout.stripe.com.evil.example/pay"), false);
     assert.equal(isAllowedStripeCheckoutUrl("https://evil.example/checkout.stripe.com"), false);
-    console.log("✓ 2. Buyer path & Stripe Checkout URL host guards behave strictly");
+    assert.equal(isAllowedStripePortalUrl("https://billing.stripe.com/p/session/bps_test_1"), true);
+    assert.equal(isAllowedStripePortalUrl("http://billing.stripe.com/p/session/bps_test_1"), false);
+    assert.equal(isAllowedStripePortalUrl("https://billing.stripe.com.evil.example/session"), false);
+    assert.equal(isAllowedStripePortalUrl("https://checkout.stripe.com/c/pay/cs_test_1"), false);
+    console.log("✓ 2. Buyer path, Stripe Checkout & Billing Portal URL host guards behave strictly");
 
     // ── 2. Unlicensed Buyer Sign-In: /auth/entitlement & /auth/callback ──────────────────────────
     const entitlementRoute = await import("../src/app/auth/entitlement/route");
@@ -660,10 +781,16 @@ async function run() {
         { userId: BUYER_USER_ID, planSku: sku, tier: expectedTier },
       );
     }
+    assert.equal(db.stripe_customers.length, 1, "first-time customer persisted once across 5 SKU calls");
+    db.stripe_customers.length = 0;
+    mockStripeCustomers = [];
 
-    // Reuse existing stripe_customer_id when already present on subscriptions
+    // Reuse existing stripe_customer_id when already present on subscriptions + live concurrency check
     db.subscriptions[0].stripe_customer_id = "cus_existing_sub";
     capturedCheckoutParams = [];
+    capturedCheckoutOptions = [];
+    capturedSubsListParams = [];
+    mockLiveStripeSubscriptions = [{ id: "sub_old_canceled", status: "canceled" }];
     const postExistingCust = await checkoutRoute.POST(
       new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
         method: "POST",
@@ -671,12 +798,178 @@ async function run() {
       }),
     );
     assert.equal(postExistingCust.status, 200);
+    assert.deepEqual(capturedSubsListParams[0], {
+      customer: "cus_existing_sub",
+      status: "all",
+      limit: 100,
+    });
     assert.equal(capturedCheckoutParams[0].customer, "cus_existing_sub");
     assert.equal(capturedCheckoutParams[0].customer_email, undefined);
-    db.subscriptions[0].stripe_customer_id = null;
+    assert.equal(
+      capturedCheckoutOptions[0]?.idempotencyKey,
+      `checkout:${BUYER_USER_ID}:SPOT-PRO-PLUS:cus_existing_sub:none`,
+    );
 
-    // Fresh customer_email + DB price precedence + redirect URLs
+    // Paginated subscriptions.list (m3): active sub on page 2 behind canceled page 1 still blocks with 409!
     capturedCheckoutParams = [];
+    capturedSubsListParams = [];
+    mockLiveStripeSubPages = [
+      [{ id: "sub_canceled_p1", status: "canceled" }],
+      [{ id: "sub_active_p2", status: "active" }],
+    ];
+    const pagedRaceRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(pagedRaceRes.status, 409);
+    assert.equal(capturedSubsListParams.length, 2);
+    assert.equal(capturedSubsListParams[1].starting_after, "sub_canceled_p1");
+    assert.equal(capturedCheckoutParams.length, 0);
+    mockLiveStripeSubPages = null;
+
+    // Exceeding MAX_SUBSCRIPTION_PAGES fails closed with sanitized 502 instead of silently allowing checkout
+    capturedCheckoutParams = [];
+    capturedSubsListParams = [];
+    mockLiveStripeSubPages = Array.from({ length: 11 }, (_, idx) => [
+      { id: `sub_canceled_page_${idx}`, status: "canceled" },
+    ]);
+    const exceededPagesRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(exceededPagesRes.status, 502);
+    assert.equal(capturedSubsListParams.length, 10);
+    assert.equal(capturedCheckoutParams.length, 0);
+    mockLiveStripeSubPages = null;
+
+    // Live Stripe concurrency check blocks double-checkout across all EXISTING_ACTIVE_SUB_STATUSES
+    for (const liveStatus of ["active", "trialing", "past_due", "paused", "incomplete"]) {
+      capturedCheckoutParams = [];
+      mockLiveStripeSubscriptions = [{ id: `sub_live_${liveStatus}`, status: liveStatus }];
+      const raceRes = await checkoutRoute.POST(
+        new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+          method: "POST",
+          body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+        }),
+      );
+      assert.equal(raceRes.status, 409, `live Stripe status ${liveStatus} must block checkout with 409`);
+      const raceJson = (await raceRes.json()) as { error?: string };
+      assert.match(raceJson.error ?? "", /Billing Portal/i);
+      assert.equal(capturedCheckoutParams.length, 0, "must not create Checkout Session when live sub exists");
+    }
+
+    // Open session reuse for same planSku and expiry of conflicting open session for different planSku (M1)
+    mockLiveStripeSubscriptions = [];
+    capturedCheckoutParams = [];
+    mockOpenCheckoutSessions = [
+      {
+        id: "cs_open_same",
+        status: "open",
+        url: "https://checkout.stripe.com/c/pay/cs_open_same",
+        expires_at: Math.floor(Date.now() / 1000) + 1800,
+        metadata: { userId: BUYER_USER_ID, planSku: "SPOT-PRO-PLUS" },
+      },
+    ];
+    const reuseRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(reuseRes.status, 200);
+    assert.deepEqual(await reuseRes.json(), { url: "https://checkout.stripe.com/c/pay/cs_open_same" });
+    assert.equal(capturedCheckoutParams.length, 0, "matching open session reused without creating a duplicate");
+
+    capturedCheckoutParams = [];
+    capturedCheckoutOptions = [];
+    capturedExpiredSessionIds = [];
+    mockRecentCheckoutSessions = [{ id: "cs_open_same", status: "open" }];
+    const switchRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-TEAM-SEASON-24" }),
+      }),
+    );
+    assert.equal(switchRes.status, 200);
+    assert.deepEqual(capturedExpiredSessionIds, ["cs_open_same"]);
+    assert.equal(
+      capturedCheckoutOptions[0]?.idempotencyKey,
+      `checkout:${BUYER_USER_ID}:SPOT-TEAM-SEASON-24:cus_existing_sub:cs_open_same`,
+    );
+
+    // Concurrent completion during expire fails safely with 409 Conflict instead of creating a second Checkout Session
+    capturedCheckoutParams = [];
+    mockOpenCheckoutSessions = [
+      {
+        id: "cs_open_completing",
+        status: "open",
+        url: "https://checkout.stripe.com/c/pay/cs_open_completing",
+        expires_at: Math.floor(Date.now() / 1000) + 1800,
+        metadata: { userId: BUYER_USER_ID, planSku: "SPOT-PRO-PLUS" },
+      },
+    ];
+    mockSimulateRaceCompleteOnExpire = true;
+    const expireRaceRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-TEAM-SEASON-24" }),
+      }),
+    );
+    mockSimulateRaceCompleteOnExpire = false;
+    assert.equal(expireRaceRes.status, 409);
+    assert.equal(capturedCheckoutParams.length, 0);
+
+    // Race fallback: if recentSessions[0] became open for same (userId, planSku), reuse instead of spawning duplicate
+    mockOpenCheckoutSessions = [];
+    mockRecentCheckoutSessions = [
+      {
+        id: "cs_recent_same_race",
+        status: "open",
+        url: "https://checkout.stripe.com/c/pay/cs_recent_same_race",
+        expires_at: Math.floor(Date.now() / 1000) + 1800,
+        metadata: { userId: BUYER_USER_ID, planSku: "SPOT-PRO-PLUS" },
+      },
+    ];
+    const recentReuseRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(recentReuseRes.status, 200);
+    assert.deepEqual(await recentReuseRes.json(), {
+      url: "https://checkout.stripe.com/c/pay/cs_recent_same_race",
+    });
+    assert.equal(capturedCheckoutParams.length, 0);
+
+    mockOpenCheckoutSessions = [];
+    mockRecentCheckoutSessions = [];
+
+    // Live Stripe subscriptions.list failure fails closed with sanitized 502
+    mockLiveStripeSubscriptions = [];
+    mockStripeSubsListError = new Error("stripe internal cus_existing_sub error");
+    const listFailRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(listFailRes.status, 502);
+    const listFailJson = (await listFailRes.json()) as { error?: string };
+    assert.doesNotMatch(listFailJson.error ?? "", /cus_existing_sub/);
+    mockStripeSubsListError = null;
+    db.subscriptions[0].stripe_customer_id = null;
+    db.stripe_customers.length = 0;
+    mockStripeCustomers = [];
+    capturedCustomerCreates = [];
+
+    // First-time buyer: resolves/creates Stripe customer idempotently + persists stripe_customers + deterministic key
+    capturedCheckoutParams = [];
+    capturedCheckoutOptions = [];
     const postOk = await checkoutRoute.POST(
       new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
         method: "POST",
@@ -686,11 +979,19 @@ async function run() {
     assert.equal(postOk.status, 200);
     assert.equal(postOk.headers.get("cache-control"), "private, no-store");
     assert.deepEqual(await postOk.json(), { url: nextCheckoutUrl });
+    assert.equal(capturedCustomerCreates.length, 1);
+    assert.equal(capturedCustomerCreates[0].options?.idempotencyKey, `customer:${BUYER_USER_ID}`);
+    assert.equal(db.stripe_customers[0]?.stripe_customer_id, capturedCheckoutParams[0].customer);
+    assert.equal(db.stripe_customers[0]?.bound_via, "checkout_session");
     assert.equal(capturedCheckoutParams.length, 1);
+    assert.equal(
+      capturedCheckoutOptions[0]?.idempotencyKey,
+      `checkout:${BUYER_USER_ID}:SPOT-PRO-PLUS:${String(capturedCheckoutParams[0].customer)}:none`,
+    );
     assert.equal((capturedCheckoutParams[0].line_items as Array<{ price: string }>)[0].price, "price_db_pro_plus");
     assert.equal(capturedCheckoutParams[0].mode, "subscription");
     assert.equal(capturedCheckoutParams[0].client_reference_id, BUYER_USER_ID);
-    assert.equal(capturedCheckoutParams[0].customer_email, BUYER_EMAIL);
+    assert.equal(capturedCheckoutParams[0].customer_email, undefined);
     assert.deepEqual(capturedCheckoutParams[0].metadata, {
       userId: BUYER_USER_ID,
       planSku: "SPOT-PRO-PLUS",
@@ -745,7 +1046,166 @@ async function run() {
     );
     assert.equal(missingProfileRes.status, 409);
     mockUser = { id: BUYER_USER_ID, email: BUYER_EMAIL };
-    console.log("✓ 4. Checkout GET/POST enforces 401/400/409/503/200, trusted origins, & private, no-store");
+    console.log("✓ 4. Checkout GET/POST enforces 401/400/409/502/503/200, live sub race guard, idempotencyKey & no-store");
+
+    // ── 3b. Stripe Billing Portal Endpoint (/api/billing/stripe/portal) ──────────────────────────
+    const portalRoute = await import("../src/app/api/billing/stripe/portal/route");
+
+    // Unauthenticated -> 401
+    mockUser = null;
+    const portalUnauth = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalUnauth.status, 401);
+    assert.equal(portalUnauth.headers.get("cache-control"), "private, no-store");
+
+    // Missing STRIPE_SECRET_KEY -> 503
+    mockUser = { id: BUYER_USER_ID, email: BUYER_EMAIL };
+    delete env.STRIPE_SECRET_KEY;
+    const portalUnconfigured = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalUnconfigured.status, 503);
+    env.STRIPE_SECRET_KEY = REAL_STRIPE_KEY;
+
+    // Concurrent first-time buyer double-click creates one customer & identical idempotencyKey (M1 + m4)
+    db.stripe_customers.length = 0;
+    mockStripeCustomers = [];
+    capturedCustomerCreates = [];
+    capturedCheckoutParams = [];
+    capturedCheckoutOptions = [];
+    seenSessionIdempotency.clear();
+    const [raceFirst1, raceFirst2] = await Promise.all([
+      checkoutRoute.POST(
+        new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+          method: "POST",
+          body: JSON.stringify({ planSku: "SPOT-PRO-STD" }),
+        }),
+      ),
+      checkoutRoute.POST(
+        new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+          method: "POST",
+          body: JSON.stringify({ planSku: "SPOT-PRO-STD" }),
+        }),
+      ),
+    ]);
+    assert.equal(raceFirst1.status, 200);
+    assert.equal(raceFirst2.status, 200);
+    assert.equal(mockStripeCustomers.length, 1, "concurrent first-time buyer resolves single Stripe customer");
+    assert.equal(
+      capturedCheckoutOptions[0]?.idempotencyKey,
+      capturedCheckoutOptions[1]?.idempotencyKey,
+      "concurrent double-click shares identical non-wall-clock idempotencyKey",
+    );
+
+    // No stripe_customers or subscriptions customer -> 404 honest message
+    db.stripe_customers.length = 0;
+    db.subscriptions[0].stripe_customer_id = null;
+    mockStripeCustomers = [];
+    const portalNoCust = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalNoCust.status, 404);
+    assert.equal(portalNoCust.headers.get("cache-control"), "private, no-store");
+    assert.match(((await portalNoCust.json()) as { error?: string }).error ?? "", /No Stripe billing customer/i);
+
+    // Pre-B15 subscriber fallback: stripe_customer_id only on subscriptions succeeds (200) without stripe_customers row
+    db.subscriptions[0].stripe_customer_id = "cus_legacy_sub_only";
+    capturedPortalParams = [];
+    const portalLegacySubRes = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalLegacySubRes.status, 200);
+    assert.deepEqual(await portalLegacySubRes.json(), { url: nextPortalUrl });
+    assert.equal(capturedPortalParams[0].customer, "cus_legacy_sub_only");
+    db.subscriptions[0].stripe_customer_id = null;
+
+    // Invalid returnPath / return_url / JSON rejected with 400
+    db.stripe_customers.push({ user_id: BUYER_USER_ID, stripe_customer_id: "cus_portal_buyer_1" });
+    for (const badBody of [
+      "{bad-json",
+      JSON.stringify({ returnPath: "https://evil.example/pricing" }),
+      JSON.stringify({ returnPath: "//evil.example/pricing" }),
+      JSON.stringify({ returnPath: "/\t/pricing" }),
+      JSON.stringify({ return_url: "https://evil.example/pricing" }),
+      JSON.stringify({ return_url: "https://hub.transcendental-sports.ai.evil.example/pricing" }),
+      JSON.stringify({ return_url: "http://hub.transcendental-sports.ai/pricing" }),
+      JSON.stringify({ return_url: "https://user:pass@hub.transcendental-sports.ai/pricing" }),
+    ]) {
+      const badRes = await portalRoute.POST(
+        new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+          method: "POST",
+          body: badBody,
+        }),
+      );
+      assert.equal(badRes.status, 400, `portal must refuse invalid payload: ${badBody}`);
+    }
+
+    // Valid default (empty body) with spoofed x-forwarded-host falls back to OFFICIAL_HOST
+    capturedPortalParams = [];
+    const portalDefaultRes = await portalRoute.POST(
+      new NextRequest("http://0.0.0.0:3040/api/billing/stripe/portal", {
+        method: "POST",
+        headers: { "x-forwarded-host": "evil.example", "x-forwarded-proto": "https" },
+      }),
+    );
+    assert.equal(portalDefaultRes.status, 200);
+    assert.equal(portalDefaultRes.headers.get("cache-control"), "private, no-store");
+    assert.deepEqual(await portalDefaultRes.json(), { url: nextPortalUrl });
+    assert.deepEqual(capturedPortalParams[0], {
+      customer: "cus_portal_buyer_1",
+      return_url: "https://hub.transcendental-sports.ai/pricing",
+    });
+
+    // Valid returnPath & valid allowlisted return_url
+    capturedPortalParams = [];
+    const portalPathRes = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+        body: JSON.stringify({ returnPath: "/pricing?tab=billing" }),
+      }),
+    );
+    assert.equal(portalPathRes.status, 200);
+    assert.deepEqual(capturedPortalParams[0], {
+      customer: "cus_portal_buyer_1",
+      return_url: "https://transcendental-sports.ai/pricing?tab=billing",
+    });
+
+    capturedPortalParams = [];
+    const portalUrlRes = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+        body: JSON.stringify({ return_url: "https://hub.transcendental-sports.ai/pricing?portal=1" }),
+      }),
+    );
+    assert.equal(portalUrlRes.status, 200);
+    assert.deepEqual(capturedPortalParams[0], {
+      customer: "cus_portal_buyer_1",
+      return_url: "https://hub.transcendental-sports.ai/pricing?portal=1",
+    });
+
+    // Stripe Billing Portal API failure -> sanitized 502 (never echoes internal Stripe error)
+    mockStripePortalCreateError = new Error("Internal Stripe failure for cus_portal_buyer_1 sk_test_raw");
+    const portalErrRes = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalErrRes.status, 502);
+    assert.equal(portalErrRes.headers.get("cache-control"), "private, no-store");
+    const portalErrJson = (await portalErrRes.json()) as { error?: string };
+    assert.doesNotMatch(portalErrJson.error ?? "", /cus_portal_buyer_1|sk_test_raw/);
+    mockStripePortalCreateError = null;
+    db.stripe_customers.length = 0;
+    console.log("✓ 4b. Billing Portal POST enforces 401/400/404/502/503/200 & strict OFFICIAL_HOST allowlist");
 
     // ── 4. Webhook Endpoint: HMAC, Dedupe, Rollback, Stale Reclaim, Live Constraints ─────────────
     const webhookRoute = await import("../src/app/api/billing/stripe/webhook/route");
@@ -1143,13 +1603,95 @@ async function run() {
         authenticated: true,
         checkoutReady: true,
         activePlan: "PRO",
+        subscriptionStatus: "active",
         hasActiveSubscription: true,
         variant: "teal",
       }),
     );
-    assert.match(activeSubHtml, /Current Subscription/);
+    assert.match(activeSubHtml, /Manage Billing/);
+    assert.match(activeSubHtml, /portal-manage-SPOT-PRO-STD/);
     assert.match(activeSubHtml, /Active account plan: PRO/);
-    console.log("✓ 6. PricingCheckoutButton renders signed-out, unconfigured, active-subscription, and ready states");
+    assert.doesNotMatch(activeSubHtml, /Current Subscription/);
+    assert.doesNotMatch(activeSubHtml, /<button[^>]*\sdisabled(?:=""|\s|>)/);
+
+    const pausedSubHtml = renderToStaticMarkup(
+      React.createElement(PricingCheckoutButton, {
+        planSku: "SPOT-PRO-STD",
+        planLabel: "Premier",
+        loading: false,
+        catalogError: null,
+        authenticated: true,
+        checkoutReady: true,
+        activePlan: "FREE",
+        subscriptionStatus: "paused",
+        hasActiveSubscription: true,
+        variant: "teal",
+      }),
+    );
+    assert.match(pausedSubHtml, /Resume Subscription/);
+    assert.match(pausedSubHtml, /portal-resume-SPOT-PRO-STD/);
+    assert.match(pausedSubHtml, /Subscription paused/);
+    assert.doesNotMatch(pausedSubHtml, /<button[^>]*\sdisabled(?:=""|\s|>)/);
+
+    const pastDueSubHtml = renderToStaticMarkup(
+      React.createElement(PricingCheckoutButton, {
+        planSku: "SPOT-FAM-PRO",
+        planLabel: "Family Pro",
+        loading: false,
+        catalogError: null,
+        authenticated: true,
+        checkoutReady: true,
+        activePlan: "FAMILY",
+        subscriptionStatus: "past_due",
+        hasActiveSubscription: true,
+        variant: "sky",
+      }),
+    );
+    assert.match(pastDueSubHtml, /Manage Billing/);
+    assert.match(pastDueSubHtml, /Subscription payment past due/);
+
+    const incompleteSubHtml = renderToStaticMarkup(
+      React.createElement(PricingCheckoutButton, {
+        planSku: "SPOT-PRO-PLUS",
+        planLabel: "Premier Plus",
+        loading: false,
+        catalogError: null,
+        authenticated: true,
+        checkoutReady: true,
+        activePlan: "FREE",
+        subscriptionStatus: "incomplete",
+        hasActiveSubscription: true,
+        variant: "teal",
+      }),
+    );
+    assert.match(incompleteSubHtml, /Manage Billing/);
+    assert.match(incompleteSubHtml, /Payment Incomplete — Action Required/);
+    assert.doesNotMatch(incompleteSubHtml, /Active account plan:/);
+
+    const canceledSubHtml = renderToStaticMarkup(
+      React.createElement(PricingCheckoutButton, {
+        planSku: "SPOT-PRO-STD",
+        planLabel: "Premier",
+        loading: false,
+        catalogError: null,
+        authenticated: true,
+        checkoutReady: true,
+        activePlan: "PRO",
+        subscriptionStatus: "canceled",
+        hasActiveSubscription: false,
+        variant: "teal",
+      }),
+    );
+    assert.match(canceledSubHtml, /Subscribe to Premier/);
+    assert.doesNotMatch(canceledSubHtml, /Manage Billing/);
+
+    const buttonSrc = fs.readFileSync(path.join(ROOT, "src/components/pricing/PricingCheckoutButton.tsx"), "utf8");
+    assert.match(buttonSrc, /\/api\/billing\/stripe\/portal/);
+    assert.match(buttonSrc, /isAllowedStripePortalUrl/);
+    assert.match(buttonSrc, /if \(!navigating\)/, "button stays locked while navigation is in flight");
+    const pricingPageSrc = fs.readFileSync(path.join(ROOT, "src/app/pricing/page.tsx"), "utf8");
+    assert.match(pricingPageSrc, /subscriptionStatus=\{subscriptionStatus\}/);
+    console.log("✓ 6. PricingCheckoutButton renders signed-out, unconfigured, active (Manage Billing), paused (Resume Subscription), past_due, incomplete, and ready states");
 
     console.log("\n🎉 ALL PORTAL STRIPE CHECKOUT & BUYER SIGN-IN TESTS PASSED!\n");
   } finally {

@@ -24,7 +24,13 @@ export function requiredSecret(name: string): string {
   return value;
 }
 
-const EXISTING_ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "paused"]);
+export const EXISTING_ACTIVE_SUB_STATUSES = new Set([
+  "active",
+  "trialing",
+  "past_due",
+  "paused",
+  "incomplete",
+]);
 
 export function isActiveSubscriptionRecord(
   row: {

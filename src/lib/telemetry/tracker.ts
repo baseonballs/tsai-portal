@@ -1,15 +1,17 @@
 /**
  * Client-side Telemetry Tracker for tsai-portal & tsai-spotlight.
- * Manages anonymous visitor ID (`tsai_vid`) cookie, tracks pageviews, scroll depth, and sends events.
+ * Manages anonymous visitor ID (`tsai_vid`) cookie, session ID (`tsai_sid`),
+ * tracks pageviews, scroll depth, and sends events.
  *
  * PORT-PERF-TELEM-006:
  * - Memoizes `tsai_vid` in memory (`cachedVisitorId`) so `document.cookie` is not split on every event.
  * - Coalesces duplicate `page_view` / `section_view` beacons within `RECENT_BEACON_DEDUP_MS` (2,000ms).
- * - Normalizes any non-standard `event_type` onto `"feature_use"` (`custom_event_type` in `event_properties`).
+ * - Normalizes any non-standard `event_type` onto `"custom"` (`custom_event_type` in `event_properties`).
  * - Applies `AbortSignal.timeout(5_000)` on fallback `fetch` so stalled telemetry endpoints never tie up browser sockets.
  */
 
 const VISITOR_COOKIE_NAME = "tsai_vid";
+const SESSION_STORAGE_KEY = "tsai_sid";
 export const RECENT_BEACON_DEDUP_MS = 2_000;
 const MAX_RECENT_BEACON_SIGNATURES = 64;
 
@@ -24,10 +26,12 @@ export const PORTAL_ALLOWED_EVENT_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 let cachedVisitorId: string | null = null;
+let cachedSessionId: string | null = null;
 const recentBeaconBySignature = new Map<string, number>();
 
 export function resetPortalTelemetryCacheForTests(): void {
   cachedVisitorId = null;
+  cachedSessionId = null;
   recentBeaconBySignature.clear();
 }
 
@@ -52,6 +56,30 @@ export function getOrCreateVisitorId(): string {
   return newVid;
 }
 
+export function getOrCreateSessionId(): string {
+  if (typeof window === "undefined") return "";
+  if (cachedSessionId) return cachedSessionId;
+
+  try {
+    const existing = window.sessionStorage?.getItem(SESSION_STORAGE_KEY)?.trim();
+    if (existing) {
+      cachedSessionId = existing;
+      return existing;
+    }
+  } catch {
+    // sessionStorage unavailable in restricted contexts; fall back to in-memory session ID
+  }
+
+  const newSid = "sid_" + crypto.randomUUID().replace(/-/g, "").substring(0, 16);
+  try {
+    window.sessionStorage?.setItem(SESSION_STORAGE_KEY, newSid);
+  } catch {
+    // Ignore storage write errors
+  }
+  cachedSessionId = newSid;
+  return newSid;
+}
+
 export type TelemetryPayload = {
   event_type:
     | "page_view"
@@ -64,6 +92,7 @@ export type TelemetryPayload = {
     | (string & {});
   event_category?: "landing" | "solutions" | "pricing" | "onboarding" | "workbench" | "analytics";
   page_path?: string;
+  session_id?: string;
   session_duration_sec?: number;
   event_properties?: Record<string, unknown>;
   // No user_id / lead_id: the server derives the user from the verified session (Phase 156).
@@ -73,9 +102,10 @@ export async function trackEvent(payload: TelemetryPayload): Promise<void> {
   if (typeof window === "undefined") return;
 
   const visitorId = getOrCreateVisitorId();
+  const sessionId = payload.session_id?.trim() || getOrCreateSessionId();
   const pagePath = payload.page_path || window.location.pathname;
   const isKnownType = PORTAL_ALLOWED_EVENT_TYPES.has(payload.event_type);
-  const normalizedEventType = isKnownType ? payload.event_type : "feature_use";
+  const normalizedEventType = isKnownType ? payload.event_type : "custom";
 
   // Coalesce identical rapid page_view / section_view beacons within 2s (e.g., StrictMode double-mount)
   if (normalizedEventType === "page_view" || normalizedEventType === "section_view") {
@@ -92,14 +122,19 @@ export async function trackEvent(payload: TelemetryPayload): Promise<void> {
     recentBeaconBySignature.set(signature, now);
   }
 
+  const { custom_event_type: _ignoredCustomType, ...cleanProps } = payload.event_properties ?? {};
+  void _ignoredCustomType;
+
   const eventData = {
-    visitor_id: visitorId,
-    page_path: pagePath,
     ...payload,
+    visitor_id: visitorId,
+    session_id: sessionId,
+    page_path: pagePath,
     event_type: normalizedEventType,
     event_properties: {
+      ...cleanProps,
       ...(isKnownType ? {} : { custom_event_type: payload.event_type }),
-      ...payload.event_properties,
+      session_id: sessionId,
       referrer: document.referrer || null,
       screen_width: window.innerWidth,
       screen_height: window.innerHeight,
