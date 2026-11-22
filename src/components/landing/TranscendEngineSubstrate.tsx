@@ -7,7 +7,7 @@ import {
   Sparkles, 
   ShieldCheck, 
   Zap, 
-  GitMerge,  
+  GitMerge,
   Network,
   Terminal,
   ArrowUp

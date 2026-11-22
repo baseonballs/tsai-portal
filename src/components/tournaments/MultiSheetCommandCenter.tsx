@@ -11,6 +11,16 @@ import { SheetGridCard } from "./SheetGridCard";
 
 export * from "./multi-sheet-types";
 
+function isSafeHttpsUrl(url: string | null | undefined): url is string {
+  if (!url || !url.startsWith("https://")) return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && Boolean(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 function resolveSheetMatch(
   sheet: TournamentSheet,
   matches: MultiSheetCommandCenterProps["matches"],
@@ -160,11 +170,11 @@ export function MultiSheetCommandCenter({
           </div>
 
           <div className="flex items-center gap-3">
-            {activeSheet.playbackUrl && (
+            {isSafeHttpsUrl(activeSheet.playbackUrl) && (
               <a
                 href={activeSheet.playbackUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="px-4 py-2 text-xs font-bold rounded-lg bg-red-600 hover:bg-red-500 text-white flex items-center gap-2 transition-all shadow-md shadow-red-950"
               >
                 ▶ WATCH YOUTUBE STREAM

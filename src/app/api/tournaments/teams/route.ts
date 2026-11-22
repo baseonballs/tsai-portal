@@ -2,6 +2,7 @@ import {
   forwardHockeyApi,
   getCallerAccessToken,
   jsonNoStore,
+  mapUpstreamResponse,
   unauthorizedResponse,
 } from "@/lib/hockey-api";
 import { mapTeamOption } from "@/lib/tournament/b8-mappers";
@@ -21,6 +22,13 @@ export async function GET() {
   const res = await forwardHockeyApi({ path: "/teams/mine", accessToken });
   if (!res.ok) return res.response;
 
-  const list = Array.isArray(res.data) ? res.data.map(mapTeamOption) : [];
-  return jsonNoStore({ teams: list });
+  const mapped = mapUpstreamResponse(() => {
+    if (!Array.isArray(res.data)) {
+      throw new Error("Expected array from /teams/mine.");
+    }
+    return res.data.map(mapTeamOption);
+  });
+  if (!mapped.ok) return mapped.response;
+
+  return jsonNoStore({ teams: mapped.data });
 }

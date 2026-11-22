@@ -6,6 +6,7 @@ import {
   getCallerAccessToken,
   isValidUuid,
   jsonNoStore,
+  mapUpstreamResponse,
   readJsonObject,
   unauthorizedResponse,
 } from "@/lib/hockey-api";
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!accessToken) return unauthorizedResponse();
 
   const { tournamentId } = await params;
-  if (!isValidUuid(tournamentId)) return jsonNoStore({ error: "Invalid tournamentId." }, 422);
+  if (!isValidUuid(tournamentId)) return jsonNoStore({ error: "Invalid tournamentId." }, 400);
 
   const parsed = await readJsonObject(req);
   if (!parsed.ok) return parsed.response;
@@ -42,5 +43,8 @@ export async function POST(req: NextRequest, { params }: Params) {
   });
   if (!res.ok) return res.response;
 
-  return jsonNoStore(mapBracketMatch(res.data), res.status === 201 ? 201 : 200);
+  const mapped = mapUpstreamResponse(() => mapBracketMatch(res.data));
+  if (!mapped.ok) return mapped.response;
+
+  return jsonNoStore(mapped.data, res.status === 201 ? 201 : 200);
 }

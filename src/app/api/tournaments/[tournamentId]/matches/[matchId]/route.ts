@@ -6,6 +6,7 @@ import {
   getCallerAccessToken,
   isValidUuid,
   jsonNoStore,
+  mapUpstreamResponse,
   NO_STORE,
   readJsonObject,
   unauthorizedResponse,
@@ -28,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const { tournamentId, matchId } = await params;
   if (!isValidUuid(tournamentId) || !isValidUuid(matchId)) {
-    return jsonNoStore({ error: "Invalid tournamentId or matchId." }, 422);
+    return jsonNoStore({ error: "Invalid tournamentId or matchId." }, 400);
   }
 
   const parsed = await readJsonObject(req);
@@ -45,7 +46,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   });
   if (!res.ok) return res.response;
 
-  return jsonNoStore(mapBracketMatch(res.data));
+  const mapped = mapUpstreamResponse(() => mapBracketMatch(res.data));
+  if (!mapped.ok) return mapped.response;
+
+  return jsonNoStore(mapped.data);
 }
 
 export async function DELETE(req: NextRequest, { params }: Params) {
@@ -61,7 +65,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
   const { tournamentId, matchId } = await params;
   if (!isValidUuid(tournamentId) || !isValidUuid(matchId)) {
-    return jsonNoStore({ error: "Invalid tournamentId or matchId." }, 422);
+    return jsonNoStore({ error: "Invalid tournamentId or matchId." }, 400);
   }
 
   const teamCheck = extractValidatedTeamId(req);

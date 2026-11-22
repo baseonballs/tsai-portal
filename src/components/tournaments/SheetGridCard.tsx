@@ -30,10 +30,6 @@ export function SheetGridCard({
   onToggleMute,
 }: SheetGridCardProps) {
   const isLive = sheet.streamState === "LIVE";
-  const homeXg = matchInfo?.homeXg;
-  const awayXg = matchInfo?.awayXg;
-  const hasXg = typeof homeXg === "number" && typeof awayXg === "number";
-  const homeXgPct = hasXg ? Math.round((homeXg / Math.max(homeXg + awayXg, 0.1)) * 100) : 0;
 
   return (
     <div
@@ -77,16 +73,8 @@ export function SheetGridCard({
               {matchInfo.period != null ? `P${matchInfo.period}` : "Period --"} •{" "}
               {formatClock(matchInfo.gameClockSeconds)}
             </span>
-            <span className="text-cyan-400">
-              {hasXg ? `xG ${homeXg.toFixed(2)} - ${awayXg.toFixed(2)}` : "xG not available"}
-            </span>
+            {matchInfo.isOvertime && <span className="text-amber-400 font-bold">OT</span>}
           </div>
-          {hasXg && (
-            <div className="w-full bg-slate-800 h-1 rounded-full mt-1.5 overflow-hidden flex">
-              <div className="bg-cyan-500 h-full" style={{ width: `${homeXgPct}%` }} />
-              <div className="bg-slate-600 h-full" style={{ width: `${100 - homeXgPct}%` }} />
-            </div>
-          )}
         </div>
       ) : (
         <div className="bg-slate-950/60 rounded-lg p-3 border border-slate-800/60 my-1 text-center text-[11px] text-slate-500">

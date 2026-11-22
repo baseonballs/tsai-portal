@@ -115,7 +115,7 @@ check("director shell renders no fake sheets, stream keys, or unavailable marker
   assert.match(html, /Tournament Director/);
   assert.equal(realNameHits(html), 0, "no listed real name on /tournament/director");
 });
-check("a sheet without xG shows it as missing and omits stream keys / RTMPS", () => {
+check("a sheet without telemetry renders pending state and omits stream keys, RTMPS, and xG", () => {
   const sheet = {
     sheetId: "fixture-sheet",
     sheetNumber: 1,
@@ -141,11 +141,12 @@ check("a sheet without xG shows it as missing and omits stream keys / RTMPS", ()
     acousticShieldMuted: false,
   };
   const html = render(<MultiSheetCommandCenter sheets={[sheet]} />);
-  assert.match(html, /xG not available/);
-  assert.doesNotMatch(html, /xG 1\.50/);
-  assert.doesNotMatch(html, /RTMPS:/i);
+  assert.match(html, /Telemetry pending/);
+  assert.match(html, /Hardware telemetry not connected/);
+  assert.doesNotMatch(html, /xG|RTMPS:/i);
   assert.doesNotMatch(code("src/components/tournaments/MultiSheetCommandCenter.tsx"), /youtubeStreamKey|rtmpsIngestUrl|\?\? 1\.5/);
-  assert.doesNotMatch(code("src/components/tournaments/multi-sheet-types.ts"), /youtubeStreamKey|rtmpsIngestUrl/);
+  assert.doesNotMatch(code("src/components/tournaments/SheetGridCard.tsx"), /homeXg|awayXg|whistleDuckingActive|recentWhistleTimestamp/);
+  assert.doesNotMatch(code("src/components/tournaments/multi-sheet-types.ts"), /youtubeStreamKey|rtmpsIngestUrl|homeXg|awayXg|whistleDuckingActive|recentWhistleTimestamp/);
 });
 check("director page and BFF routes use live /api/tournaments* without built-in sheets or service-role bypass", () => {
   const s = code("src/app/tournament/director/page.tsx");
@@ -326,6 +327,7 @@ check("no built-in data constants remain in the component and type trees", () =>
     }
   };
   for (const d of dirs) walk(d);
+  // Any exception must be listed here with its register row, so a NEW constant fails the suite.
   const allowed: string[] = [];
   const unexpected = offenders.filter((o) => !allowed.some((a) => o.startsWith(a)));
   assert.deepEqual(unexpected, [], `built-in data constants found:\n${unexpected.join("\n")}`);

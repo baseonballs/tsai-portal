@@ -91,7 +91,7 @@ export function extractValidatedTeamId(
     (typeof body?.team_id === "string" ? body.team_id : undefined);
   const cleaned = raw?.trim();
   if (!isValidUuid(cleaned)) {
-    return { ok: false, response: jsonNoStore({ error: "Valid teamId is required." }, 422) };
+    return { ok: false, response: jsonNoStore({ error: "Valid teamId is required." }, 400) };
   }
   return { ok: true, teamId: cleaned };
 }
@@ -129,8 +129,24 @@ function formatUpstreamError(status: number, parsed: unknown): string {
       return "Request conflicts with current tournament state.";
     case 422:
       return "Validation failed.";
+    case 503:
+      return "Tournament service temporarily unavailable.";
     default:
       return "Tournament service error.";
+  }
+}
+
+export function mapUpstreamResponse<T>(
+  fn: () => T,
+): { ok: true; data: T } | { ok: false; response: NextResponse } {
+  try {
+    return { ok: true, data: fn() };
+  } catch (err) {
+    console.error("[hockey-api] Response contract mismatch:", err instanceof Error ? err.message : String(err));
+    return {
+      ok: false,
+      response: jsonNoStore({ error: "Upstream tournament response violated expected contract." }, 502),
+    };
   }
 }
 
@@ -146,7 +162,7 @@ export type UpstreamCallResult =
   | { ok: true; status: number; data: unknown }
   | { ok: false; response: NextResponse };
 
-const PRESERVED_STATUSES = new Set([400, 401, 403, 404, 409, 422]);
+const PRESERVED_STATUSES = new Set([400, 401, 403, 404, 409, 422, 503]);
 
 export async function forwardHockeyApi(opts: UpstreamCallOptions): Promise<UpstreamCallResult> {
   let base: string;
@@ -177,12 +193,17 @@ export async function forwardHockeyApi(opts: UpstreamCallOptions): Promise<Upstr
       headers,
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
       cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
     });
   } catch (err) {
+    const isTimeout = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
     console.error("[hockey-api] Network failure:", err instanceof Error ? err.message : String(err));
     return {
       ok: false,
-      response: jsonNoStore({ error: "Tournament service is currently unreachable." }, 502),
+      response: jsonNoStore(
+        { error: isTimeout ? "Tournament service request timed out." : "Tournament service is currently unreachable." },
+        isTimeout ? 504 : 502,
+      ),
     };
   }
 

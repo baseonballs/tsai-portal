@@ -141,7 +141,19 @@ export default function TournamentDirectorPage() {
           </div>
         )}
 
-        {director.teams.length === 0 ? (
+        {director.teamsError ? (
+          <div className="rounded-2xl border border-rose-500/40 bg-rose-950/30 p-8 text-center space-y-3">
+            <p className="font-semibold text-white text-sm">Could not load your teams</p>
+            <p className="text-xs text-rose-200">{director.teamsError}</p>
+            <button
+              type="button"
+              onClick={director.retryTeams}
+              className="rounded-lg bg-rose-500/20 border border-rose-400/40 px-4 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-500/30"
+            >
+              Retry
+            </button>
+          </div>
+        ) : director.teams.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-[#0B0F17] p-8 text-center text-sm text-slate-400">
             <p className="font-semibold text-white">No teams linked to your account</p>
             <p className="mt-1 text-xs">Ask a team manager or administrator to add you to a team.</p>
@@ -160,6 +172,34 @@ export default function TournamentDirectorPage() {
         ) : director.loadingList ? (
           <div className="rounded-2xl border border-slate-800 bg-[#0B0F17] p-8 text-center text-xs text-slate-400">
             Loading tournaments...
+          </div>
+        ) : director.listError ? (
+          <div className="rounded-2xl border border-rose-500/40 bg-rose-950/30 p-8 text-center space-y-3">
+            <p className="font-semibold text-white text-sm">Could not load tournaments</p>
+            <p className="text-xs text-rose-200">{director.listError}</p>
+            <button
+              type="button"
+              onClick={director.retryList}
+              className="rounded-lg bg-rose-500/20 border border-rose-400/40 px-4 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-500/30"
+            >
+              Retry
+            </button>
+          </div>
+        ) : director.loadingDetail ? (
+          <div className="rounded-2xl border border-slate-800 bg-[#0B0F17] p-8 text-center text-xs text-slate-400">
+            Loading tournament details...
+          </div>
+        ) : director.detailError ? (
+          <div className="rounded-2xl border border-rose-500/40 bg-rose-950/30 p-8 text-center space-y-3">
+            <p className="font-semibold text-white text-sm">Could not load tournament details</p>
+            <p className="text-xs text-rose-200">{director.detailError}</p>
+            <button
+              type="button"
+              onClick={director.retryDetail}
+              className="rounded-lg bg-rose-500/20 border border-rose-400/40 px-4 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-500/30"
+            >
+              Retry
+            </button>
           </div>
         ) : !director.detail ? (
           <div className="rounded-2xl border border-slate-800 bg-[#0B0F17] p-8 text-center space-y-3">

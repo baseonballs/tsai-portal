@@ -59,10 +59,6 @@ export interface SheetMatchInfo {
   scoreHome: number | null;
   scoreAway: number | null;
   isOvertime: boolean;
-  homeXg?: number | null;
-  awayXg?: number | null;
-  whistleDuckingActive?: boolean;
-  recentWhistleTimestamp?: number;
 }
 
 export interface SheetHardwareHealth {

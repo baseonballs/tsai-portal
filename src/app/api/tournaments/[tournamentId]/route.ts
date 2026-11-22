@@ -6,6 +6,7 @@ import {
   getCallerAccessToken,
   isValidUuid,
   jsonNoStore,
+  mapUpstreamResponse,
   NO_STORE,
   readJsonObject,
   unauthorizedResponse,
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   if (!accessToken) return unauthorizedResponse();
 
   const { tournamentId } = await params;
-  if (!isValidUuid(tournamentId)) return jsonNoStore({ error: "Invalid tournamentId." }, 422);
+  if (!isValidUuid(tournamentId)) return jsonNoStore({ error: "Invalid tournamentId." }, 400);
 
   const teamCheck = extractValidatedTeamId(req);
   if (!teamCheck.ok) return teamCheck.response;
@@ -38,7 +39,10 @@ export async function GET(req: NextRequest, { params }: Params) {
   });
   if (!res.ok) return res.response;
 
-  return jsonNoStore(mapTournamentDetail(res.data));
+  const mapped = mapUpstreamResponse(() => mapTournamentDetail(res.data));
+  if (!mapped.ok) return mapped.response;
+
+  return jsonNoStore(mapped.data);
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
@@ -53,7 +57,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!accessToken) return unauthorizedResponse();
 
   const { tournamentId } = await params;
-  if (!isValidUuid(tournamentId)) return jsonNoStore({ error: "Invalid tournamentId." }, 422);
+  if (!isValidUuid(tournamentId)) return jsonNoStore({ error: "Invalid tournamentId." }, 400);
 
   const parsed = await readJsonObject(req);
   if (!parsed.ok) return parsed.response;
@@ -69,7 +73,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   });
   if (!res.ok) return res.response;
 
-  return jsonNoStore(mapTournamentDetail(res.data));
+  const mapped = mapUpstreamResponse(() => mapTournamentDetail(res.data));
+  if (!mapped.ok) return mapped.response;
+
+  return jsonNoStore(mapped.data);
 }
 
 export async function DELETE(req: NextRequest, { params }: Params) {
@@ -84,7 +91,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   if (!accessToken) return unauthorizedResponse();
 
   const { tournamentId } = await params;
-  if (!isValidUuid(tournamentId)) return jsonNoStore({ error: "Invalid tournamentId." }, 422);
+  if (!isValidUuid(tournamentId)) return jsonNoStore({ error: "Invalid tournamentId." }, 400);
 
   const teamCheck = extractValidatedTeamId(req);
   if (!teamCheck.ok) return teamCheck.response;

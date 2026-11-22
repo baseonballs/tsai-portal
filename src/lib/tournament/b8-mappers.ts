@@ -16,136 +16,216 @@ import type {
 
 type JsonObj = Record<string, unknown>;
 
-function asObj(v: unknown): JsonObj {
-  return v && typeof v === "object" && !Array.isArray(v) ? (v as JsonObj) : {};
+const VALID_TOURNAMENT_FORMATS = new Set<TournamentFormat>([
+  "single_elimination",
+  "pool_play",
+  "round_robin",
+  "showcase",
+]);
+const VALID_TOURNAMENT_STATUSES = new Set<TournamentStatus>(["scheduled", "live", "completed", "cancelled"]);
+const VALID_STREAM_STATES = new Set<SheetStreamState>([
+  "UNINITIALIZED",
+  "TESTING",
+  "LIVE",
+  "PAUSED_INTERMISSION",
+  "COMPLETED",
+  "ERROR",
+]);
+const VALID_BROADCAST_ANGLES = new Set<BroadcastAngle>([
+  "TACTICAL_PRIMARY",
+  "HIGH_ENDZONE_HOME",
+  "HIGH_ENDZONE_AWAY",
+  "OVERHEAD_TACTICAL",
+]);
+const VALID_BRACKET_ROUNDS = new Set<BracketRound>([
+  "POOL",
+  "ROUND_OF_16",
+  "QUARTERFINALS",
+  "SEMIFINALS",
+  "THIRD_PLACE",
+  "CHAMPIONSHIP",
+]);
+const VALID_BRACKET_STATUSES = new Set<BracketMatchStatus>(["UPCOMING", "LIVE", "FINAL", "CANCELLED"]);
+const VALID_BRACKET_SIDES = new Set<BracketSide>(["home", "away"]);
+
+function requireObj(v: unknown, context: string): JsonObj {
+  if (!v || typeof v !== "object" || Array.isArray(v)) {
+    throw new Error(`Invalid ${context}: expected object.`);
+  }
+  return v as JsonObj;
 }
 
-function strOrNull(v: unknown): string | null {
-  return typeof v === "string" && v.trim() ? v.trim() : null;
+function requireNonEmptyString(v: unknown, field: string): string {
+  if (typeof v !== "string" || !v.trim()) {
+    throw new Error(`Missing or invalid required string field "${field}".`);
+  }
+  return v.trim();
 }
 
-function numOrNull(v: unknown): number | null {
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
+function requireNumber(v: unknown, field: string): number {
+  if (typeof v !== "number" || !Number.isFinite(v)) {
+    throw new Error(`Missing or invalid required number field "${field}".`);
+  }
+  return v;
 }
 
-function numOrZero(v: unknown): number {
-  return typeof v === "number" && Number.isFinite(v) ? v : 0;
+function requireBoolean(v: unknown, field: string): boolean {
+  if (typeof v !== "boolean") {
+    throw new Error(`Missing or invalid required boolean field "${field}".`);
+  }
+  return v;
+}
+
+function requireEnum<T extends string>(v: unknown, allowed: Set<T>, field: string): T {
+  if (typeof v !== "string" || !allowed.has(v as T)) {
+    throw new Error(`Missing or invalid enum value for "${field}": ${String(v)}.`);
+  }
+  return v as T;
+}
+
+function optionalString(v: unknown, field: string): string | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v !== "string") {
+    throw new Error(`Invalid optional string field "${field}".`);
+  }
+  return v.trim() || null;
+}
+
+function optionalNumber(v: unknown, field: string): number | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v !== "number" || !Number.isFinite(v)) {
+    throw new Error(`Invalid optional number field "${field}".`);
+  }
+  return v;
+}
+
+function optionalBoolean(v: unknown, field: string): boolean | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v !== "boolean") {
+    throw new Error(`Invalid optional boolean field "${field}".`);
+  }
+  return v;
+}
+
+function optionalEnum<T extends string>(v: unknown, allowed: Set<T>, field: string): T | null {
+  if (v === null || v === undefined) return null;
+  return requireEnum(v, allowed, field);
 }
 
 export function mapTeamOption(raw: unknown): TeamOption {
-  const o = asObj(raw);
-  const org = o.organization ? asObj(o.organization) : null;
+  const o = requireObj(raw, "team");
+  const org = o.organization === null || o.organization === undefined ? null : requireObj(o.organization, "team.organization");
   return {
-    id: String(o.id ?? ""),
-    name: String(o.name ?? ""),
-    season: String(o.season ?? ""),
-    levelOfPlay: strOrNull(o.level_of_play ?? o.levelOfPlay),
-    tier: strOrNull(o.tier),
-    gender: strOrNull(o.gender),
-    organizationName: org ? strOrNull(org.name) : null,
+    id: requireNonEmptyString(o.id, "team.id"),
+    name: requireNonEmptyString(o.name, "team.name"),
+    season: requireNonEmptyString(o.season, "team.season"),
+    levelOfPlay: optionalString(o.level_of_play ?? o.levelOfPlay, "team.level_of_play"),
+    tier: optionalString(o.tier, "team.tier"),
+    gender: optionalString(o.gender, "team.gender"),
+    organizationName: org ? optionalString(org.name, "team.organization.name") : null,
   };
 }
 
 export function mapHardwareHealth(raw: unknown): SheetHardwareHealth | null {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  const o = asObj(raw);
+  if (raw === null || raw === undefined) return null;
+  const o = requireObj(raw, "hardware_health");
   return {
-    temperatureCelsius: numOrNull(o.temperature_celsius ?? o.temperatureCelsius),
-    droppedFramesCount: numOrNull(o.dropped_frames_count ?? o.droppedFramesCount),
-    ispLoadPercentage: numOrNull(o.isp_load_percentage ?? o.ispLoadPercentage),
-    thermalThrottled:
-      typeof (o.thermal_throttled ?? o.thermalThrottled) === "boolean"
-        ? Boolean(o.thermal_throttled ?? o.thermalThrottled)
-        : null,
+    temperatureCelsius: optionalNumber(o.temperature_celsius ?? o.temperatureCelsius, "hardware_health.temperature_celsius"),
+    droppedFramesCount: optionalNumber(o.dropped_frames_count ?? o.droppedFramesCount, "hardware_health.dropped_frames_count"),
+    ispLoadPercentage: optionalNumber(o.isp_load_percentage ?? o.ispLoadPercentage, "hardware_health.isp_load_percentage"),
+    thermalThrottled: optionalBoolean(o.thermal_throttled ?? o.thermalThrottled, "hardware_health.thermal_throttled"),
   };
 }
 
 export function mapTournamentSheet(raw: unknown): TournamentSheet {
-  const o = asObj(raw);
+  const o = requireObj(raw, "tournament_sheet");
+  const tournamentId = optionalString(o.tournament_id ?? o.tournamentId, "sheet.tournament_id");
   return {
-    sheetId: String(o.id ?? o.sheetId ?? ""),
-    tournamentId: strOrNull(o.tournament_id ?? o.tournamentId) ?? undefined,
-    sheetNumber: numOrZero(o.sheet_number ?? o.sheetNumber),
-    rinkName: String(o.rink_name ?? o.rinkName ?? ""),
-    streamState: (o.stream_state ?? o.streamState ?? "UNINITIALIZED") as SheetStreamState,
-    activeAngle: (o.active_angle ?? o.activeAngle ?? "TACTICAL_PRIMARY") as BroadcastAngle,
-    youtubeBroadcastId: strOrNull(o.youtube_broadcast_id ?? o.youtubeBroadcastId),
-    playbackUrl: strOrNull(o.playback_url ?? o.playbackUrl),
-    bitrateKbps: numOrNull(o.bitrate_kbps ?? o.bitrateKbps),
-    fps: numOrNull(o.fps),
+    sheetId: requireNonEmptyString(o.id ?? o.sheetId, "sheet.id"),
+    ...(tournamentId ? { tournamentId } : {}),
+    sheetNumber: requireNumber(o.sheet_number ?? o.sheetNumber, "sheet.sheet_number"),
+    rinkName: requireNonEmptyString(o.rink_name ?? o.rinkName, "sheet.rink_name"),
+    streamState: requireEnum(o.stream_state ?? o.streamState, VALID_STREAM_STATES, "sheet.stream_state"),
+    activeAngle: requireEnum(o.active_angle ?? o.activeAngle, VALID_BROADCAST_ANGLES, "sheet.active_angle"),
+    youtubeBroadcastId: optionalString(o.youtube_broadcast_id ?? o.youtubeBroadcastId, "sheet.youtube_broadcast_id"),
+    playbackUrl: optionalString(o.playback_url ?? o.playbackUrl, "sheet.playback_url"),
+    bitrateKbps: optionalNumber(o.bitrate_kbps ?? o.bitrateKbps, "sheet.bitrate_kbps"),
+    fps: optionalNumber(o.fps, "sheet.fps"),
     hardwareHealth: mapHardwareHealth(o.hardware_health ?? o.hardwareHealth),
-    isPublicShowcase: Boolean(o.is_public_showcase ?? o.isPublicShowcase),
-    acousticShieldMuted: Boolean(o.acoustic_shield_muted ?? o.acousticShieldMuted),
+    isPublicShowcase: requireBoolean(o.is_public_showcase ?? o.isPublicShowcase, "sheet.is_public_showcase"),
+    acousticShieldMuted: requireBoolean(o.acoustic_shield_muted ?? o.acousticShieldMuted, "sheet.acoustic_shield_muted"),
   };
 }
 
 export function mapBracketMatch(raw: unknown): BracketMatch {
-  const o = asObj(raw);
-  const rawWinner = o.winner_side ?? o.winnerSide;
-  const rawNextSlot = o.next_match_slot ?? o.nextMatchSlot;
+  const o = requireObj(raw, "bracket_match");
+  const tournamentId = optionalString(o.tournament_id ?? o.tournamentId, "match.tournament_id");
   return {
-    matchId: String(o.id ?? o.matchId ?? ""),
-    tournamentId: strOrNull(o.tournament_id ?? o.tournamentId) ?? undefined,
-    round: (o.round ?? "POOL") as BracketRound,
-    matchLabel: String(o.match_label ?? o.matchLabel ?? ""),
-    sortOrder: numOrZero(o.sort_order ?? o.sortOrder),
-    sheetId: strOrNull(o.sheet_id ?? o.sheetId),
-    gameId: strOrNull(o.game_id ?? o.gameId),
-    homeTeamName: strOrNull(o.home_team_name ?? o.homeTeamName),
-    awayTeamName: strOrNull(o.away_team_name ?? o.awayTeamName),
-    homeSeed: numOrNull(o.home_seed ?? o.homeSeed),
-    awaySeed: numOrNull(o.away_seed ?? o.awaySeed),
-    homeScore: numOrNull(o.home_score ?? o.homeScore),
-    awayScore: numOrNull(o.away_score ?? o.awayScore),
-    status: (o.status ?? "UPCOMING") as BracketMatchStatus,
-    period: numOrNull(o.period),
-    clockSeconds: numOrNull(o.clock_seconds ?? o.clockSeconds),
-    isOvertime: Boolean(o.is_overtime ?? o.isOvertime),
-    winnerSide: rawWinner === "home" || rawWinner === "away" ? (rawWinner as BracketSide) : null,
-    nextMatchId: strOrNull(o.next_match_id ?? o.nextMatchId),
-    nextMatchSlot: rawNextSlot === "home" || rawNextSlot === "away" ? (rawNextSlot as BracketSide) : null,
-    startsAt: strOrNull(o.starts_at ?? o.startsAt),
+    matchId: requireNonEmptyString(o.id ?? o.matchId, "match.id"),
+    ...(tournamentId ? { tournamentId } : {}),
+    round: requireEnum(o.round, VALID_BRACKET_ROUNDS, "match.round"),
+    matchLabel: requireNonEmptyString(o.match_label ?? o.matchLabel, "match.match_label"),
+    sortOrder: requireNumber(o.sort_order ?? o.sortOrder, "match.sort_order"),
+    sheetId: optionalString(o.sheet_id ?? o.sheetId, "match.sheet_id"),
+    gameId: optionalString(o.game_id ?? o.gameId, "match.game_id"),
+    homeTeamName: optionalString(o.home_team_name ?? o.homeTeamName, "match.home_team_name"),
+    awayTeamName: optionalString(o.away_team_name ?? o.awayTeamName, "match.away_team_name"),
+    homeSeed: optionalNumber(o.home_seed ?? o.homeSeed, "match.home_seed"),
+    awaySeed: optionalNumber(o.away_seed ?? o.awaySeed, "match.away_seed"),
+    homeScore: optionalNumber(o.home_score ?? o.homeScore, "match.home_score"),
+    awayScore: optionalNumber(o.away_score ?? o.awayScore, "match.away_score"),
+    status: requireEnum(o.status, VALID_BRACKET_STATUSES, "match.status"),
+    period: optionalNumber(o.period, "match.period"),
+    clockSeconds: optionalNumber(o.clock_seconds ?? o.clockSeconds, "match.clock_seconds"),
+    isOvertime: requireBoolean(o.is_overtime ?? o.isOvertime, "match.is_overtime"),
+    winnerSide: optionalEnum(o.winner_side ?? o.winnerSide, VALID_BRACKET_SIDES, "match.winner_side"),
+    nextMatchId: optionalString(o.next_match_id ?? o.nextMatchId, "match.next_match_id"),
+    nextMatchSlot: optionalEnum(o.next_match_slot ?? o.nextMatchSlot, VALID_BRACKET_SIDES, "match.next_match_slot"),
+    startsAt: optionalString(o.starts_at ?? o.startsAt, "match.starts_at"),
+  };
+}
+
+function mapTournamentCore(o: JsonObj) {
+  return {
+    id: requireNonEmptyString(o.id, "tournament.id"),
+    teamId: requireNonEmptyString(o.team_id ?? o.teamId, "tournament.team_id"),
+    seasonId: optionalString(o.season_id ?? o.seasonId, "tournament.season_id"),
+    name: requireNonEmptyString(o.name, "tournament.name"),
+    venueName: optionalString(o.venue_name ?? o.venueName, "tournament.venue_name"),
+    startsOn: optionalString(o.starts_on ?? o.startsOn, "tournament.starts_on"),
+    endsOn: optionalString(o.ends_on ?? o.endsOn, "tournament.ends_on"),
+    format: requireEnum(o.format, VALID_TOURNAMENT_FORMATS, "tournament.format"),
+    status: requireEnum(o.status, VALID_TOURNAMENT_STATUSES, "tournament.status"),
+    emergencyGlobalAudioMute: requireBoolean(
+      o.emergency_global_audio_mute ?? o.emergencyGlobalAudioMute,
+      "tournament.emergency_global_audio_mute",
+    ),
+    createdAt: requireNonEmptyString(o.created_at ?? o.createdAt, "tournament.created_at"),
+    updatedAt: optionalString(o.updated_at ?? o.updatedAt, "tournament.updated_at"),
   };
 }
 
 export function mapTournamentSummary(raw: unknown): TournamentSummary {
-  const o = asObj(raw);
+  const o = requireObj(raw, "tournament_summary");
   return {
-    id: String(o.id ?? ""),
-    teamId: String(o.team_id ?? o.teamId ?? ""),
-    seasonId: strOrNull(o.season_id ?? o.seasonId),
-    name: String(o.name ?? ""),
-    venueName: strOrNull(o.venue_name ?? o.venueName),
-    startsOn: strOrNull(o.starts_on ?? o.startsOn),
-    endsOn: strOrNull(o.ends_on ?? o.endsOn),
-    format: (o.format ?? "single_elimination") as TournamentFormat,
-    status: (o.status ?? "scheduled") as TournamentStatus,
-    emergencyGlobalAudioMute: Boolean(o.emergency_global_audio_mute ?? o.emergencyGlobalAudioMute),
-    sheetCount: numOrZero(o.sheet_count ?? o.sheetCount),
-    matchCount: numOrZero(o.match_count ?? o.matchCount),
-    createdAt: String(o.created_at ?? o.createdAt ?? ""),
-    updatedAt: strOrNull(o.updated_at ?? o.updatedAt),
+    ...mapTournamentCore(o),
+    sheetCount: requireNumber(o.sheet_count ?? o.sheetCount, "tournament.sheet_count"),
+    matchCount: requireNumber(o.match_count ?? o.matchCount, "tournament.match_count"),
   };
 }
 
 export function mapTournamentDetail(raw: unknown): TournamentDetail {
-  const o = asObj(raw);
-  const summary = mapTournamentSummary(o);
+  const o = requireObj(raw, "tournament_detail");
+  if (!Array.isArray(o.sheets)) {
+    throw new Error('Missing or invalid array field "tournament.sheets".');
+  }
+  if (!Array.isArray(o.matches)) {
+    throw new Error('Missing or invalid array field "tournament.matches".');
+  }
   return {
-    id: summary.id,
-    teamId: summary.teamId,
-    seasonId: summary.seasonId,
-    name: summary.name,
-    venueName: summary.venueName,
-    startsOn: summary.startsOn,
-    endsOn: summary.endsOn,
-    format: summary.format,
-    status: summary.status,
-    emergencyGlobalAudioMute: summary.emergencyGlobalAudioMute,
-    sheets: Array.isArray(o.sheets) ? o.sheets.map(mapTournamentSheet) : [],
-    matches: Array.isArray(o.matches) ? o.matches.map(mapBracketMatch) : [],
-    createdAt: summary.createdAt,
-    updatedAt: summary.updatedAt,
+    ...mapTournamentCore(o),
+    sheets: o.sheets.map(mapTournamentSheet),
+    matches: o.matches.map(mapBracketMatch),
   };
 }
 

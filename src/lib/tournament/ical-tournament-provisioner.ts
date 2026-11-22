@@ -6,10 +6,13 @@
  * Patent Track 16: TSAI-PATENT-VISION-01 (Docket P229, Claims 9 & 10)
  *
  * Automated tournament schedule ingestion, RFC 5545 iCalendar parsing,
- * sheet location reconciliation, and multi-sheet schedule preparation.
+ * explicit location-to-sheet parsing, and multi-sheet schedule preparation.
  */
 
 import { type TournamentSheet } from "@/components/tournaments/multi-sheet-types";
+
+export const MIN_SHEET_NUMBER = 1;
+export const MAX_SHEET_NUMBER = 16;
 
 export interface ICalEvent {
   uid: string;
@@ -18,10 +21,10 @@ export interface ICalEvent {
   location: string;
   dtStart: Date;
   dtEnd: Date;
-  homeTeam: string;
-  awayTeam: string;
-  sheetNumber: number;
-  rinkName: string;
+  homeTeam: string | null;
+  awayTeam: string | null;
+  sheetNumber: number | null;
+  rinkName: string | null;
   division?: string;
   round?: string;
 }
@@ -40,44 +43,42 @@ export interface ProvisioningReport {
   sheets: TournamentSheet[];
   activeSheetNumbers: number[];
   unmappedEventsCount: number;
+  unmappedEvents: ICalEvent[];
 }
 
 /**
- * Extracts sheet number (1-8) and canonical rink name from event location text.
+ * Extracts an explicit sheet/rink number (1-16) and preserves LOCATION verbatim.
+ * Events without an explicit, unambiguous sheet number remain unmapped (sheetNumber: null).
  */
-export function mapLocationToSheetNumber(location: string): { sheetNumber: number; rinkName: string } {
-  const locLower = location.toLowerCase();
-
-  const sheetMatch = locLower.match(/(?:sheet|rink)\s*(?:#|no\.?)?\s*(\d+)/);
-  if (sheetMatch) {
-    const num = parseInt(sheetMatch[1], 10);
-    if (num >= 1 && num <= 8) {
-      return { sheetNumber: num, rinkName: `Sheet ${num} (${location.trim()})` };
-    }
+export function mapLocationToSheetNumber(location: string): { sheetNumber: number | null; rinkName: string | null } {
+  const trimmed = location.trim();
+  const rinkName = trimmed.length > 0 ? trimmed : null;
+  if (!trimmed) {
+    return { sheetNumber: null, rinkName: null };
   }
 
-  if (locLower.includes("center") || locLower.includes("main") || locLower.includes("arena a")) {
-    return { sheetNumber: 1, rinkName: "Main Center Arena (Sheet 1)" };
-  }
-  if (locLower.includes("south") || locLower.includes("olympic") || locLower.includes("arena b")) {
-    return { sheetNumber: 2, rinkName: "Olympic South Sheet (Sheet 2)" };
-  }
-  if (locLower.includes("north") || locLower.includes("east") || locLower.includes("arena c")) {
-    return { sheetNumber: 3, rinkName: "North Rink 3 (Sheet 3)" };
-  }
-  if (locLower.includes("west") || locLower.includes("arena d")) {
-    return { sheetNumber: 4, rinkName: "West Rink 4 (Sheet 4)" };
+  const matches = [...trimmed.matchAll(/\b(?:sheet|rink)\s*(?:#|no\.?)?\s*(\d+)\b/gi)];
+  const validNumbers = Array.from(
+    new Set(
+      matches
+        .map((m) => Number.parseInt(m[1], 10))
+        .filter((num) => Number.isInteger(num) && num >= MIN_SHEET_NUMBER && num <= MAX_SHEET_NUMBER),
+    ),
+  );
+
+  if (validNumbers.length === 1) {
+    return { sheetNumber: validNumbers[0], rinkName };
   }
 
-  return { sheetNumber: 1, rinkName: location.trim() || "Sheet 1 (Main Arena)" };
+  return { sheetNumber: null, rinkName };
 }
 
 /**
- * Parses Home vs Away team names, round, and division from summary text.
+ * Parses Home vs Away team names, round, and division from summary text without inventing defaults.
  */
 export function parseTeamsFromSummary(summary: string): {
-  homeTeam: string;
-  awayTeam: string;
+  homeTeam: string | null;
+  awayTeam: string | null;
   division?: string;
   round?: string;
 } {
@@ -104,12 +105,17 @@ export function parseTeamsFromSummary(summary: string): {
 
   const vsSplit = cleanSummary.split(/\s+(?:vs\.?|VS\.?|@)\s+/i);
   if (vsSplit.length >= 2) {
-    return { homeTeam: vsSplit[0].trim(), awayTeam: vsSplit[1].trim(), division, round };
+    return {
+      homeTeam: vsSplit[0].trim() || null,
+      awayTeam: vsSplit[1].trim() || null,
+      division,
+      round,
+    };
   }
 
   return {
-    homeTeam: cleanSummary || "Home Team",
-    awayTeam: "Away Team",
+    homeTeam: cleanSummary || null,
+    awayTeam: null,
     division,
     round,
   };
@@ -177,7 +183,7 @@ export function parseICalFeed(icsContent: string): ICalEvent[] {
         const dtEnd = parseICalDate(currentDtEnd);
 
         events.push({
-          uid: currentUid || `match-${events.length + 1}-${Date.now()}`,
+          uid: currentUid || `event-${events.length + 1}`,
           summary: currentSummary,
           description: currentDescription,
           location: currentLocation,
@@ -206,31 +212,32 @@ export function parseICalFeed(icsContent: string): ICalEvent[] {
 }
 
 /**
- * Detects scheduling conflicts where two matches overlap on the same sheet.
+ * Detects scheduling conflicts where two mapped matches overlap on the same sheet.
  */
 export function detectSheetScheduleConflicts(events: ICalEvent[]): SheetScheduleConflict[] {
   const conflicts: SheetScheduleConflict[] = [];
 
   for (let i = 0; i < events.length; i++) {
+    const a = events[i];
+    if (a.sheetNumber === null) continue;
+
     for (let j = i + 1; j < events.length; j++) {
-      const a = events[i];
       const b = events[j];
+      if (b.sheetNumber === null || a.sheetNumber !== b.sheetNumber) continue;
 
-      if (a.sheetNumber === b.sheetNumber) {
-        const startA = a.dtStart.getTime();
-        const endA = a.dtEnd.getTime();
-        const startB = b.dtStart.getTime();
-        const endB = b.dtEnd.getTime();
+      const startA = a.dtStart.getTime();
+      const endA = a.dtEnd.getTime();
+      const startB = b.dtStart.getTime();
+      const endB = b.dtEnd.getTime();
 
-        if (startA < endB && startB < endA) {
-          const overlapMillis = Math.min(endA, endB) - Math.max(startA, startB);
-          conflicts.push({
-            sheetNumber: a.sheetNumber,
-            eventA: a,
-            eventB: b,
-            conflictOverlapSeconds: Math.round(overlapMillis / 1000),
-          });
-        }
+      if (startA < endB && startB < endA) {
+        const overlapMillis = Math.min(endA, endB) - Math.max(startA, startB);
+        conflicts.push({
+          sheetNumber: a.sheetNumber,
+          eventA: a,
+          eventB: b,
+          conflictOverlapSeconds: Math.round(overlapMillis / 1000),
+        });
       }
     }
   }
@@ -239,8 +246,9 @@ export function detectSheetScheduleConflicts(events: ICalEvent[]): SheetSchedule
 }
 
 /**
- * Prepares tournament sheet definitions from parsed iCal events without inventing stream
- * secrets, playback URLs, scores, clocks, or hardware telemetry.
+ * Prepares tournament sheet definitions ONLY from events with explicit sheet numbers.
+ * Preserves LOCATION verbatim without inventing rink names, stream secrets, playback URLs,
+ * scores, clocks, or hardware telemetry.
  */
 export function provisionTournamentSheetsFromICal(
   events: ICalEvent[],
@@ -252,59 +260,37 @@ export function provisionTournamentSheetsFromICal(
   const conflicts = detectSheetScheduleConflicts(events);
 
   const sheetEventsMap = new Map<number, ICalEvent[]>();
-  for (let s = 1; s <= 8; s++) {
-    sheetEventsMap.set(s, []);
-  }
+  const unmappedEvents: ICalEvent[] = [];
 
-  let unmappedEvents = 0;
   for (const ev of events) {
-    if (ev.sheetNumber >= 1 && ev.sheetNumber <= 8) {
-      sheetEventsMap.get(ev.sheetNumber)!.push(ev);
+    if (ev.sheetNumber !== null && ev.sheetNumber >= MIN_SHEET_NUMBER && ev.sheetNumber <= MAX_SHEET_NUMBER) {
+      const list = sheetEventsMap.get(ev.sheetNumber) ?? [];
+      list.push(ev);
+      sheetEventsMap.set(ev.sheetNumber, list);
     } else {
-      unmappedEvents++;
+      unmappedEvents.push(ev);
     }
   }
 
-  const defaultRinkNames: Record<number, string> = {
-    1: "Main Center Arena (NHL Standard)",
-    2: "Olympic South Sheet",
-    3: "North Rink 3",
-    4: "West Rink 4",
-    5: "East Rink 5",
-    6: "Training Sheet 6",
-    7: "Community Rink 7",
-    8: "Studio Pond 8",
-  };
-
+  const activeSheetNumbers = Array.from(sheetEventsMap.keys()).sort((a, b) => a - b);
   const sheets: TournamentSheet[] = [];
-  const activeSheetNumbers: number[] = [];
+  const nowTime = now.getTime();
 
-  for (let sheetNum = 1; sheetNum <= 8; sheetNum++) {
+  for (const sheetNum of activeSheetNumbers) {
     const sheetEvents = sheetEventsMap.get(sheetNum)!;
     sheetEvents.sort((a, b) => a.dtStart.getTime() - b.dtStart.getTime());
-    if (sheetEvents.length > 0) {
-      activeSheetNumbers.push(sheetNum);
-    }
 
-    const nowTime = now.getTime();
     let activeEvent = sheetEvents.find((e) => e.dtStart.getTime() <= nowTime && nowTime <= e.dtEnd.getTime());
-
     if (!activeEvent) {
-      const upcoming = sheetEvents.find((e) => e.dtStart.getTime() > nowTime);
-      if (upcoming) {
-        activeEvent = upcoming;
-      } else if (sheetEvents.length > 0) {
-        activeEvent = sheetEvents[sheetEvents.length - 1];
-      }
+      activeEvent = sheetEvents.find((e) => e.dtStart.getTime() > nowTime) ?? sheetEvents[sheetEvents.length - 1];
     }
 
-    const rinkName = activeEvent?.rinkName || defaultRinkNames[sheetNum];
-    const matchId = activeEvent?.uid || `sheet-${sheetNum}-idle`;
+    const verbatimRinkName = activeEvent?.rinkName ?? sheetEvents.find((e) => e.rinkName)?.rinkName ?? "";
 
     sheets.push({
-      sheetId: `sheet-0${sheetNum}`,
+      sheetId: `sheet-${String(sheetNum).padStart(2, "0")}`,
       sheetNumber: sheetNum,
-      rinkName,
+      rinkName: verbatimRinkName,
       streamState: "UNINITIALIZED",
       youtubeBroadcastId: null,
       playbackUrl: null,
@@ -315,9 +301,9 @@ export function provisionTournamentSheetsFromICal(
       hardwareHealth: null,
       acousticShieldMuted: false,
       matchInfo: {
-        matchId,
-        homeTeam: activeEvent?.homeTeam ?? null,
-        awayTeam: activeEvent?.awayTeam ?? null,
+        matchId: activeEvent.uid,
+        homeTeam: activeEvent.homeTeam,
+        awayTeam: activeEvent.awayTeam,
         period: null,
         gameClockSeconds: null,
         scoreHome: null,
@@ -333,6 +319,7 @@ export function provisionTournamentSheetsFromICal(
     conflictsDetected: conflicts,
     sheets,
     activeSheetNumbers,
-    unmappedEventsCount: unmappedEvents,
+    unmappedEventsCount: unmappedEvents.length,
+    unmappedEvents,
   };
 }

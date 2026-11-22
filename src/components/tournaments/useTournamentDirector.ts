@@ -2,31 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  createTournament,
-  createTournamentMatch,
-  createTournamentSheet,
-  deleteTournament,
-  deleteTournamentMatch,
-  deleteTournamentSheet,
   fetchMyTeams,
   fetchTeamTournaments,
   fetchTournamentDetail,
   TournamentApiError,
-  updateTournament,
-  updateTournamentMatch,
-  updateTournamentSheet,
-  type CreateSheetInput,
-  type CreateTournamentInput,
-  type MatchMutationInput,
 } from "@/lib/tournament/tournament-api-client";
-import type {
-  BracketRound,
-  BroadcastAngle,
-  TeamOption,
-  TournamentDetail,
-  TournamentStatus,
-  TournamentSummary,
-} from "@/components/tournaments/multi-sheet-types";
+import { buildDirectorMutations } from "@/lib/tournament/director-mutations";
+import type { TeamOption, TournamentDetail, TournamentSummary } from "@/components/tournaments/multi-sheet-types";
 
 export type DirectorAuthState = "loading" | "signed-out" | "ready";
 
@@ -37,56 +19,28 @@ function toErrorMessage(err: unknown, fallback: string): string {
 export function useTournamentDirector() {
   const [authState, setAuthState] = useState<DirectorAuthState>("loading");
   const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [teamsError, setTeamsError] = useState<string | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [loadedTeamId, setLoadedTeamId] = useState<string | null>(null);
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
+  const [listError, setListError] = useState<string | null>(null);
   const [selectedTournamentId, setSelectedTournamentId] = useState("");
   const [detail, setDetail] = useState<TournamentDetail | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const [selectedSheetId, setSelectedSheetId] = useState("");
   const [entitlementError, setEntitlementError] = useState<string | null>(null);
   const [loadingList, setLoadingList] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const applyApiError = useCallback((err: unknown, fallback: string, handleForbidden = false) => {
-    if (err instanceof TournamentApiError && err.status === 401) {
-      setAuthState("signed-out");
-    } else if (handleForbidden && err instanceof TournamentApiError && err.status === 403) {
-      setEntitlementError(err.message);
-    } else {
-      setError(toErrorMessage(err, fallback));
-    }
-  }, []);
+  const [reloadSeq, setReloadSeq] = useState({ teams: 0, list: 0, detail: 0 });
 
   const applyDetail = useCallback((next: TournamentDetail) => {
+    setDetailError(null);
     setDetail(next);
     setSelectedSheetId((prev) =>
       prev && next.sheets.some((s) => s.sheetId === prev) ? prev : next.sheets[0]?.sheetId ?? "",
     );
   }, []);
-
-  const loadTournaments = useCallback(async (teamId: string) => {
-    if (!teamId) {
-      setTournaments([]);
-      setSelectedTournamentId("");
-      setDetail(null);
-      return;
-    }
-    setLoadingList(true);
-    setEntitlementError(null);
-    setError(null);
-    try {
-      const list = await fetchTeamTournaments(teamId);
-      setTournaments(list);
-      setSelectedTournamentId((prev) => (prev && list.some((t) => t.id === prev) ? prev : list[0]?.id ?? ""));
-    } catch (err) {
-      setTournaments([]);
-      setSelectedTournamentId("");
-      setDetail(null);
-      applyApiError(err, "Unable to load tournaments.", true);
-    } finally {
-      setLoadingList(false);
-    }
-  }, [applyApiError]);
 
   const refreshDetail = useCallback(async (teamId = selectedTeamId, tournamentId = selectedTournamentId) => {
     if (!teamId || !tournamentId) {
@@ -96,15 +50,49 @@ export function useTournamentDirector() {
     try {
       applyDetail(await fetchTournamentDetail(teamId, tournamentId));
     } catch (err) {
-      applyApiError(err, "Unable to load tournament detail.");
+      if (err instanceof TournamentApiError && err.status === 401) {
+        setAuthState("signed-out");
+      } else {
+        setDetailError(toErrorMessage(err, "Unable to load tournament detail."));
+      }
     }
-  }, [selectedTeamId, selectedTournamentId, applyDetail, applyApiError]);
+  }, [selectedTeamId, selectedTournamentId, applyDetail]);
+
+  const loadTournaments = useCallback(async (teamId: string) => {
+    if (!teamId) {
+      setTournaments([]);
+      setSelectedTournamentId("");
+      setDetail(null);
+      setLoadedTeamId(null);
+      return;
+    }
+    setLoadingList(true);
+    setEntitlementError(null);
+    setListError(null);
+    setDetailError(null);
+    try {
+      const list = await fetchTeamTournaments(teamId);
+      setTournaments(list);
+      setSelectedTournamentId((prev) => (prev && list.some((t) => t.id === prev) ? prev : list[0]?.id ?? ""));
+    } catch (err) {
+      setTournaments([]);
+      setSelectedTournamentId("");
+      setDetail(null);
+      if (err instanceof TournamentApiError && err.status === 401) setAuthState("signed-out");
+      else if (err instanceof TournamentApiError && err.status === 403) setEntitlementError(err.message);
+      else setListError(toErrorMessage(err, "Unable to load tournaments."));
+    } finally {
+      setLoadedTeamId(teamId);
+      setLoadingList(false);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     fetchMyTeams()
       .then((list) => {
         if (cancelled) return;
+        setTeamsError(null);
         setTeams(list);
         setSelectedTeamId((prev) => (prev && list.some((t) => t.id === prev) ? prev : list[0]?.id ?? ""));
         setAuthState("ready");
@@ -114,14 +102,14 @@ export function useTournamentDirector() {
         if (err instanceof TournamentApiError && err.status === 401) {
           setAuthState("signed-out");
         } else {
+          setTeamsError(toErrorMessage(err, "Unable to load your teams."));
           setAuthState("ready");
-          setError(toErrorMessage(err, "Unable to load your teams."));
         }
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadSeq.teams]);
 
   useEffect(() => {
     if (authState !== "ready" || !selectedTeamId) return;
@@ -130,9 +118,10 @@ export function useTournamentDirector() {
       .then((list) => {
         if (cancelled) return;
         setEntitlementError(null);
-        setError(null);
+        setListError(null);
         setTournaments(list);
         setSelectedTournamentId((prev) => (prev && list.some((t) => t.id === prev) ? prev : list[0]?.id ?? ""));
+        setLoadedTeamId(selectedTeamId);
         setLoadingList(false);
       })
       .catch((err) => {
@@ -140,13 +129,16 @@ export function useTournamentDirector() {
         setTournaments([]);
         setSelectedTournamentId("");
         setDetail(null);
+        setLoadedTeamId(selectedTeamId);
         setLoadingList(false);
-        applyApiError(err, "Unable to load tournaments.", true);
+        if (err instanceof TournamentApiError && err.status === 401) setAuthState("signed-out");
+        else if (err instanceof TournamentApiError && err.status === 403) setEntitlementError(err.message);
+        else setListError(toErrorMessage(err, "Unable to load tournaments."));
       });
     return () => {
       cancelled = true;
     };
-  }, [authState, selectedTeamId, applyApiError]);
+  }, [authState, selectedTeamId, reloadSeq.list]);
 
   useEffect(() => {
     if (authState !== "ready" || !selectedTeamId || !selectedTournamentId) return;
@@ -156,22 +148,41 @@ export function useTournamentDirector() {
         if (!cancelled) applyDetail(next);
       })
       .catch((err) => {
-        if (!cancelled) applyApiError(err, "Unable to load tournament detail.");
+        if (cancelled) return;
+        if (err instanceof TournamentApiError && err.status === 401) setAuthState("signed-out");
+        else setDetailError(toErrorMessage(err, "Unable to load tournament detail."));
       });
     return () => {
       cancelled = true;
     };
-  }, [authState, selectedTeamId, selectedTournamentId, applyDetail, applyApiError]);
+  }, [authState, selectedTeamId, selectedTournamentId, reloadSeq.detail, applyDetail]);
 
   const handleSelectTeam = useCallback((teamId: string) => {
     setSelectedTeamId(teamId);
     setSelectedTournamentId("");
     setDetail(null);
     setEntitlementError(null);
-    setLoadingList(Boolean(teamId));
+    setListError(null);
+    setDetailError(null);
+    setLoadedTeamId(null);
+  }, []);
+
+  const handleSelectTournament = useCallback((tournamentId: string) => {
+    setSelectedTournamentId(tournamentId);
+    setDetailError(null);
   }, []);
 
   const activeDetail = detail && detail.id === selectedTournamentId ? detail : null;
+  const isLoadingList =
+    loadingList || (authState === "ready" && Boolean(selectedTeamId) && !entitlementError && loadedTeamId !== selectedTeamId);
+  const isLoadingDetail =
+    authState === "ready" &&
+    Boolean(selectedTeamId) &&
+    Boolean(selectedTournamentId) &&
+    !entitlementError &&
+    !listError &&
+    !detailError &&
+    activeDetail === null;
 
   const runMutation = useCallback(async (fn: () => Promise<void>, rethrow = false) => {
     setBusy(true);
@@ -179,109 +190,61 @@ export function useTournamentDirector() {
     try {
       await fn();
     } catch (err) {
-      applyApiError(err, "Action failed.");
+      if (err instanceof TournamentApiError && err.status === 401) setAuthState("signed-out");
+      else setError(toErrorMessage(err, "Action failed."));
       if (rethrow) throw err;
     } finally {
       setBusy(false);
     }
-  }, [applyApiError]);
+  }, []);
 
-  const withActiveDetail = useCallback(
-    (fn: (teamId: string, d: TournamentDetail) => Promise<void>, rethrow = false) => {
-      if (!selectedTeamId || !activeDetail) return Promise.resolve();
-      return runMutation(() => fn(selectedTeamId, activeDetail), rethrow);
-    },
-    [selectedTeamId, activeDetail, runMutation],
-  );
-
-  const handleCreateTournament = useCallback(
-    (input: CreateTournamentInput) =>
-      selectedTeamId
-        ? runMutation(async () => {
-            const created = await createTournament(selectedTeamId, input);
-            await loadTournaments(selectedTeamId);
-            setSelectedTournamentId(created.id);
-            applyDetail(created);
-          }, true)
-        : Promise.resolve(),
-    [selectedTeamId, runMutation, loadTournaments, applyDetail],
-  );
+  const mutations = buildDirectorMutations({
+    selectedTeamId,
+    activeDetail,
+    runMutation,
+    loadTournaments,
+    applyDetail,
+    refreshDetail,
+    setSelectedTournamentId,
+    setTournaments,
+  });
 
   return {
     authState,
     teams,
+    teamsError,
     selectedTeamId,
     setSelectedTeamId: handleSelectTeam,
     tournaments,
+    listError,
     selectedTournamentId,
-    setSelectedTournamentId,
+    setSelectedTournamentId: handleSelectTournament,
     detail: activeDetail,
+    detailError,
     selectedSheetId,
     setSelectedSheetId,
     entitlementError,
-    loadingList,
+    loadingList: isLoadingList,
+    loadingDetail: isLoadingDetail,
     busy,
     error,
     clearError: () => setError(null),
+    retryTeams: () => {
+      setTeamsError(null);
+      setAuthState("loading");
+      setReloadSeq((s) => ({ ...s, teams: s.teams + 1 }));
+    },
+    retryList: () => {
+      setListError(null);
+      setLoadedTeamId(null);
+      setReloadSeq((s) => ({ ...s, list: s.list + 1 }));
+    },
+    retryDetail: () => {
+      setDetailError(null);
+      setDetail(null);
+      setReloadSeq((s) => ({ ...s, detail: s.detail + 1 }));
+    },
     refreshDetail: () => refreshDetail(selectedTeamId, selectedTournamentId),
-    handleCreateTournament,
-    handleUpdateTournamentStatus: (status: TournamentStatus) =>
-      withActiveDetail(async (tid, d) => {
-        const updated = await updateTournament(tid, d.id, { status });
-        applyDetail(updated);
-        setTournaments((prev) => prev.map((t) => (t.id === updated.id ? { ...t, status: updated.status } : t)));
-      }),
-    handleDeleteTournament: () =>
-      withActiveDetail(async (tid, d) => {
-        await deleteTournament(tid, d.id);
-        await loadTournaments(tid);
-      }),
-    handleToggleGlobalMute: () =>
-      withActiveDetail(async (tid, d) => {
-        applyDetail(
-          await updateTournament(tid, d.id, {
-            emergencyGlobalAudioMute: !d.emergencyGlobalAudioMute,
-            cascadeAudioMute: true,
-          }),
-        );
-      }),
-    handleCreateSheet: (input: CreateSheetInput) =>
-      withActiveDetail(async (tid, d) => {
-        await createTournamentSheet(tid, d.id, {
-          ...input,
-          acousticShieldMuted: d.emergencyGlobalAudioMute ? true : input.acousticShieldMuted ?? false,
-        });
-        await refreshDetail(tid, d.id);
-      }, true),
-    handleChangeSheetAngle: (sheetId: string, activeAngle: BroadcastAngle) =>
-      withActiveDetail(async (tid, d) => {
-        await updateTournamentSheet(tid, d.id, sheetId, { activeAngle });
-        await refreshDetail(tid, d.id);
-      }),
-    handleToggleSheetMute: (sheetId: string, acousticShieldMuted: boolean) =>
-      withActiveDetail(async (tid, d) => {
-        await updateTournamentSheet(tid, d.id, sheetId, { acousticShieldMuted });
-        await refreshDetail(tid, d.id);
-      }),
-    handleDeleteSheet: (sheetId: string) =>
-      withActiveDetail(async (tid, d) => {
-        await deleteTournamentSheet(tid, d.id, sheetId);
-        await refreshDetail(tid, d.id);
-      }),
-    handleCreateMatch: (input: MatchMutationInput & { round: BracketRound; matchLabel: string }) =>
-      withActiveDetail(async (tid, d) => {
-        await createTournamentMatch(tid, d.id, input);
-        await refreshDetail(tid, d.id);
-      }, true),
-    handleUpdateMatch: (matchId: string, input: MatchMutationInput) =>
-      withActiveDetail(async (tid, d) => {
-        await updateTournamentMatch(tid, d.id, matchId, input);
-        await refreshDetail(tid, d.id);
-      }, true),
-    handleDeleteMatch: (matchId: string) =>
-      withActiveDetail(async (tid, d) => {
-        await deleteTournamentMatch(tid, d.id, matchId);
-        await refreshDetail(tid, d.id);
-      }, true),
+    ...mutations,
   };
 }

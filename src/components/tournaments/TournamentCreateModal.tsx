@@ -11,15 +11,17 @@ interface TournamentCreateModalProps {
   onCreate: (input: CreateTournamentInput) => Promise<void>;
 }
 
-export function TournamentCreateModal({ isOpen, busy, onClose, onCreate }: TournamentCreateModalProps) {
+function TournamentCreateModalInner({
+  busy,
+  onClose,
+  onCreate,
+}: Omit<TournamentCreateModalProps, "isOpen">) {
   const [name, setName] = useState("");
   const [venueName, setVenueName] = useState("");
   const [startsOn, setStartsOn] = useState("");
   const [endsOn, setEndsOn] = useState("");
   const [format, setFormat] = useState<TournamentFormat>("single_elimination");
   const [localError, setLocalError] = useState<string | null>(null);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,10 +38,6 @@ export function TournamentCreateModal({ isOpen, busy, onClose, onCreate }: Tourn
         endsOn: endsOn || null,
         format,
       });
-      setName("");
-      setVenueName("");
-      setStartsOn("");
-      setEndsOn("");
       onClose();
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Could not create tournament.");
@@ -143,4 +141,9 @@ export function TournamentCreateModal({ isOpen, busy, onClose, onCreate }: Tourn
       </form>
     </div>
   );
+}
+
+export function TournamentCreateModal({ isOpen, busy, onClose, onCreate }: TournamentCreateModalProps) {
+  if (!isOpen) return null;
+  return <TournamentCreateModalInner busy={busy} onClose={onClose} onCreate={onCreate} />;
 }
