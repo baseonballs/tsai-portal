@@ -65,11 +65,10 @@ type TelemetryTableName = "user_telemetry_events" | "user_session_journeys";
 interface TelemetryMockDb {
   user_telemetry_events: Row[];
   user_session_journeys: Row[];
-  fixedCreatedAt?: string | null;
 }
 
 function toPostgrestTimestamptz(raw: string): string {
-  return raw.replace(/\.(\d{3})Z$/, (_match, frac: string) => {
+  return raw.replace(/\.(\d+)Z$/, (_match, frac: string) => {
     const trimmed = frac.replace(/0+$/, "");
     return trimmed ? `.${trimmed}+00:00` : "+00:00";
   });
@@ -151,8 +150,7 @@ function createFakeTelemetryDbClient(state: TelemetryMockDb) {
                 return { data: null, error: { code: "23505", message: "duplicate key value violates unique constraint" } };
               }
             }
-            const defaultCreatedAt =
-              state.fixedCreatedAt ?? new Date(1795000000000 + rows.length * 1000).toISOString();
+            const defaultCreatedAt = new Date(1795000000000 + rows.length * 1000).toISOString();
             const created = {
               id: item.id ?? `row-${rows.length + 1}`,
               created_at: item.created_at ?? defaultCreatedAt,
@@ -436,18 +434,134 @@ async function run() {
     assert.equal((await postEvent({ visitor_id: "vid_hist", event_type: "page_view", session_id: "sid_brand_new" })).status, 200);
     assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_hist")?.total_sessions, 3);
 
-    // Same-millisecond concurrent beacons in windowExhausted (>200 events) under PostgREST +00:00 vs Z format
-    db.fixedCreatedAt = "2026-11-22T08:00:00.100Z";
+    // Concurrent same-session race inside windowExhausted (>200 events)
     const histRaceResponses = await Promise.all([
       postEvent({ visitor_id: "vid_hist", event_type: "page_view", session_id: "sid_hist_race" }),
       postEvent({ visitor_id: "vid_hist", event_type: "button_click", session_id: "sid_hist_race" }),
     ]);
-    db.fixedCreatedAt = null;
     assert.ok(histRaceResponses.every((r) => r.status === 200));
+    assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_hist")?.total_sessions, 4);
+
+    // Deterministic compareEventOrder coverage for PostgREST +00:00 trimmed fractions & microseconds vs JS Z
+    const { computeNextJourneyState } = await import("../src/lib/telemetry/journey-lifecycle");
+    const postgrestFirstRes = computeNextJourneyState({
+      existingJourney: { total_sessions: 4, total_duration_sec: 100, current_lifecycle_stage: "engaged_prospect" },
+      currentEvent: {
+        id: "zzz-event",
+        event_type: "button_click",
+        event_properties: { session_id: "sid_pg_tie" },
+        session_id: "sid_pg_tie",
+        duration_sec: 1,
+        user_id: null,
+        created_at: "2026-11-22T08:00:00.100Z",
+      },
+      priorEvents: [
+        {
+          id: "aaa-event",
+          user_id: null,
+          event_type: "page_view",
+          event_properties: { session_id: "sid_pg_tie" },
+          created_at: "2026-11-22T08:00:00.1+00:00",
+        },
+      ],
+      windowExhausted: true,
+      nowIso: "2026-11-22T08:00:00.100Z",
+    });
     assert.equal(
-      db.user_session_journeys.find((j) => j.visitor_id === "vid_hist")?.total_sessions,
+      postgrestFirstRes.totalSessions,
       4,
-      "same-ms PostgREST +00:00 vs Z concurrent beacons in windowExhausted must increment total_sessions once",
+      "PostgREST .1+00:00 equals JS .100Z so earlier id aaa-event wins tie-break",
+    );
+
+    const jsEarlierWholeSecRes = computeNextJourneyState({
+      existingJourney: { total_sessions: 4, total_duration_sec: 100, current_lifecycle_stage: "engaged_prospect" },
+      currentEvent: {
+        id: "aaa-event",
+        event_type: "page_view",
+        event_properties: { session_id: "sid_pg_whole" },
+        session_id: "sid_pg_whole",
+        duration_sec: 1,
+        user_id: null,
+        created_at: "2026-11-22T08:00:00.000Z",
+      },
+      priorEvents: [
+        {
+          id: "zzz-event",
+          user_id: null,
+          event_type: "button_click",
+          event_properties: { session_id: "sid_pg_whole" },
+          created_at: "2026-11-22T08:00:00+00:00",
+        },
+      ],
+      windowExhausted: true,
+      nowIso: "2026-11-22T08:00:00.000Z",
+    });
+    assert.equal(
+      jsEarlierWholeSecRes.totalSessions,
+      5,
+      "JS .000Z matches PostgREST whole-second +00:00 and wins tie-break by smaller id",
+    );
+
+    const subMsOrderRes = computeNextJourneyState({
+      existingJourney: { total_sessions: 4, total_duration_sec: 100, current_lifecycle_stage: "engaged_prospect" },
+      currentEvent: {
+        id: "zzz-event",
+        event_type: "page_view",
+        event_properties: { session_id: "sid_pg_subms" },
+        session_id: "sid_pg_subms",
+        duration_sec: 1,
+        user_id: null,
+        created_at: "2026-11-22T08:00:00.123Z",
+      },
+      priorEvents: [
+        {
+          id: "aaa-event",
+          user_id: null,
+          event_type: "button_click",
+          event_properties: { session_id: "sid_pg_subms" },
+          created_at: "2026-11-22T08:00:00.123456+00:00",
+        },
+      ],
+      windowExhausted: true,
+      nowIso: "2026-11-22T08:00:00.123Z",
+    });
+    assert.equal(
+      subMsOrderRes.totalSessions,
+      5,
+      ".123Z (.123000) sorts before .123456+00:00 even with larger UUID",
+    );
+
+    // Un-sessioned initial event + concurrent distinct new session_ids (!windowExhausted) must NOT double-count (1 -> 3, not 4)
+    db.user_session_journeys.push({
+      id: "journey-nosid-race",
+      visitor_id: "vid_nosid_race",
+      lead_id: null,
+      user_id: null,
+      first_seen_at: "2026-01-01T00:00:00.000Z",
+      converted_at: null,
+      last_active_at: "2026-01-01T00:00:00.000Z",
+      total_sessions: 1,
+      total_duration_sec: 10,
+      acquisition_source: "direct",
+      current_lifecycle_stage: "anonymous_visitor",
+      updated_at: "2026-01-01T00:00:00.000Z",
+    });
+    db.user_telemetry_events.push({
+      id: "ev-nosid-initial",
+      visitor_id: "vid_nosid_race",
+      event_type: "page_view",
+      event_properties: {},
+      created_at: "2026-01-01T00:00:00.000Z",
+    });
+    const noSidDistinctRace = await Promise.all([
+      postEvent({ visitor_id: "vid_nosid_race", event_type: "page_view", session_id: "sid_nr_1" }),
+      postEvent({ visitor_id: "vid_nosid_race", event_type: "page_view", session_id: "sid_nr_2" }),
+    ]);
+    assert.ok(noSidDistinctRace.every((r) => r.status === 200));
+    assert.equal(
+      db.user_session_journeys.find((j) => j.visitor_id === "vid_nosid_race")?.total_sessions,
+      3,
+      "initial un-sessioned event + 2 concurrent distinct sessions must equal 3 without CAS double-count",
     );
 
     // Pre-Wave-6 legacy journey (total_sessions > seenSessions.size, un-sessioned prior event) still increments cleanly

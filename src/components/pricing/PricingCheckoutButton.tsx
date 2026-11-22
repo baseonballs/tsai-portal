@@ -72,8 +72,8 @@ export function PricingCheckoutButton({
       const data = (await res.json().catch(() => null)) as { url?: unknown; error?: string } | null;
 
       if (res.status === 401) {
-        navigating = true;
         window.location.href = "/login?next=/pricing";
+        navigating = true;
         return;
       }
       if (res.status === 503) {
@@ -88,8 +88,8 @@ export function PricingCheckoutButton({
         setInlineError(messages.badRedirect);
         return;
       }
-      navigating = true;
       window.location.assign(data.url);
+      navigating = true;
     } catch {
       setInlineError("Could not reach the billing service. Please try again.");
     } finally {
@@ -159,8 +159,10 @@ export function PricingCheckoutButton({
   }
 
   const normalizedStatus = subscriptionStatus?.trim().toLowerCase() ?? "";
+  const isCanceled = normalizedStatus === "canceled";
   const hasManageableSub =
     authenticated &&
+    !isCanceled &&
     (hasActiveSubscription ||
       normalizedStatus === "paused" ||
       normalizedStatus === "incomplete" ||

@@ -1102,8 +1102,9 @@ async function run() {
       "concurrent double-click shares identical non-wall-clock idempotencyKey",
     );
 
-    // No stripe_customers row -> 404 honest message
+    // No stripe_customers or subscriptions customer -> 404 honest message
     db.stripe_customers.length = 0;
+    db.subscriptions[0].stripe_customer_id = null;
     mockStripeCustomers = [];
     const portalNoCust = await portalRoute.POST(
       new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
@@ -1113,6 +1114,19 @@ async function run() {
     assert.equal(portalNoCust.status, 404);
     assert.equal(portalNoCust.headers.get("cache-control"), "private, no-store");
     assert.match(((await portalNoCust.json()) as { error?: string }).error ?? "", /No Stripe billing customer/i);
+
+    // Pre-B15 subscriber fallback: stripe_customer_id only on subscriptions succeeds (200) without stripe_customers row
+    db.subscriptions[0].stripe_customer_id = "cus_legacy_sub_only";
+    capturedPortalParams = [];
+    const portalLegacySubRes = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalLegacySubRes.status, 200);
+    assert.deepEqual(await portalLegacySubRes.json(), { url: nextPortalUrl });
+    assert.equal(capturedPortalParams[0].customer, "cus_legacy_sub_only");
+    db.subscriptions[0].stripe_customer_id = null;
 
     // Invalid returnPath / return_url / JSON rejected with 400
     db.stripe_customers.push({ user_id: BUYER_USER_ID, stripe_customer_id: "cus_portal_buyer_1" });
@@ -1653,6 +1667,23 @@ async function run() {
     assert.match(incompleteSubHtml, /Manage Billing/);
     assert.match(incompleteSubHtml, /Payment Incomplete — Action Required/);
     assert.doesNotMatch(incompleteSubHtml, /Active account plan:/);
+
+    const canceledSubHtml = renderToStaticMarkup(
+      React.createElement(PricingCheckoutButton, {
+        planSku: "SPOT-PRO-STD",
+        planLabel: "Premier",
+        loading: false,
+        catalogError: null,
+        authenticated: true,
+        checkoutReady: true,
+        activePlan: "PRO",
+        subscriptionStatus: "canceled",
+        hasActiveSubscription: false,
+        variant: "teal",
+      }),
+    );
+    assert.match(canceledSubHtml, /Subscribe to Premier/);
+    assert.doesNotMatch(canceledSubHtml, /Manage Billing/);
 
     const buttonSrc = fs.readFileSync(path.join(ROOT, "src/components/pricing/PricingCheckoutButton.tsx"), "utf8");
     assert.match(buttonSrc, /\/api\/billing\/stripe\/portal/);

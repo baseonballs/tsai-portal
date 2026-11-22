@@ -9,6 +9,7 @@ import {
   matchesIfNoneMatch,
 } from "@/lib/perf/server-timing";
 import {
+  nextMonotonicEventCreatedAt,
   resolveSessionIdFromEvent,
   type ExistingJourneyRecord,
 } from "@/lib/telemetry/journey-lifecycle";
@@ -121,6 +122,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = getTelemetryAdminClient();
     const nowIso = new Date().toISOString();
+    const eventCreatedAt = nextMonotonicEventCreatedAt();
     const eventId = crypto.randomUUID();
     const durationSec = Math.max(0, Math.floor(Number(session_duration_sec) || 0));
 
@@ -141,7 +143,7 @@ export async function POST(req: NextRequest) {
           event_properties: normalizedEventProperties,
           ip_hash: ipHash,
           user_agent: userAgent,
-          created_at: nowIso,
+          created_at: eventCreatedAt,
         },
       ]),
       supabase
@@ -169,7 +171,7 @@ export async function POST(req: NextRequest) {
         session_id: resolvedSessionId,
         duration_sec: durationSec,
         user_id,
-        created_at: nowIso,
+        created_at: eventCreatedAt,
       },
       leadId: lead_id,
       nowIso,

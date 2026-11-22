@@ -81,6 +81,18 @@ function compareEventOrder(a: TelemetryEventSummary, b: TelemetryEventSummary): 
   return String(a.id ?? "").localeCompare(String(b.id ?? ""));
 }
 
+let lastEventMicros = 0;
+
+/** Generate a process-monotonic microsecond ISO timestamp so sub-ms beacons preserve order. */
+export function nextMonotonicEventCreatedAt(nowMs = Date.now()): string {
+  const baseMicros = Math.floor(nowMs) * 1000;
+  lastEventMicros = baseMicros > lastEventMicros ? baseMicros : lastEventMicros + 1;
+  const epochMs = Math.floor(lastEventMicros / 1000);
+  const subMs = lastEventMicros % 1000;
+  const iso = new Date(epochMs).toISOString();
+  return subMs === 0 ? iso : `${iso.slice(0, -1)}${String(subMs).padStart(3, "0")}Z`;
+}
+
 export function computeNextJourneyState(opts: {
   existingJourney: ExistingJourneyRecord | null;
   currentEvent: {
@@ -161,9 +173,11 @@ export function computeNextJourneyState(opts: {
 
     if (!windowExhausted) {
       const earliestEvent = sortedEvents[0];
-      const earliestHadNoSession = Boolean(earliestEvent && !extractSessionIdFromProperties(earliestEvent.event_properties));
+      const earliestHadNoSession = Boolean(
+        earliestEvent && !extractSessionIdFromProperties(earliestEvent.event_properties),
+      );
       const observedCount = seenSessions.size + (earliestHadNoSession ? 1 : 0);
-      if (baseSessions > seenSessions.size && isCanonicalFirst && (earliestHadNoSession || baseSessions > 1)) {
+      if (baseSessions > observedCount && isCanonicalFirst) {
         totalSessions = baseSessions + 1;
       } else {
         totalSessions = Math.max(baseSessions, observedCount);

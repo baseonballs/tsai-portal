@@ -53,19 +53,37 @@ export async function POST(req: NextRequest) {
 
     const stripe = getStripe();
     const adminClient = createPortalAdminClient();
-    const { data: customerRow, error: custErr } = await adminClient
-      .from("stripe_customers")
-      .select("stripe_customer_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    const [customerRes, subscriptionRes] = await Promise.all([
+      adminClient
+        .from("stripe_customers")
+        .select("stripe_customer_id")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      adminClient
+        .from("subscriptions")
+        .select("stripe_customer_id")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
 
-    if (custErr) {
-      console.error("[StripePortal POST] Customer lookup failed:", custErr.message);
+    if (customerRes.error) {
+      console.error("[StripePortal POST] Customer lookup failed:", customerRes.error.message);
       return jsonNoStore({ error: "Billing service is temporarily unavailable." }, 503);
     }
 
-    const stripeCustomerId = (customerRow as { stripe_customer_id?: string | null } | null)
+    const customerFromBinding = (customerRes.data as { stripe_customer_id?: string | null } | null)
       ?.stripe_customer_id?.trim();
+    if (!customerFromBinding && subscriptionRes.error) {
+      console.error(
+        "[StripePortal POST] Subscription customer lookup failed:",
+        subscriptionRes.error.message,
+      );
+      return jsonNoStore({ error: "Billing service is temporarily unavailable." }, 503);
+    }
+
+    const customerFromSub = (subscriptionRes.data as { stripe_customer_id?: string | null } | null)
+      ?.stripe_customer_id?.trim();
+    const stripeCustomerId = customerFromBinding || customerFromSub;
     if (!stripeCustomerId) {
       return jsonNoStore(
         { error: "No Stripe billing customer record exists for this account yet." },
