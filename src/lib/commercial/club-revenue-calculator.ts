@@ -2,7 +2,6 @@
  * club-revenue-calculator.ts
  * tsai-portal
  *
- * Author / Inventor: Jeffrey T. Lucas
  * Assignee: Transcendental Sports AI LLC
  * Commercial Strategy: Disruptive Club Revenue Sharing (50% Net Pass Subscription)
  *

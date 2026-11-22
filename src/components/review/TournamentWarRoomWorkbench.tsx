@@ -3,7 +3,6 @@
 //
 //  TournamentWarRoomWorkbench.tsx
 //  tsai-portal
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Palette: slate/zinc/cyan/emerald/amber/rose only
 //  Rule: Component < 300 lines

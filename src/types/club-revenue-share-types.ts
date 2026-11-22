@@ -2,7 +2,6 @@
 //  club-revenue-share-types.ts
 //  tsai-portal
 //
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Commercial Rollout: 50% Club Revenue Sharing & Scout Download Console
 */

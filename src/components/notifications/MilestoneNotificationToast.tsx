@@ -4,7 +4,6 @@
 //  MilestoneNotificationToast.tsx
 //  tsai-portal
 //
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Patent Track: Track 16 (Docket P229, Claim 10)
 //  Rule: Strictly Zero-Purple (zinc/slate/emerald/amber/rose/cyan only)

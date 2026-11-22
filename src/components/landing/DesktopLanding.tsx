@@ -5,7 +5,6 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import { YouthHockeyCinematicBanner } from "@/components/landing/YouthHockeyCinematicBanner";
 import { TheLoopIllustration } from "@/components/landing/TheLoopIllustration";
 import { LockerRoomHub } from "@/components/landing/LockerRoomHub";
-import { RinkTelemetryChart } from "@/components/landing/RinkTelemetryChart";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import Link from "next/link";
@@ -96,20 +95,6 @@ export function DesktopLanding() {
 
         {/* THE LOCKER ROOM INTERACTIVE SHOWCASE */}
         <LockerRoomHub />
-
-        {/* RINK TELEMETRY CHART COMPONENT */}
-        <section className="px-6 py-24 lg:px-8 border-t border-white/5 bg-zinc-900/40">
-          <div className="mx-auto max-w-5xl">
-            <div className="text-center mb-12">
-              <span className="text-xs font-semibold tracking-[0.2em] text-cyan-400 uppercase">Telemetry Visualization</span>
-              <h2 className="mt-4 text-4xl font-serif text-white sm:text-5xl">Rink Telemetry and Spatial Intelligence</h2>
-              <p className="mt-4 text-base text-zinc-400 max-w-2xl mx-auto">
-                Real-time spatial tracking mapping shift events across the rink surface.
-              </p>
-            </div>
-            <RinkTelemetryChart />
-          </div>
-        </section>
 
         {/* TEAM BETA REGISTRATION FORM */}
         <section id="beta-access" className="px-6 py-32 lg:px-8 border-t border-white/10 bg-gradient-to-b from-zinc-950 via-cyan-950/20 to-zinc-950 text-center relative overflow-hidden">

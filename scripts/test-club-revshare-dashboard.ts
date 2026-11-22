@@ -2,7 +2,6 @@
  * test-club-revshare-dashboard.ts
  * TsaiPortal / Rev-Share Dashboard & Commercial Verification Suite
  *
- * Author / Inventor: Jeffrey T. Lucas
  * Assignee: Transcendental Sports AI LLC
  * Commercial Strategy: Option D - Turnkey Arena Rig ($78.99) & 50% Net Rev Share ($4.60/sub/mo)
  *

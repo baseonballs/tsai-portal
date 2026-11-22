@@ -4,7 +4,6 @@
 //  VoronoiPassingLaneWorkbench.tsx
 //  tsai-portal
 //
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Patent Track: Track 16 (TSAI-PAT-P384)
 //  Sprint 26: Anticipatory Passing Lane Voronoi Shadow & Collapse Field

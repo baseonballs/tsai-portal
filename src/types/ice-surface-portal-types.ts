@@ -2,7 +2,6 @@
 //  ice-surface-portal-types.ts
 //  tsai-portal
 //
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Patent Track: Track 16 (TSAI-PAT-P406)
 //  Sprint 48: Multi-Sheet Ice Surface Temperature & Zamboni Resurfacing Quality Forecaster

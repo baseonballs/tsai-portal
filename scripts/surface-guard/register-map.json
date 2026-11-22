@@ -29,12 +29,6 @@
     "route:/api/billing/stripe/connect": "O-06",
     "route:/api/rosters/import": "O-07",
     "unavailable:testid:byod-pairing-unavailable": "O-09",
-    "unavailable:testid:club-partner-unavailable": "O-08",
-    "unavailable:testid:engine-throughput-unavailable": "O-03",
-    "unavailable:testid:ical-provisioning-unavailable": "O-01",
-    "unavailable:testid:platform-status-unavailable": "O-03",
-    "unavailable:testid:rink-telemetry-unavailable": "O-02",
-    "unavailable:testid:tournament-bracket-unavailable": "O-01",
-    "unavailable:testid:tournament-director-unavailable": "O-01"
+    "unavailable:testid:club-partner-unavailable": "O-06"
   }
 }

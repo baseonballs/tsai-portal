@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
-import { RinkTelemetryChart } from "@/components/landing/RinkTelemetryChart";
 import { BetaSignupForm } from "@/components/landing/BetaSignupForm";
 import { DualLedgersScienceSection } from "@/components/landing/DualLedgersScienceSection";
 import { 
@@ -172,9 +171,9 @@ export default function TechnologySolutionsPage() {
               })}
             </div>
 
-            {/* Active Sub-Stack Card and Live Telemetry Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-              <div className="lg:col-span-6 bg-zinc-900/40 border border-white/10 rounded-3xl p-8 backdrop-blur-xl flex flex-col justify-between shadow-2xl">
+            {/* Active Sub-Stack Card */}
+            <div className="mx-auto max-w-4xl">
+              <div className="bg-zinc-900/40 border border-white/10 rounded-3xl p-8 md:p-10 backdrop-blur-xl flex flex-col justify-between shadow-2xl">
                 <div>
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
@@ -209,10 +208,6 @@ export default function TechnologySolutionsPage() {
                   <span>Engine Integration: <strong className="text-white">MASCE L2/L3</strong></span>
                   <span>Timestamp Lock: <strong className="text-cyan-400">Sub-second</strong></span>
                 </div>
-              </div>
-
-              <div className="lg:col-span-6 flex flex-col justify-center">
-                <RinkTelemetryChart />
               </div>
             </div>
           </div>

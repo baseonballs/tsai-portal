@@ -2,26 +2,70 @@
 
 import React, { useState } from "react";
 import {
-  type TournamentSheet,
-  type BroadcastAngle,
   type MultiSheetCommandCenterProps,
+  type SheetMatchInfo,
+  type TournamentSheet,
 } from "./multi-sheet-types";
 import { ICalProvisioningModal } from "./ICalProvisioningModal";
+import { SheetGridCard } from "./SheetGridCard";
 
 export * from "./multi-sheet-types";
 
+function isSafeHttpsUrl(url: string | null | undefined): url is string {
+  if (!url || !url.startsWith("https://")) return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && Boolean(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function resolveSheetMatch(
+  sheet: TournamentSheet,
+  matches: MultiSheetCommandCenterProps["matches"],
+): SheetMatchInfo | null {
+  if (matches && matches.length > 0) {
+    const linked = matches.filter((m) => m.sheetId === sheet.sheetId);
+    const chosen =
+      linked.find((m) => m.status === "LIVE") ??
+      linked.find((m) => m.status === "UPCOMING") ??
+      linked[0];
+    if (chosen) {
+      return {
+        matchId: chosen.matchId,
+        homeTeam: chosen.homeTeamName,
+        awayTeam: chosen.awayTeamName,
+        period: chosen.period,
+        gameClockSeconds: chosen.clockSeconds,
+        scoreHome: chosen.homeScore,
+        scoreAway: chosen.awayScore,
+        isOvertime: chosen.isOvertime,
+      };
+    }
+  }
+  return sheet.matchInfo ?? null;
+}
+
 export function MultiSheetCommandCenter({
-  initialSheets = [],
+  sheets,
+  matches = [],
+  teamId = null,
+  tournamentId = null,
   tournamentName = "Tournament Director",
-  venueName = "No tournament connected",
+  venueName = null,
+  emergencyGlobalAudioMute = false,
+  busy = false,
   selectedSheetId: controlledSheetId,
   onSelectSheet,
+  onToggleGlobalMute,
+  onChangeSheetAngle,
+  onToggleSheetMute,
+  onDeleteSheet,
+  onOpenCreateSheet,
+  onSheetsApplied,
 }: MultiSheetCommandCenterProps) {
-  const [sheets, setSheets] = useState<TournamentSheet[]>(initialSheets);
-  const [globalMute, setGlobalMute] = useState<boolean>(false);
-  const [internalSheetId, setInternalSheetId] = useState<string>(
-    initialSheets[0]?.sheetId || ""
-  );
+  const [internalSheetId, setInternalSheetId] = useState<string>(sheets[0]?.sheetId || "");
   const [isIcalModalOpen, setIsIcalModalOpen] = useState(false);
 
   const activeSheetId = controlledSheetId ?? internalSheetId;
@@ -30,164 +74,84 @@ export function MultiSheetCommandCenter({
     onSelectSheet?.(sheetId);
   };
 
-  const toggleGlobalAcousticShieldMute = () => {
-    const nextState = !globalMute;
-    setGlobalMute(nextState);
-    setSheets((prev) =>
-      prev.map((s) => ({ ...s, acousticShieldMuted: nextState }))
-    );
-  };
-
-  const setSheetAngle = (sheetId: string, angle: BroadcastAngle) => {
-    setSheets((prev) =>
-      prev.map((s) => (s.sheetId === sheetId ? { ...s, activeAngle: angle } : s))
-    );
-  };
-
   const activeSheet = sheets.find((s) => s.sheetId === activeSheetId) || sheets[0];
 
   return (
     <div className="space-y-6">
-      {/* ── Director Header HUD ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0B0F17] p-5 rounded-2xl border border-slate-800 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <span className={`flex h-2.5 w-2.5 rounded-full ${sheets.length > 0 ? "bg-red-500 animate-ping" : "bg-slate-600"}`} />
+            <span
+              className={`flex h-2.5 w-2.5 rounded-full ${
+                sheets.some((s) => s.streamState === "LIVE") ? "bg-red-500 animate-ping" : "bg-slate-600"
+              }`}
+            />
             <h2 className="text-xl font-black tracking-tight text-white uppercase">{tournamentName}</h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            {venueName} • <span className="text-cyan-400 font-mono">8-Sheet Synchronized Director Engine</span>
+            {venueName || "No venue specified"} •{" "}
+            <span className="text-cyan-400 font-mono">{sheets.length} Sheet(s) Configured</span>
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {onOpenCreateSheet && (
+            <button
+              type="button"
+              disabled={busy || !tournamentId}
+              onClick={onOpenCreateSheet}
+              className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 disabled:opacity-50"
+            >
+              + Add Sheet
+            </button>
+          )}
           <button
+            type="button"
+            disabled={busy || !tournamentId}
             onClick={() => setIsIcalModalOpen(true)}
-            className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-2 border border-cyan-500 shadow-lg shadow-cyan-950/40 transition-all"
+            className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-2 border border-cyan-500 shadow-lg shadow-cyan-950/40 transition-all disabled:opacity-50"
           >
             <span>📅</span> Import iCal Schedule
           </button>
           <button
-            onClick={toggleGlobalAcousticShieldMute}
-            className={`px-3.5 py-2 text-xs font-bold rounded-lg border transition-all ${
-              globalMute
+            type="button"
+            disabled={busy || !onToggleGlobalMute || !tournamentId}
+            onClick={() => onToggleGlobalMute?.()}
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg border transition-all disabled:opacity-50 ${
+              emergencyGlobalAudioMute
                 ? "bg-rose-950/80 border-rose-500 text-rose-300 animate-pulse"
                 : "bg-slate-900 border-slate-700 text-slate-300 hover:text-white"
             }`}
           >
-            {globalMute ? "⚠️ EMERGENCY AUDIO MUTE ACTIVE" : "🔇 Cascading Acoustic Shield Mute"}
+            {emergencyGlobalAudioMute ? "⚠️ EMERGENCY AUDIO MUTE ACTIVE" : "🔇 Emergency Global Audio Mute"}
           </button>
         </div>
       </div>
 
-      {/* GA-030 O-01 (T0.4): no tournament backend yet — an honest empty state, never built-in sheets. */}
-      {sheets.length === 0 && (
-        <div
-          data-testid="tournament-director-unavailable"
-          className="rounded-2xl border border-slate-800 bg-[#0d121d] p-8 text-center text-sm text-slate-400"
-        >
-          <p className="font-semibold text-white">Live sheets: not yet available</p>
+      {sheets.length === 0 ? (
+        <div className="rounded-2xl border border-slate-800 bg-[#0d121d] p-8 text-center text-sm text-slate-400">
+          <p className="font-semibold text-white">No rink sheets configured</p>
           <p className="mt-1 text-xs">
-            No tournament, rink sheet or stream is connected. Nothing on this page is live.
+            Add a rink sheet or import an iCal schedule to assign feeds and bracket matchups.
           </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {sheets.map((sheet) => (
+            <SheetGridCard
+              key={sheet.sheetId}
+              sheet={sheet}
+              matchInfo={resolveSheetMatch(sheet, matches)}
+              isSelected={sheet.sheetId === activeSheetId}
+              busy={busy}
+              onSelect={handleSelectSheet}
+              onChangeAngle={onChangeSheetAngle}
+              onToggleMute={onToggleSheetMute}
+            />
+          ))}
         </div>
       )}
 
-      {/* ── 8-Sheet Mosaic Video Matrix ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {sheets.map((sheet) => {
-          const isSelected = sheet.sheetId === activeSheetId;
-          const isLive = sheet.streamState === "LIVE";
-          const whistleActive = sheet.matchInfo?.whistleDuckingActive ?? false;
-          // No xG reading → show it as missing, never a made-up even split (GA-030 O-01).
-          const homeXg = sheet.matchInfo?.homeXg;
-          const awayXg = sheet.matchInfo?.awayXg;
-          const hasXg = typeof homeXg === "number" && typeof awayXg === "number";
-          const homeXgPct = hasXg ? Math.round((homeXg / Math.max(homeXg + awayXg, 0.1)) * 100) : 0;
-
-          return (
-            <div
-              key={sheet.sheetId}
-              onClick={() => handleSelectSheet(sheet.sheetId)}
-              className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border bg-[#0d121d] p-3 transition-all cursor-pointer ${
-                isSelected
-                  ? "border-cyan-500 shadow-xl shadow-cyan-950/30 ring-1 ring-cyan-500"
-                  : "border-slate-800 hover:border-slate-700"
-              }`}
-            >
-              {/* Top Meta Bar */}
-              <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2 mb-2">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-xs font-bold text-white truncate">{sheet.rinkName}</span>
-                  {sheet.isPublicShowcase && (
-                    <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      SHOWCASE
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {whistleActive && (
-                    <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-500 text-slate-950 animate-pulse">
-                      -24dB WHISTLE
-                    </span>
-                  )}
-                  <span
-                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${
-                      isLive
-                        ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                        : "bg-slate-800 text-slate-400"
-                    }`}
-                  >
-                    {sheet.streamState}
-                  </span>
-                </div>
-              </div>
-
-              {/* Scorebug HUD & xG Threat Bar */}
-              <div className="bg-slate-950/90 rounded-lg p-2.5 border border-slate-800/60 my-1">
-                <div className="flex justify-between items-center text-xs font-mono font-bold">
-                  <span className="text-slate-200 truncate max-w-[90px]">{sheet.matchInfo.homeTeam}</span>
-                  <span className="text-white text-sm bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                    {sheet.matchInfo.scoreHome} - {sheet.matchInfo.scoreAway}
-                  </span>
-                  <span className="text-slate-200 truncate max-w-[90px] text-right">{sheet.matchInfo.awayTeam}</span>
-                </div>
-                <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1.5 font-mono">
-                  <span>P{sheet.matchInfo.period} • {Math.floor(sheet.matchInfo.gameClockSeconds / 60)}:{(sheet.matchInfo.gameClockSeconds % 60).toString().padStart(2, "0")}</span>
-                  <span className="text-cyan-400">{hasXg ? `xG ${homeXg.toFixed(2)} - ${awayXg.toFixed(2)}` : "xG not available"}</span>
-                </div>
-                {/* Dynamic xG pressure bar */}
-                {hasXg && (
-                  <div className="w-full bg-slate-800 h-1 rounded-full mt-1.5 overflow-hidden flex">
-                    <div className="bg-cyan-500 h-full" style={{ width: `${homeXgPct}%` }} />
-                    <div className="bg-slate-600 h-full" style={{ width: `${100 - homeXgPct}%` }} />
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom Angle Controls */}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[10px]">
-                <span className="text-slate-400 font-mono">
-                  {sheet.fps} FPS • {Math.round(sheet.bitrateKbps / 1000)} Mbps
-                </span>
-                <select
-                  value={sheet.activeAngle}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => setSheetAngle(sheet.sheetId, e.target.value as BroadcastAngle)}
-                  className="bg-slate-900 text-slate-300 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] focus:outline-none"
-                >
-                  <option value="TACTICAL_PRIMARY">Tactical Center</option>
-                  <option value="HIGH_ENDZONE_HOME">Endzone Home</option>
-                  <option value="HIGH_ENDZONE_AWAY">Endzone Away</option>
-                  <option value="OVERHEAD_TACTICAL">Overhead</option>
-                </select>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── Active Sheet Director Control Bar ── */}
       {activeSheet && (
         <div className="bg-[#0B0F17] p-5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -197,34 +161,47 @@ export function MultiSheetCommandCenter({
             <div>
               <h3 className="text-sm font-bold text-white">{activeSheet.rinkName} Selected</h3>
               <p className="text-xs text-slate-400 font-mono">
-                RTMPS: {activeSheet.rtmpsIngestUrl.slice(0, 32)}... • Temp: {activeSheet.hardwareHealth.temperatureCelsius}°C
+                YouTube Broadcast: {activeSheet.youtubeBroadcastId || "Not linked"} •{" "}
+                {activeSheet.hardwareHealth?.temperatureCelsius != null
+                  ? `Temp: ${activeSheet.hardwareHealth.temperatureCelsius}°C`
+                  : "Hardware telemetry not connected"}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {activeSheet.playbackUrl && (
+            {isSafeHttpsUrl(activeSheet.playbackUrl) && (
               <a
                 href={activeSheet.playbackUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="px-4 py-2 text-xs font-bold rounded-lg bg-red-600 hover:bg-red-500 text-white flex items-center gap-2 transition-all shadow-md shadow-red-950"
               >
                 ▶ WATCH YOUTUBE STREAM
               </a>
             )}
+            {onDeleteSheet && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void onDeleteSheet(activeSheet.sheetId)}
+                className="px-3 py-2 text-xs font-semibold rounded-lg border border-rose-500/40 bg-rose-950/40 text-rose-300 hover:bg-rose-900/50 disabled:opacity-50"
+              >
+                Remove Sheet
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      {/* iCal Modal */}
       <ICalProvisioningModal
         isOpen={isIcalModalOpen}
         onClose={() => setIsIcalModalOpen(false)}
-        onApplyProvisioning={(newSheets) => {
-          setSheets(newSheets);
-          if (newSheets.length > 0) setInternalSheetId(newSheets[0].sheetId);
-        }}
+        teamId={teamId}
+        tournamentId={tournamentId}
+        existingSheetNumbers={sheets.map((s) => s.sheetNumber)}
+        emergencyGlobalAudioMute={emergencyGlobalAudioMute}
+        onSheetsApplied={onSheetsApplied}
       />
     </div>
   );
