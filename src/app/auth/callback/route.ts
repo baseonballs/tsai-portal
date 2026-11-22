@@ -73,5 +73,7 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(new URL('/login?error=auth-callback-failed', publicOrigin))
+  return NextResponse.redirect(new URL('/login?error=auth-callback-failed', publicOrigin), {
+    headers: { "Cache-Control": "private, no-store" },
+  })
 }

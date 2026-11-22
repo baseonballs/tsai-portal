@@ -14,6 +14,7 @@ export interface CheckoutCatalogResponse {
   authenticated: boolean;
   checkoutConfigured: boolean;
   activePlan: string | null;
+  hasActiveSubscription?: boolean;
   plans: CheckoutCatalogPlan[];
 }
 

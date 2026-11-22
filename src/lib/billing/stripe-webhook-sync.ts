@@ -200,14 +200,31 @@ export async function syncPersonalLicenseRow(
 }
 
 /**
- * Sync `public.user_product_licenses` (`product_id: "spotlight"`), whose DB trigger
- * recomputes `auth.users.raw_app_meta_data`.
+ * Sync `public.user_product_licenses` (`product_id: "spotlight"`), preserving non-Stripe
+ * grants (`invite_code`, `admin_override`, `provisioning`, etc.) on both activation and revocation.
  */
 export async function syncUserProductLicenseRow(
   supabaseAdmin: SupabaseClient,
   opts: { userId: string; active: boolean },
 ): Promise<void> {
   await assertProfileExists(supabaseAdmin, opts.userId);
+
+  const { data: existing, error: lookupErr } = await supabaseAdmin
+    .from("user_product_licenses")
+    .select("id, status, granted_via")
+    .eq("user_id", opts.userId)
+    .eq("product_id", "spotlight")
+    .maybeSingle();
+  if (lookupErr) throw new Error(`Failed to inspect user_product_licenses: ${lookupErr.message}`);
+
+  const row = existing as { id: string; status: string; granted_via: string } | null;
+  if (opts.active) {
+    if (row?.status === "active" && row.granted_via !== "stripe_webhook") {
+      return;
+    }
+  } else if (!row || row.granted_via !== "stripe_webhook") {
+    return;
+  }
 
   const { error } = await supabaseAdmin.from("user_product_licenses").upsert(
     {
@@ -220,4 +237,49 @@ export async function syncUserProductLicenseRow(
     { onConflict: "user_id,product_id" },
   );
   if (error) throw new Error(`Failed to upsert user_product_licenses: ${error.message}`);
+}
+
+export async function applyStripeEntitlements(
+  supabaseAdmin: SupabaseClient,
+  opts: {
+    userId: string;
+    planType: ValidLicensePlanType;
+    planId: string | null;
+    planSku: string | null;
+    subStatus: string;
+    customerId: string | null;
+    subscriptionId: string | null;
+    periodEnd: string | null;
+    trialEnd: string | null;
+    eventId: string;
+    grantProductLicense: boolean | null;
+  },
+): Promise<void> {
+  await syncSubscriptionRow(supabaseAdmin, {
+    userId: opts.userId,
+    activePlan: opts.planType,
+    status: opts.subStatus,
+    planId: opts.planId,
+    customerId: opts.customerId,
+    subscriptionId: opts.subscriptionId,
+    currentPeriodEnd: opts.periodEnd,
+    trialEnd: opts.trialEnd,
+  });
+  await syncPersonalLicenseRow(supabaseAdmin, {
+    userId: opts.userId,
+    planType: opts.planType,
+    planId: opts.planId,
+    planSku: opts.planSku,
+    customerId: opts.customerId,
+    subscriptionId: opts.subscriptionId,
+    validUntil: opts.periodEnd,
+    trialEndsAt: opts.trialEnd,
+    eventId: opts.eventId,
+  });
+  if (opts.grantProductLicense !== null) {
+    await syncUserProductLicenseRow(supabaseAdmin, {
+      userId: opts.userId,
+      active: opts.grantProductLicense,
+    });
+  }
 }

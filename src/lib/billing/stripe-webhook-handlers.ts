@@ -9,13 +9,13 @@ import {
   resolveWebhookPlan,
   type ValidLicensePlanType,
 } from "@/lib/billing/stripe-plans";
+import { isStaleOutOfOrderEvent } from "@/lib/billing/stripe-webhook-claim";
 import {
+  applyStripeEntitlements,
   asStringId,
   bindStripeCustomer,
   resolveUserIdByCustomer,
-  syncPersonalLicenseRow,
   syncSubscriptionRow,
-  syncUserProductLicenseRow,
   unixToIso,
 } from "@/lib/billing/stripe-webhook-sync";
 
@@ -23,7 +23,14 @@ const REVOKING_SUBSCRIPTION_STATUSES = new Set([
   "canceled",
   "unpaid",
   "incomplete_expired",
+  "paused",
 ]);
+
+export interface WebhookEventContext {
+  eventId: string;
+  eventCreatedAt: string;
+  stripe?: Stripe;
+}
 
 export interface WebhookEventOutcome {
   userId: string | null;
@@ -35,7 +42,7 @@ export interface WebhookEventOutcome {
 export async function handleCheckoutCompleted(
   supabaseAdmin: SupabaseClient,
   session: Stripe.Checkout.Session,
-  eventId: string,
+  ctx: WebhookEventContext,
 ): Promise<WebhookEventOutcome> {
   const customerId = asStringId(session.customer);
   const subscriptionId = asStringId(session.subscription);
@@ -43,7 +50,10 @@ export async function handleCheckoutCompleted(
   const userId = await resolveUserIdByCustomer(supabaseAdmin, customerId, metaUserId);
 
   if (userId && customerId) {
-    await bindStripeCustomer(supabaseAdmin, userId, customerId, eventId);
+    await bindStripeCustomer(supabaseAdmin, userId, customerId, ctx.eventId);
+  }
+  if (session.payment_status === "unpaid") {
+    return { userId, customerId, subscriptionId, outcome: "awaiting_payment" };
   }
 
   const resolvedPlan = await resolveWebhookPlan(supabaseAdmin, {
@@ -55,28 +65,31 @@ export async function handleCheckoutCompleted(
     return { userId, customerId, subscriptionId, outcome: "missing_metadata" };
   }
 
-  await syncSubscriptionRow(supabaseAdmin, {
-    userId,
-    activePlan: resolvedPlan.planType,
-    status: "active",
-    planId: resolvedPlan.planId,
-    customerId,
+  const stale = await isStaleOutOfOrderEvent(supabaseAdmin, {
+    eventId: ctx.eventId,
+    eventCreatedAt: ctx.eventCreatedAt,
     subscriptionId,
+    userId,
+    checkStripeCanonical: true,
+    stripe: ctx.stripe,
   });
+  if (stale) {
+    return { userId, customerId, subscriptionId, outcome: "stale_out_of_order_event" };
+  }
 
-  await syncPersonalLicenseRow(supabaseAdmin, {
+  await applyStripeEntitlements(supabaseAdmin, {
     userId,
     planType: resolvedPlan.planType,
     planId: resolvedPlan.planId,
     planSku: resolvedPlan.planSku,
+    subStatus: "active",
     customerId,
     subscriptionId,
-    validUntil: null,
-    trialEndsAt: null,
-    eventId,
+    periodEnd: null,
+    trialEnd: null,
+    eventId: ctx.eventId,
+    grantProductLicense: true,
   });
-
-  await syncUserProductLicenseRow(supabaseAdmin, { userId, active: true });
 
   return {
     userId,
@@ -90,7 +103,7 @@ export async function handleSubscriptionLifecycle(
   supabaseAdmin: SupabaseClient,
   sub: Stripe.Subscription,
   eventType: string,
-  eventId: string,
+  ctx: WebhookEventContext,
 ): Promise<WebhookEventOutcome> {
   const customerId = asStringId(sub.customer);
   const subscriptionId = sub.id;
@@ -101,7 +114,7 @@ export async function handleSubscriptionLifecycle(
   );
 
   if (userId && customerId) {
-    await bindStripeCustomer(supabaseAdmin, userId, customerId, eventId);
+    await bindStripeCustomer(supabaseAdmin, userId, customerId, ctx.eventId);
   }
   if (!userId) {
     return { userId: null, customerId, subscriptionId, outcome: "unmapped_customer" };
@@ -133,8 +146,8 @@ export async function handleSubscriptionLifecycle(
   const trialEnd = unixToIso(sub.trial_end);
 
   const resolvedPlan = await resolveWebhookPlan(supabaseAdmin, {
-    planSku: sub.metadata?.planSku ?? null,
     priceId: firstItem?.price?.id ?? null,
+    planSku: sub.metadata?.planSku ?? null,
     tier: sub.metadata?.tier ?? null,
   });
 
@@ -149,30 +162,33 @@ export async function handleSubscriptionLifecycle(
   const isRevoked =
     eventType === "customer.subscription.deleted" || REVOKING_SUBSCRIPTION_STATUSES.has(sub.status);
 
+  const stale = await isStaleOutOfOrderEvent(supabaseAdmin, {
+    eventId: ctx.eventId,
+    eventCreatedAt: ctx.eventCreatedAt,
+    subscriptionId,
+    userId,
+    checkStripeCanonical: !isRevoked,
+    stripe: ctx.stripe,
+  });
+  if (stale) {
+    return { userId, customerId, subscriptionId, outcome: "stale_out_of_order_event" };
+  }
+
   if (isRevoked) {
     const freePlanId = await resolveFreePlanId(supabaseAdmin);
-    await syncSubscriptionRow(supabaseAdmin, {
-      userId,
-      activePlan: "FREE",
-      status: eventType === "customer.subscription.deleted" ? "canceled" : sub.status,
-      planId: freePlanId,
-      customerId,
-      subscriptionId,
-      currentPeriodEnd: periodEnd,
-      trialEnd,
-    });
-    await syncPersonalLicenseRow(supabaseAdmin, {
+    await applyStripeEntitlements(supabaseAdmin, {
       userId,
       planType: "FREE",
       planId: freePlanId,
       planSku: "SPOT-FREE-STD",
+      subStatus: eventType === "customer.subscription.deleted" ? "canceled" : sub.status,
       customerId,
       subscriptionId,
-      validUntil: periodEnd,
-      trialEndsAt: trialEnd,
-      eventId,
+      periodEnd,
+      trialEnd,
+      eventId: ctx.eventId,
+      grantProductLicense: false,
     });
-    await syncUserProductLicenseRow(supabaseAdmin, { userId, active: false });
     return { userId, customerId, subscriptionId, outcome: `${eventType}:revoked` };
   }
 
@@ -180,42 +196,27 @@ export async function handleSubscriptionLifecycle(
     existingSub?.active_plan && isValidLicensePlanType(existingSub.active_plan)
       ? existingSub.active_plan
       : "FREE";
-  const nextPlanType = resolvedPlan.planType ?? fallbackActivePlan;
-  const nextPlanId = resolvedPlan.planId ?? existingSub?.plan_id ?? null;
 
-  await syncSubscriptionRow(supabaseAdmin, {
+  await applyStripeEntitlements(supabaseAdmin, {
     userId,
-    activePlan: nextPlanType,
-    status: sub.status,
-    planId: nextPlanId,
-    customerId,
-    subscriptionId,
-    currentPeriodEnd: periodEnd,
-    trialEnd,
-  });
-
-  await syncPersonalLicenseRow(supabaseAdmin, {
-    userId,
-    planType: nextPlanType,
-    planId: nextPlanId,
+    planType: resolvedPlan.planType ?? fallbackActivePlan,
+    planId: resolvedPlan.planId ?? existingSub?.plan_id ?? null,
     planSku: resolvedPlan.planSku,
+    subStatus: sub.status,
     customerId,
     subscriptionId,
-    validUntil: periodEnd,
-    trialEndsAt: trialEnd,
-    eventId,
+    periodEnd,
+    trialEnd,
+    eventId: ctx.eventId,
+    grantProductLicense: sub.status === "active" || sub.status === "trialing" ? true : null,
   });
-
-  if (sub.status === "active" || sub.status === "trialing") {
-    await syncUserProductLicenseRow(supabaseAdmin, { userId, active: true });
-  }
-
   return { userId, customerId, subscriptionId, outcome: `${eventType}:${sub.status}` };
 }
 
 export async function handleInvoicePaymentFailed(
   supabaseAdmin: SupabaseClient,
   invoice: Stripe.Invoice,
+  ctx: WebhookEventContext,
 ): Promise<WebhookEventOutcome> {
   const customerId = asStringId(invoice.customer);
   const invAny = invoice as unknown as {
@@ -231,9 +232,8 @@ export async function handleInvoicePaymentFailed(
   const subscriptionId = asStringId(
     invAny.parent?.subscription_details?.subscription ?? invAny.subscription,
   );
-  const line0 = invAny.lines?.data?.[0];
   const metaUserId =
-    invAny.parent?.subscription_details?.metadata?.userId ?? line0?.metadata?.userId ?? null;
+    invAny.parent?.subscription_details?.metadata?.userId ?? invAny.lines?.data?.[0]?.metadata?.userId ?? null;
   const userId = await resolveUserIdByCustomer(supabaseAdmin, customerId, metaUserId);
 
   if (!userId) {
@@ -255,12 +255,20 @@ export async function handleInvoicePaymentFailed(
     plan_id?: string | null;
   } | null;
 
-  if (
-    subscriptionId &&
-    existingSub?.stripe_subscription_id &&
-    existingSub.stripe_subscription_id !== subscriptionId
-  ) {
+  if (subscriptionId && existingSub?.stripe_subscription_id && existingSub.stripe_subscription_id !== subscriptionId) {
     return { userId, customerId, subscriptionId, outcome: "ignored_non_primary_subscription" };
+  }
+
+  const stale = await isStaleOutOfOrderEvent(supabaseAdmin, {
+    eventId: ctx.eventId,
+    eventCreatedAt: ctx.eventCreatedAt,
+    subscriptionId,
+    userId,
+    checkStripeCanonical: true,
+    stripe: ctx.stripe,
+  });
+  if (stale) {
+    return { userId, customerId, subscriptionId, outcome: "stale_out_of_order_event" };
   }
 
   const activePlan: ValidLicensePlanType =
@@ -276,6 +284,5 @@ export async function handleInvoicePaymentFailed(
     customerId,
     subscriptionId,
   });
-
   return { userId, customerId, subscriptionId, outcome: "past_due" };
 }

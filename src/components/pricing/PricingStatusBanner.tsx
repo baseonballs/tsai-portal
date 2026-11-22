@@ -28,8 +28,8 @@ export function PricingStatusBanner({
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>
             {activePlan && activePlan !== "FREE"
-              ? `Stripe checkout completed. Active plan on your account: ${activePlan}.`
-              : "Stripe checkout completed. Your subscription status will update once Stripe delivers the confirmation webhook."}
+              ? `Returned from checkout. Active plan on your account: ${activePlan}.`
+              : "Returned from checkout. Subscription activation completes once Stripe confirms payment."}
           </span>
         </div>
       )}

@@ -194,16 +194,7 @@ export async function resolveWebhookPlan(
   adminClient: SupabaseClient,
   opts: { planSku?: string | null; priceId?: string | null; tier?: string | null },
 ): Promise<{ planId: string | null; planSku: string | null; planType: ValidLicensePlanType | null }> {
-  const sku = opts.planSku?.trim() || null;
-  if (sku) {
-    const { data, error } = await adminClient.from("plans").select(PLAN_SELECT).eq("sku", sku).maybeSingle();
-    if (error) throw new Error(`Failed to look up plan SKU ${sku}: ${error.message}`);
-    if (data) {
-      const row = data as PlanCatalogRow;
-      return { planId: row.id, planSku: row.sku, planType: derivePlanType(row) };
-    }
-  }
-
+  // Prefer Stripe price_id before metadata so out-of-band Stripe price updates win over stale metadata.
   const priceId = opts.priceId?.trim() || null;
   if (priceId) {
     const { data, error } = await adminClient
@@ -230,6 +221,16 @@ export async function resolveWebhookPlan(
         const row = envRow as PlanCatalogRow;
         return { planId: row.id, planSku: row.sku, planType: derivePlanType(row) };
       }
+    }
+  }
+
+  const sku = opts.planSku?.trim() || null;
+  if (sku) {
+    const { data, error } = await adminClient.from("plans").select(PLAN_SELECT).eq("sku", sku).maybeSingle();
+    if (error) throw new Error(`Failed to look up plan SKU ${sku}: ${error.message}`);
+    if (data) {
+      const row = data as PlanCatalogRow;
+      return { planId: row.id, planSku: row.sku, planType: derivePlanType(row) };
     }
   }
 

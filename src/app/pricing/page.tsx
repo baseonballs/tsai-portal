@@ -33,6 +33,7 @@ export default function PricingPage() {
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [activePlan, setActivePlan] = useState<string | null>(null);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [plansBySku, setPlansBySku] = useState<Record<string, CheckoutCatalogPlan>>({});
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function PricingPage() {
         setPlansBySku(indexed);
         setAuthenticated(Boolean(data.authenticated));
         setActivePlan(data.activePlan ?? null);
+        setHasActiveSubscription(Boolean(data.hasActiveSubscription));
         setCatalogError(null);
       } catch {
         if (!cancelled) {
@@ -289,6 +291,8 @@ export default function PricingPage() {
                     catalogError={catalogError}
                     authenticated={authenticated}
                     checkoutReady={Boolean(familyPlan?.checkoutReady)}
+                    activePlan={activePlan}
+                    hasActiveSubscription={hasActiveSubscription}
                     variant="sky"
                   />
                 </div>
@@ -426,6 +430,8 @@ export default function PricingPage() {
                     catalogError={catalogError}
                     authenticated={authenticated}
                     checkoutReady={Boolean(proPlan?.checkoutReady)}
+                    activePlan={activePlan}
+                    hasActiveSubscription={hasActiveSubscription}
                     variant="teal"
                   />
                 </div>
@@ -703,6 +709,8 @@ export default function PricingPage() {
                     catalogError={catalogError}
                     authenticated={authenticated}
                     checkoutReady={Boolean(teamPlan?.checkoutReady)}
+                    activePlan={activePlan}
+                    hasActiveSubscription={hasActiveSubscription}
                     variant="cyan"
                   />
                 </div>

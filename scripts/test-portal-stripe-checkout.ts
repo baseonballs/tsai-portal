@@ -320,6 +320,14 @@ function createFakeAdminClient(state: MockDbState) {
           filters.push((r) => typeof r[col] === "string" && Date.parse(r[col] as string) < Date.parse(val));
           return q;
         },
+        gt: (col: string, val: string) => {
+          filters.push((r) => typeof r[col] === "string" && Date.parse(r[col] as string) > Date.parse(val));
+          return q;
+        },
+        neq: (col: string, val: unknown) => {
+          filters.push((r) => r[col] !== val);
+          return q;
+        },
         or: () => q,
         order: () => q,
         limit: () => q,
@@ -345,6 +353,7 @@ async function run() {
   let globalSignOutCalls = 0;
   let capturedCheckoutParams: Record<string, unknown>[] = [];
   const nextCheckoutUrl = "https://checkout.stripe.com/c/pay/cs_test_portal_123";
+  let mockCanonicalSubStatus: string = "active";
   let mockEntitlementThrow = false;
 
   const MI = Module as unknown as { _load: (r: string, p: unknown, m: boolean) => unknown };
@@ -393,6 +402,9 @@ async function run() {
       const realStripe = new Stripe(REAL_STRIPE_KEY, { apiVersion: "2026-07-29.dahlia" });
       return class MockedStripe {
         webhooks = realStripe.webhooks;
+        subscriptions = {
+          retrieve: async (id: string) => ({ id, status: mockCanonicalSubStatus }),
+        };
         checkout = {
           sessions: {
             create: async (params: Record<string, unknown>) => {
@@ -429,7 +441,7 @@ async function run() {
       const lines = fs.readFileSync(path.join(ROOT, rel), "utf8").split("\n").length;
       assert.ok(lines < 300, `${rel} must be < 300 lines (got ${lines})`);
     }
-    console.log("✓ 1. All 14 new/updated runtime modules are strictly < 300 lines");
+    console.log(`✓ 1. All ${runtimeFiles.length} new/updated runtime modules are strictly < 300 lines`);
 
     const { isAllowedUnlicensedNextPath } = await import("../src/lib/auth/buyer-session-paths");
     const { isAllowedStripeCheckoutUrl } = await import("../src/lib/billing/pricing-catalog-client");
@@ -692,7 +704,48 @@ async function run() {
       capturedCheckoutParams[0].cancel_url,
       "https://transcendental-sports.ai/pricing?checkout=canceled",
     );
-    console.log("✓ 4. Checkout GET/POST enforces 401/400/503/200, all 5 SKUs, DB price precedence, & private, no-store");
+
+    // Untrusted x-forwarded-host is ignored -> falls back to official origin
+    capturedCheckoutParams = [];
+    const spoofedOriginRes = await checkoutRoute.POST(
+      new NextRequest("http://0.0.0.0:3040/api/billing/stripe/checkout", {
+        method: "POST",
+        headers: { "x-forwarded-host": "evil.example", "x-forwarded-proto": "https" },
+        body: JSON.stringify({ planSku: "SPOT-PRO-STD" }),
+      }),
+    );
+    assert.equal(spoofedOriginRes.status, 200);
+    assert.equal(
+      capturedCheckoutParams[0].success_url,
+      "https://hub.transcendental-sports.ai/pricing?checkout=success",
+    );
+
+    // Duplicate active subscription refused with 409
+    db.subscriptions[0].stripe_subscription_id = "sub_already_active";
+    db.subscriptions[0].status = "active";
+    db.subscriptions[0].active_plan = "PRO";
+    const dupSubCheckout = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-TEAM-SEASON-24" }),
+      }),
+    );
+    assert.equal(dupSubCheckout.status, 409);
+    db.subscriptions[0].stripe_subscription_id = null;
+    db.subscriptions[0].status = "free";
+    db.subscriptions[0].active_plan = "FREE";
+
+    // Missing profile refused before creating Checkout Session
+    mockUser = { id: OTHER_USER_ID, email: "other@example.test" };
+    const missingProfileRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-STD" }),
+      }),
+    );
+    assert.equal(missingProfileRes.status, 409);
+    mockUser = { id: BUYER_USER_ID, email: BUYER_EMAIL };
+    console.log("✓ 4. Checkout GET/POST enforces 401/400/409/503/200, trusted origins, & private, no-store");
 
     // ── 4. Webhook Endpoint: HMAC, Dedupe, Rollback, Stale Reclaim, Live Constraints ─────────────
     const webhookRoute = await import("../src/app/api/billing/stripe/webhook/route");
@@ -790,13 +843,13 @@ async function run() {
         data: { object: { id: "sub_portal_1", customer: "cus_portal_1", status: "active", items: { data: [] } } },
       }),
     );
-    assert.equal(inProgRes.status, 200);
-    assert.deepEqual(await inProgRes.json(), { received: true, inProgress: true });
+    assert.equal(inProgRes.status, 409);
+    assert.deepEqual(await inProgRes.json(), { received: false, inProgress: true });
 
     db.stripe_webhook_events.push({
       event_id: "evt_stale_received",
       event_type: "customer.subscription.updated",
-      stripe_created_at: new Date().toISOString(),
+      stripe_created_at: new Date(1795000200 * 1000).toISOString(),
       payload_json: {},
       processing_status: "received",
       received_at: new Date(Date.now() - 6 * 60 * 1000).toISOString(),
@@ -866,12 +919,163 @@ async function run() {
     assert.equal("valid_from" in db.licenses[0], false);
     assert.equal(db.user_product_licenses[0].status, "revoked");
 
+    // Out-of-order late event (older than evt_sub_del_1 @ 1795000400) is ignored without re-granting
+    const lateCheckoutRes = await webhookRoute.POST(
+      signedWebhookReq({
+        id: "evt_late_checkout",
+        type: "checkout.session.completed",
+        created: 1795000050,
+        data: {
+          object: {
+            id: "cs_late",
+            customer: "cus_portal_1",
+            subscription: "sub_portal_1",
+            payment_status: "paid",
+            metadata: { userId: BUYER_USER_ID, planSku: "SPOT-PRO-PLUS", tier: "PRO" },
+          },
+        },
+      }),
+    );
+    assert.equal(lateCheckoutRes.status, 200);
+    assert.equal(db.stripe_webhook_events.find((e) => e.event_id === "evt_late_checkout")?.processing_status, "ignored");
+    assert.equal(db.user_product_licenses[0].status, "revoked");
+    assert.equal(db.subscriptions[0].active_plan, "FREE");
+
+    // Canonical Stripe cancellation check blocks late activation on a brand-new subscription ID
+    mockCanonicalSubStatus = "canceled";
+    const canonicalCanceledRes = await webhookRoute.POST(
+      signedWebhookReq({
+        id: "evt_canonical_canceled",
+        type: "checkout.session.completed",
+        created: 1795000450,
+        data: {
+          object: {
+            id: "cs_canceled_before_webhook",
+            customer: "cus_portal_1",
+            subscription: "sub_already_canceled_upstream",
+            payment_status: "paid",
+            metadata: { userId: BUYER_USER_ID, planSku: "SPOT-PRO-STD", tier: "PRO" },
+          },
+        },
+      }),
+    );
+    assert.equal(canonicalCanceledRes.status, 200);
+    assert.equal(db.stripe_webhook_events.find((e) => e.event_id === "evt_canonical_canceled")?.processing_status, "ignored");
+    assert.equal(db.user_product_licenses[0].status, "revoked");
+    mockCanonicalSubStatus = "active";
+
+    // Unpaid async checkout session is ignored (awaiting_payment) without granting UPL
+    const unpaidCheckoutRes = await webhookRoute.POST(
+      signedWebhookReq({
+        id: "evt_unpaid_checkout",
+        type: "checkout.session.completed",
+        created: 1795000460,
+        data: {
+          object: {
+            id: "cs_unpaid",
+            customer: "cus_portal_1",
+            subscription: "sub_portal_2",
+            payment_status: "unpaid",
+            metadata: { userId: BUYER_USER_ID, planSku: "SPOT-PRO-STD", tier: "PRO" },
+          },
+        },
+      }),
+    );
+    assert.equal(unpaidCheckoutRes.status, 200);
+    assert.equal(db.stripe_webhook_events.find((e) => e.event_id === "evt_unpaid_checkout")?.processing_status, "ignored");
+    assert.equal(db.user_product_licenses[0].status, "revoked");
+
+    // firstItem.price.id takes precedence over stale sub.metadata.planSku
+    const pricePrecedenceRes = await webhookRoute.POST(
+      signedWebhookReq({
+        id: "evt_price_precedence",
+        type: "customer.subscription.updated",
+        created: 1795000500,
+        data: {
+          object: {
+            id: "sub_portal_1",
+            customer: "cus_portal_1",
+            status: "active",
+            current_period_end: 1799000000,
+            metadata: { userId: BUYER_USER_ID, planSku: "SPOT-FAM-BASIC" },
+            items: { data: [{ price: { id: "price_env_team" } }] },
+          },
+        },
+      }),
+    );
+    assert.equal(pricePrecedenceRes.status, 200);
+    assert.equal(db.subscriptions[0].active_plan, "TEAM");
+    assert.equal(db.licenses[0].plan_type, "TEAM");
+    assert.equal(db.user_product_licenses[0].status, "active");
+
+    // Stripe status "paused" revokes stripe_webhook UPL
+    const pausedRes = await webhookRoute.POST(
+      signedWebhookReq({
+        id: "evt_sub_paused",
+        type: "customer.subscription.updated",
+        created: 1795000550,
+        data: {
+          object: {
+            id: "sub_portal_1",
+            customer: "cus_portal_1",
+            status: "paused",
+            current_period_end: 1799000000,
+            items: { data: [] },
+          },
+        },
+      }),
+    );
+    assert.equal(pausedRes.status, 200);
+    assert.equal(db.subscriptions[0].status, "paused");
+    assert.equal(db.user_product_licenses[0].status, "revoked");
+
+    // Non-Stripe grant (granted_via: "invite_code") is preserved across BOTH activation and deletion!
+    db.user_product_licenses[0].status = "active";
+    db.user_product_licenses[0].granted_via = "invite_code";
+    const preserveActivateRes = await webhookRoute.POST(
+      signedWebhookReq({
+        id: "evt_preserve_invite_activate",
+        type: "customer.subscription.updated",
+        created: 1795000600,
+        data: {
+          object: {
+            id: "sub_portal_1",
+            customer: "cus_portal_1",
+            status: "active",
+            items: { data: [{ price: { id: "price_env_pro" } }] },
+          },
+        },
+      }),
+    );
+    assert.equal(preserveActivateRes.status, 200);
+    assert.equal(db.user_product_licenses[0].status, "active");
+    assert.equal(db.user_product_licenses[0].granted_via, "invite_code");
+
+    const preserveDeleteRes = await webhookRoute.POST(
+      signedWebhookReq({
+        id: "evt_preserve_invite_delete",
+        type: "customer.subscription.deleted",
+        created: 1795000650,
+        data: {
+          object: {
+            id: "sub_portal_1",
+            customer: "cus_portal_1",
+            status: "canceled",
+            items: { data: [] },
+          },
+        },
+      }),
+    );
+    assert.equal(preserveDeleteRes.status, 200);
+    assert.equal(db.user_product_licenses[0].status, "active");
+    assert.equal(db.user_product_licenses[0].granted_via, "invite_code");
+
     // Customer mismatch conflict fails loudly (never silently overwrites stripe_customer_id)
     const mismatchRes = await webhookRoute.POST(
       signedWebhookReq({
         id: "evt_cust_mismatch",
         type: "checkout.session.completed",
-        created: 1795000500,
+        created: 1795000700,
         data: {
           object: {
             id: "cs_mismatch",
@@ -929,7 +1133,23 @@ async function run() {
       }),
     );
     assert.match(signedInReadyHtml, /Subscribe to Family Pro/);
-    console.log("✓ 6. PricingCheckoutButton renders signed-out, unconfigured 503-honest, and ready states");
+
+    const activeSubHtml = renderToStaticMarkup(
+      React.createElement(PricingCheckoutButton, {
+        planSku: "SPOT-PRO-STD",
+        planLabel: "Premier",
+        loading: false,
+        catalogError: null,
+        authenticated: true,
+        checkoutReady: true,
+        activePlan: "PRO",
+        hasActiveSubscription: true,
+        variant: "teal",
+      }),
+    );
+    assert.match(activeSubHtml, /Current Subscription/);
+    assert.match(activeSubHtml, /Active account plan: PRO/);
+    console.log("✓ 6. PricingCheckoutButton renders signed-out, unconfigured, active-subscription, and ready states");
 
     console.log("\n🎉 ALL PORTAL STRIPE CHECKOUT & BUYER SIGN-IN TESTS PASSED!\n");
   } finally {

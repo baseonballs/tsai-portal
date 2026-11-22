@@ -3,7 +3,11 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type Stripe from "stripe";
 
-import { claimStripeWebhookEvent, recordWebhookStatus } from "@/lib/billing/stripe-webhook-claim";
+import {
+  claimStripeWebhookEvent,
+  eventCreatedIso,
+  recordWebhookStatus,
+} from "@/lib/billing/stripe-webhook-claim";
 import {
   handleCheckoutCompleted,
   handleInvoicePaymentFailed,
@@ -12,32 +16,50 @@ import {
 
 export { handleCheckoutCompleted, handleInvoicePaymentFailed, handleSubscriptionLifecycle };
 
+const IGNORED_OUTCOMES = new Set([
+  "missing_metadata",
+  "awaiting_payment",
+  "stale_out_of_order_event",
+  "unmapped_customer",
+  "ignored_non_primary_subscription",
+  "ignored_unlinked_subscription_delete",
+]);
+
 export async function processStripeWebhookEvent(
   supabaseAdmin: SupabaseClient,
   event: Stripe.Event,
+  stripe?: Stripe,
 ): Promise<{ status: number; body: Record<string, unknown> }> {
   const claim = await claimStripeWebhookEvent(supabaseAdmin, event);
   if (claim.action === "deduplicated") {
     return { status: 200, body: { received: true, deduplicated: true } };
   }
   if (claim.action === "inProgress") {
-    return { status: 200, body: { received: true, inProgress: true } };
+    return { status: 409, body: { received: false, inProgress: true } };
   }
   if (claim.action === "error") {
     return { status: claim.status, body: { error: claim.message } };
   }
 
+  const ctx = {
+    eventId: event.id,
+    eventCreatedAt: eventCreatedIso(event),
+    stripe,
+  };
+
   try {
+    let recorded = false;
     if (event.type === "checkout.session.completed") {
       const res = await handleCheckoutCompleted(
         supabaseAdmin,
         event.data.object as Stripe.Checkout.Session,
-        event.id,
+        ctx,
       );
-      const status = res.outcome === "missing_metadata" ? "ignored" : "applied";
-      await recordWebhookStatus(supabaseAdmin, event.id, status, {
+      const status = IGNORED_OUTCOMES.has(res.outcome) ? "ignored" : "applied";
+      recorded = await recordWebhookStatus(supabaseAdmin, event.id, status, {
         ...res,
         result: { outcome: res.outcome },
+        claimReceivedAt: claim.claimReceivedAt,
       });
     } else if (
       event.type === "customer.subscription.updated" ||
@@ -47,38 +69,44 @@ export async function processStripeWebhookEvent(
         supabaseAdmin,
         event.data.object as Stripe.Subscription,
         event.type,
-        event.id,
+        ctx,
       );
-      const ignored =
-        res.outcome === "unmapped_customer" ||
-        res.outcome === "ignored_non_primary_subscription" ||
-        res.outcome === "ignored_unlinked_subscription_delete";
-      await recordWebhookStatus(supabaseAdmin, event.id, ignored ? "ignored" : "applied", {
+      const status = IGNORED_OUTCOMES.has(res.outcome) ? "ignored" : "applied";
+      recorded = await recordWebhookStatus(supabaseAdmin, event.id, status, {
         ...res,
         result: { outcome: res.outcome },
+        claimReceivedAt: claim.claimReceivedAt,
       });
     } else if (event.type === "invoice.payment_failed") {
       const res = await handleInvoicePaymentFailed(
         supabaseAdmin,
         event.data.object as Stripe.Invoice,
+        ctx,
       );
-      const ignored =
-        res.outcome === "unmapped_customer" ||
-        res.outcome === "ignored_non_primary_subscription";
-      await recordWebhookStatus(supabaseAdmin, event.id, ignored ? "ignored" : "applied", {
+      const status = IGNORED_OUTCOMES.has(res.outcome) ? "ignored" : "applied";
+      recorded = await recordWebhookStatus(supabaseAdmin, event.id, status, {
         ...res,
         result: { outcome: res.outcome },
+        claimReceivedAt: claim.claimReceivedAt,
       });
     } else {
-      await recordWebhookStatus(supabaseAdmin, event.id, "ignored", {
+      recorded = await recordWebhookStatus(supabaseAdmin, event.id, "ignored", {
         result: { outcome: "unhandled_event_type" },
+        claimReceivedAt: claim.claimReceivedAt,
       });
+    }
+
+    if (!recorded) {
+      return { status: 409, body: { received: false, inProgress: true } };
     }
     return { status: 200, body: { received: true } };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to process Stripe webhook";
     try {
-      await recordWebhookStatus(supabaseAdmin, event.id, "failed", { error: message });
+      await recordWebhookStatus(supabaseAdmin, event.id, "failed", {
+        error: message,
+        claimReceivedAt: claim.claimReceivedAt,
+      });
     } catch (recordErr) {
       console.error("[StripeWebhook] Failed to record failed status:", recordErr);
     }

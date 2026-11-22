@@ -24,6 +24,24 @@ export function requiredSecret(name: string): string {
   return value;
 }
 
+const EXISTING_ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "paused"]);
+
+export function isActiveSubscriptionRecord(
+  row: {
+    stripe_subscription_id?: string | null;
+    status?: string | null;
+    active_plan?: string | null;
+  } | null | undefined,
+): boolean {
+  if (!row) return false;
+  const hasStripeSub = Boolean(row.stripe_subscription_id?.trim());
+  if (!hasStripeSub) return false;
+  const status = (row.status ?? "").trim().toLowerCase();
+  if (EXISTING_ACTIVE_SUB_STATUSES.has(status)) return true;
+  const activePlan = (row.active_plan ?? "").trim().toUpperCase();
+  return Boolean(activePlan && activePlan !== "FREE" && status !== "canceled");
+}
+
 let cached: { key: string; client: Stripe } | null = null;
 
 /**

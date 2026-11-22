@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const supabaseAdmin = createPortalAdminClient();
-    const result = await processStripeWebhookEvent(supabaseAdmin, event);
+    const result = await processStripeWebhookEvent(supabaseAdmin, event, stripe);
     return jsonNoStore(result.body, result.status);
   } catch (err) {
     console.error("[StripeWebhook POST] Failed:", errorMessage(err));

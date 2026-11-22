@@ -12,6 +12,8 @@ interface PricingCheckoutButtonProps {
   catalogError: string | null;
   authenticated: boolean;
   checkoutReady: boolean;
+  activePlan?: string | null;
+  hasActiveSubscription?: boolean;
   variant?: "sky" | "teal" | "cyan";
 }
 
@@ -28,6 +30,8 @@ export function PricingCheckoutButton({
   catalogError,
   authenticated,
   checkoutReady,
+  activePlan,
+  hasActiveSubscription = false,
   variant = "cyan",
 }: PricingCheckoutButtonProps) {
   const [submitting, setSubmitting] = useState(false);
@@ -98,6 +102,24 @@ export function PricingCheckoutButton({
           <span>Pricing Unavailable</span>
         </button>
         <p className="text-[11px] text-rose-300 text-center leading-snug">{catalogError}</p>
+      </div>
+    );
+  }
+
+  if (authenticated && (hasActiveSubscription || (activePlan && activePlan.trim().toUpperCase() !== "FREE"))) {
+    return (
+      <div className="space-y-2">
+        <button
+          type="button"
+          disabled
+          data-testid={`checkout-active-${planSku}`}
+          className="w-full rounded-xl border border-emerald-500/30 bg-emerald-950/20 py-3 text-xs font-semibold text-emerald-200 cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          <span>Current Subscription</span>
+        </button>
+        <p className="text-[11px] text-emerald-300 text-center leading-snug">
+          Active account plan: {activePlan ?? "Active"}.
+        </p>
       </div>
     );
   }
