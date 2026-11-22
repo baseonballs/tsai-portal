@@ -29,6 +29,7 @@ import {
   loadProvenance,
   loadRegisterSource,
   manifestJson,
+  opsHandlerProblem,
   overlayTree,
   parseLedger,
   parseProvenance,
@@ -596,6 +597,119 @@ export function runProvenanceSelfTest(o: { root: string; config: GuardConfig }):
   const empty: ProvenanceSidecar = { surfaces: { ...all().surfaces, [page.id]: { static: "" } } };
   assert.ok(judgeOn(empty, sbase).invalid.some((i) => i.id === page.id), "a static entry with no reason is invalid");
   checks += 2;
+
+  // ── 6b. ops entries: real infra/ops connector + verified AST handlerSource without fake literals, import-hop stubs, or unguarded HTTP handlers ──
+  const opsAppDir = config.appDirs[0] ?? "app";
+  const altOpsAppDir = opsAppDir === "app" ? "src/app" : "app";
+  const opsHandlerPath = `${opsAppDir}/api/surface-guard-ops-probe/route.ts`;
+  const fakeOpsHandlerPath = `${opsAppDir}/api/surface-guard-fake-ops-probe/route.ts`;
+  const commentOnlyOpsPath = `${opsAppDir}/api/surface-guard-comment-ops-probe/route.ts`;
+  const hopOpsHelperPath = `${opsAppDir}/api/surface-guard-hop-ops-probe/helper.ts`;
+  const hopOpsHandlerPath = `${opsAppDir}/api/surface-guard-hop-ops-probe/route.ts`;
+  const unauthOpsHandlerPath = `${opsAppDir}/api/surface-guard-unauth-ops-probe/route.ts`;
+  const arrowUnauthOpsPath = `${opsAppDir}/api/surface-guard-arrow-unauth-ops-probe/route.ts`;
+  const reexportUnauthOpsPath = `${opsAppDir}/api/surface-guard-reexport-unauth-ops-probe/route.ts`;
+  const destructuredUnauthOpsPath = `${opsAppDir}/api/surface-guard-destructured-unauth-ops-probe/route.ts`;
+  const deepOpsHandlerPath = `${opsAppDir}/api/surface-guard-deep-ops-probe/route.ts`;
+  const altUnauthOpsPath = `${altOpsAppDir}/api/surface-guard-alt-unauth-ops-probe/route.ts`;
+  const deepChainOverlay: Record<string, string> = {};
+  for (let d = 0; d <= 13; d++) {
+    const p = `${opsAppDir}/api/surface-guard-deep-ops-probe/${d === 0 ? "route" : `hop-${d}`}.ts`;
+    const nextImp = d < 13 ? `import { v${d + 1} } from "./hop-${d + 1}";\n` : "";
+    deepChainOverlay[p] =
+      d === 0
+        ? `${nextImp}export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: v1 });\n}\n`
+        : `${nextImp}export const v${d} = ${d < 13 ? `v${d + 1}` : "1"};\n`;
+  }
+  const opsTree = overlayTree(base, {
+    ...deepChainOverlay,
+    [opsHandlerPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true, metric: "prometheus" });\n}\nexport async function POST() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true });\n}\n',
+    [commentOnlyOpsPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  const endpoint = "https://prom.internal"; // never Math.random()\n  return Response.json({ endpoint });\n}\n',
+    [fakeOpsHandlerPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ value: Math.random() });\n}\n',
+    [hopOpsHelperPath]: "export const issuedTokens: string[] = [];\n",
+    [hopOpsHandlerPath]:
+      'import { issuedTokens } from "./helper";\nexport async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ tokens: issuedTokens });\n}\n',
+    [unauthOpsHandlerPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true });\n}\nexport async function POST() {\n  return Response.json({ ok: false });\n}\n',
+    [arrowUnauthOpsPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true });\n}\nexport const POST = async () => Response.json({ ok: true });\n',
+    [reexportUnauthOpsPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true });\n}\nasync function unguardedPatch() {\n  return Response.json({ ok: true });\n}\nexport { unguardedPatch as PATCH };\n',
+    [destructuredUnauthOpsPath]:
+      'export async function GET() {\n  await requireSuperadminSession();\n  return Response.json({ ok: true });\n}\nconst makeHandlers = () => ({ POST: async () => Response.json({ ok: true }) });\nexport const { POST } = makeHandlers();\n',
+  });
+  const probeIds = [
+    "route:/api/surface-guard-ops-probe",
+    "route:/api/surface-guard-fake-ops-probe",
+    "route:/api/surface-guard-comment-ops-probe",
+    "route:/api/surface-guard-hop-ops-probe",
+    "route:/api/surface-guard-unauth-ops-probe",
+    "route:/api/surface-guard-arrow-unauth-ops-probe",
+    "route:/api/surface-guard-reexport-unauth-ops-probe",
+    "route:/api/surface-guard-destructured-unauth-ops-probe",
+    "route:/api/surface-guard-deep-ops-probe",
+  ] as const;
+  const withOpsProbe = (probeId: string, entry: unknown, extra: Record<string, unknown> = {}): ProvenanceSidecar => {
+    const surfacesMap: Record<string, unknown> = { ...all().surfaces };
+    for (const pid of probeIds) surfacesMap[pid] = { register: `${prefix}901` };
+    Object.assign(surfacesMap, extra);
+    surfacesMap[probeId] = entry;
+    return { surfaces: surfacesMap as ProvenanceSidecar["surfaces"] };
+  };
+  for (const [probeId, cleanPath] of [
+    ["route:/api/surface-guard-ops-probe", opsHandlerPath],
+    ["route:/api/surface-guard-comment-ops-probe", commentOnlyOpsPath],
+  ] as const) {
+    const okOps = judgeOn(
+      withOpsProbe(probeId, { ops: "prometheus CPU query", connector: "prometheus:node_cpu", handlerSource: `self:${cleanPath}#GET` }),
+      opsTree,
+      true,
+    );
+    assert.ok(okOps.ops.includes(probeId) && !okOps.invalid.length, `a valid ops entry (${cleanPath}) must pass: ${JSON.stringify(okOps.invalid)}`);
+    checks++;
+  }
+  for (const [probeId, entry, why, what, extra] of [
+    ["route:/api/surface-guard-ops-probe", { ops: "x", connector: "prometheus:up" }, /must name handlerSource/, "ops without handlerSource", undefined],
+    ["route:/api/surface-guard-ops-probe", { ops: "x", handlerSource: `self:${opsHandlerPath}#GET` }, /must name connector/, "ops without connector", undefined],
+    ["route:/api/surface-guard-ops-probe", { ops: "x", connector: "madeup:thing", handlerSource: `self:${opsHandlerPath}#GET` }, /allowlisted prefix/, "ops with unknown connector prefix", undefined],
+    ["route:/api/surface-guard-ops-probe", { ops: "x", connector: "prometheus:", handlerSource: `self:${opsHandlerPath}#GET` }, /allowlisted prefix/, "ops with empty connector target", undefined],
+    ["route:/api/surface-guard-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${opsAppDir}/api/no-such-ops/route.ts#GET` }, /cannot be read/, "ops with nonexistent handlerSource file", undefined],
+    ["route:/api/surface-guard-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${opsHandlerPath}#DELETE` }, /defines no function DELETE/, "ops with nonexistent handler symbol", undefined],
+    ["route:/api/surface-guard-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${opsHandlerPath}:1` }, /cites a line number/, "ops handlerSource using line number", undefined],
+    ["route:/api/surface-guard-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: "tsai-probe:web/route.ts#GET" }, /must cite this app/, "ops handlerSource citing another repo", undefined],
+    ["route:/api/surface-guard-fake-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${opsHandlerPath}#GET` }, /must cite this surface's own file/, "route ops handlerSource mismatched from surface source file", undefined],
+    ["route:/api/surface-guard-fake-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${fakeOpsHandlerPath}#GET` }, /forbidden fake\/stub literal/, "ops handler carrying Math.random", undefined],
+    ["route:/api/surface-guard-hop-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${hopOpsHandlerPath}#GET` }, /forbidden fake\/stub literal/, "ops handler hiding in-memory stub via local import", undefined],
+    ["route:/api/surface-guard-hop-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${hopOpsHandlerPath}#GET` }, /forbidden fake\/stub literal/, "register .ts evidence does not shield non-ui-shell ops import walk", { "route:/api/surface-guard-fake-ops-probe": { register: `${prefix}901`, evidence: hopOpsHelperPath } }],
+    ["route:/api/surface-guard-unauth-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${unauthOpsHandlerPath}#GET` }, /no recognized ops auth\/HMAC guard/, "ops route with unauthenticated sibling POST", undefined],
+    ["route:/api/surface-guard-arrow-unauth-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${arrowUnauthOpsPath}#GET` }, /no recognized ops auth\/HMAC guard/, "ops route with unauthenticated arrow const POST", undefined],
+    ["route:/api/surface-guard-reexport-unauth-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${reexportUnauthOpsPath}#GET` }, /no recognized ops auth\/HMAC guard/, "ops route with unauthenticated re-exported PATCH", undefined],
+    ["route:/api/surface-guard-destructured-unauth-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${destructuredUnauthOpsPath}#GET` }, /no recognized ops auth\/HMAC guard/, "ops route with destructured unauthenticated GET/POST", undefined],
+    ["route:/api/surface-guard-deep-ops-probe", { ops: "x", connector: "prometheus:up", handlerSource: `self:${deepOpsHandlerPath}#GET` }, /deeper than 12 hops/, "ops route exceeding import walk depth", undefined],
+    [
+      "route:/api/surface-guard-ops-probe",
+      { ops: "x", connector: "prometheus:up", handlerSource: `self:${opsHandlerPath}#GET`, endpoint: "x", table: "t", writer: "user-action: y" },
+      /exactly one/,
+      "combining ops + endpoint",
+      undefined,
+    ],
+  ] as const) {
+    const v = judgeOn(withOpsProbe(probeId, entry, extra), opsTree, true);
+    assert.ok(
+      v.invalid.some((i) => i.id === probeId && why.test(i.why)),
+      `ops negative check failed (${what}): ${JSON.stringify(v.invalid)}`,
+    );
+    checks++;
+  }
+  const altTree = overlayTree(base, {
+    [altUnauthOpsPath]: "export async function GET() {\n  return Response.json({ ok: true });\n}\n",
+  });
+  const altHit = opsHandlerProblem(`self:${altUnauthOpsPath}#GET`, altTree, ws);
+  assert.ok(altHit && /no recognized ops auth\/HMAC guard/.test(altHit), `opsHandlerProblem must enforce auth on ${altOpsAppDir}/api/** routes too; got ${altHit}`);
+  checks++;
 
   assert.deepEqual(JSON.parse(jsonc('{"a": "**/*.ts", /* c */ "b": [1,], // d\n}')), { a: "**/*.ts", b: [1] }, "tsconfig globs are not comments");
   checks++;

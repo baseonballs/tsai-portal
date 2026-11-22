@@ -1141,7 +1141,7 @@ const DATA_ACCESS: { re: RegExp; what: string }[] = [
 ];
 /** Bounds on the static tripwire's import walk; a graph larger than this cannot be proven static, which is a failure. */
 const STATIC_WALK = { depth: 8, files: 400 };
-const SOURCE_EXT = ["", ".ts", ".tsx", ".js", ".jsx", ".mjs", "/index.ts", "/index.tsx", "/index.js"];
+const SOURCE_EXT = ["", ".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", "/index.ts", "/index.tsx", "/index.js"];
 
 /** JSON with comments and trailing commas (tsconfig.json) → JSON. String-aware: a glob such as a double star, slash, star inside a string is not a comment. */
 export function jsonc(raw: string): string {
@@ -1234,11 +1234,40 @@ export function dataAccessIn(tree: SourceTree, file: string): string | null {
 const NON_WRITER_METHOD = /\b(GET|HEAD|OPTIONS|DELETE)\s+\//;
 /** Audit / log tables record that something happened; they are never the domain table a surface reads. */
 const AUDIT_TABLE = /audit/i;
-const ENTRY_KEYS: Record<"endpoint" | "register" | "static", string[]> = {
+const ENTRY_KEYS: Record<"endpoint" | "register" | "static" | "ops", string[]> = {
   endpoint: ["endpoint", "table", "writer", "writerSource", "evidence", "note"],
   register: ["register", "via", "evidence", "note"],
   static: ["static", "note"],
+  ops: ["ops", "connector", "handlerSource", "evidence", "note"],
 };
+
+export const OPS_CONNECTOR_PREFIXES = [
+  "prometheus",
+  "loki",
+  "temporal",
+  "minio",
+  "bifrost",
+  "docker",
+  "cloudflare",
+  "gotrue",
+  "notify",
+  "host",
+  "vault",
+  "security-plane",
+  "hockey-api-ops",
+  "clickhouse-ro",
+  "webhook-ops",
+  "ui-shell",
+] as const;
+
+const FORBIDDEN_OPS_BODY_LITERALS =
+  /Math\.random\s*\(|live_tsai_|yt_bc_|temperatureCelsius:\s*41\.5|bitrateKbps:\s*8500|ISSUE-891|series-g16-nit-showcase|team-jr-sharks-16u-aa|clickhouse_http_reachable:\s*true|No durable access-request store yet|\bmultiSheetOrchestrator\b|\bconst\s+(?:issuedTokens|dispatchedDeliveryLedger)\s*[:=]/;
+
+const OPS_ROUTE_AUTH_GUARD =
+  /\b(?:requireSuperadminSession|requireObservabilitySuperadmin|requireSuperadmin|getOperatorContext|resolvePurgeActor|handleUnbackedSecurity(?:Get|Post)|verifyConfiguredWebhookSecret|timingSafeEqual)\s*\(|\bauth\.get(?:Session|User)\s*\(/;
+
+const OPS_WALK = { depth: 12, files: 250 };
+const OPS_HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
 
 export interface ProvenanceEntry {
   endpoint?: string;
@@ -1248,6 +1277,9 @@ export interface ProvenanceEntry {
   writerSource?: string;
   register?: string;
   static?: string;
+  ops?: string;
+  connector?: string;
+  handlerSource?: string;
   evidence?: string;
   via?: string;
   note?: string;
@@ -1263,6 +1295,7 @@ export interface ProvenanceVerdict {
   endpoint: string[];
   register: string[];
   static: string[];
+  ops: string[];
   unresolved: SurfaceEntry[];
   invalid: { id: string; why: string }[];
 }
@@ -1491,11 +1524,205 @@ function modelsFor(ws: WorkspaceReader, repo: string, root: string, table: strin
     for (const f of ws.files(repo, root)) {
       if (!f.endsWith(".py")) continue;
       const src = ws.read(repo, f) ?? "";
-      for (const m of allMatches(/^class\s+(\w+)\b[\s\S]*?__tablename__\s*=\s*["']([a-z0-9_]+)["']/gm, src)) pairs.push(`${m[2]}=${m[1]}`);
+      for (const m of allMatches(/^class\s+(\w+)\b(?:(?!\nclass\s)[\s\S])*?__tablename__\s*=\s*["']([a-z0-9_]+)["']/gm, src))
+        pairs.push(`${m[2]}=${m[1]}`);
     }
     cache.set(key, pairs);
   }
   return (cache.get(key) ?? []).filter((p) => p.startsWith(`${table}=`)).map((p) => p.slice(table.length + 1));
+}
+
+function resolveCitedHandler(
+  citationStr: string,
+  fieldName: "writerSource" | "handlerSource",
+  tree: SourceTree,
+  ws: WorkspaceReader,
+  opts: { strict?: boolean; rejectLine?: boolean } = {},
+): { body: string; at: string; repo: string; path: string; py: boolean; src: string } | { problem: string } {
+  const c = parseWriterSource(citationStr);
+  if (!c) return { problem: `${fieldName} must be "<repo>:<path>#<function>" or "<repo>:<path>:<line>" (repo "self" for this app), not ${JSON.stringify(citationStr)}` };
+  const { repo, path } = c;
+  if ("line" in c && opts.rejectLine) {
+    return { problem: `${citationStr} cites a line number, which drifts on edits: cite the function as ${repo}:${path}#<function>` };
+  }
+  if ("line" in c && repo !== "self" && opts.strict) {
+    return { problem: `${citationStr} cites a line in another repo, which drifts on its unrelated edits: cite the function as ${repo}:${path}#<function>` };
+  }
+  const at = "line" in c ? `${repo}:${path}:${c.line}` : `${repo}:${path}#${c.symbol}`;
+  const src = repo === "self" ? tree.read(path) : ws.read(repo, path);
+  if (src === null) return { problem: `the cited handler ${repo}:${path} cannot be read (workspace ${ws.origin}), so it cannot be verified` };
+  const py = path.endsWith(".py");
+  if ("line" in c) {
+    const lineCount = src.split("\n").length;
+    if (c.line < 1 || c.line > lineCount) {
+      return { problem: `${at} line ${c.line} is outside ${repo}:${path} (1..${lineCount})` };
+    }
+    return { body: handlerBody(src, c.line, py), at, repo, path, py, src };
+  }
+  const r = symbolBody(src, c.symbol, py, path);
+  if ("problem" in r) return { problem: `${repo}:${path} ${r.problem}, so ${at} cannot be verified` };
+  return { body: r.body, at, repo, path, py, src };
+}
+
+export function stripTsComments(src: string, filePath = "file.tsx"): string {
+  const kind = /\.(tsx|jsx)$/.test(filePath) ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(filePath, src, ts.ScriptTarget.Latest, true, kind);
+  return ts.createPrinter({ removeComments: true }).printFile(sf);
+}
+
+function exportedHttpMethodHandlers(
+  src: string,
+  filePath: string,
+): Array<{ method: string; body: string }> | { problem: string } {
+  const sf = ts.createSourceFile(filePath, src, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const diags = (sf as unknown as { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics;
+  if (!Array.isArray(diags) || diags.length) {
+    return { problem: `${filePath} does not parse cleanly as TypeScript` };
+  }
+  const printer = ts.createPrinter({ removeComments: true });
+  const isExported = (st: ts.Node) =>
+    ts.canHaveModifiers(st) && Boolean(ts.getModifiers(st)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword));
+  const methodSet = new Set<string>(OPS_HTTP_METHODS);
+  const handlers: Array<{ method: string; body: string }> = [];
+
+  for (const st of sf.statements) {
+    if (ts.isFunctionDeclaration(st) && isExported(st) && st.name && methodSet.has(st.name.text)) {
+      handlers.push({ method: st.name.text, body: st.body ? printer.printNode(ts.EmitHint.Unspecified, st.body, sf) : "" });
+    } else if (ts.isVariableStatement(st) && isExported(st)) {
+      for (const d of st.declarationList.declarations) {
+        if (ts.isIdentifier(d.name) && methodSet.has(d.name.text)) {
+          const f = fnInitializer(d.initializer);
+          const bodyNode = f?.body ?? d.initializer;
+          handlers.push({
+            method: d.name.text,
+            body: bodyNode ? printer.printNode(ts.EmitHint.Unspecified, bodyNode, sf) : "",
+          });
+        } else if (ts.isObjectBindingPattern(d.name)) {
+          const initBody = d.initializer ? printer.printNode(ts.EmitHint.Unspecified, d.initializer, sf) : "";
+          for (const el of d.name.elements) {
+            if (!ts.isIdentifier(el.name)) continue;
+            const exportedName = el.name.text;
+            if (!methodSet.has(exportedName)) continue;
+            handlers.push({ method: exportedName, body: initBody });
+          }
+        }
+      }
+    } else if (ts.isExportDeclaration(st) && st.exportClause && ts.isNamedExports(st.exportClause)) {
+      for (const spec of st.exportClause.elements) {
+        const exportedName = spec.name.text;
+        if (!methodSet.has(exportedName)) continue;
+        if (st.moduleSpecifier) {
+          handlers.push({ method: exportedName, body: printer.printNode(ts.EmitHint.Unspecified, st, sf) });
+          continue;
+        }
+        const localName = (spec.propertyName ?? spec.name).text;
+        const resolved = symbolBody(src, localName, false, filePath);
+        handlers.push({
+          method: exportedName,
+          body: "problem" in resolved ? "" : resolved.body,
+        });
+      }
+    }
+  }
+  return handlers;
+}
+
+/**
+ * Bounded BFS across local imports from `entryFile`; fails loudly if truncated or if any reachable
+ * non-test module matches `FORBIDDEN_OPS_BODY_LITERALS`. Open register surface files are treated as
+ * explicit boundaries when scanning shared shell routes.
+ */
+function opsImportGraphProblem(
+  tree: SourceTree,
+  entryFile: string,
+  skipFiles: ReadonlySet<string> = new Set(),
+  strippedCache: Map<string, string> = new Map(),
+): string | null {
+  const aliases = importAliases(tree);
+  const seen = new Set<string>([entryFile]);
+  let frontier = [entryFile];
+  for (let depth = 0; frontier.length; depth++) {
+    const next: string[] = [];
+    for (const f of frontier) {
+      if (/\.(test|spec)\.[jt]sx?$/.test(f)) continue;
+      const src = tree.read(f);
+      if (src === null || !/\.(tsx?|jsx?|mjs|mts|cts)$/.test(f)) continue;
+      let code = strippedCache.get(f);
+      if (code === undefined) {
+        code = /\.(tsx?|mts|cts)$/.test(f) ? stripTsComments(src, f) : stripComments(src);
+        strippedCache.set(f, code);
+      }
+      const hit = FORBIDDEN_OPS_BODY_LITERALS.exec(code);
+      if (hit) {
+        return `local import ${f} reachable from ${entryFile} contains forbidden fake/stub literal ${JSON.stringify(hit[0])}`;
+      }
+      for (const m of allMatches(/(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*)["'`]([^"'`]+)["'`]/g, code)) {
+        const r = resolveImport(tree, f, m[1], aliases);
+        if (r && !seen.has(r) && !/\.(test|spec)\.[jt]sx?$/.test(r)) {
+          if (r !== entryFile && skipFiles.has(r)) continue;
+          seen.add(r);
+          next.push(r);
+        }
+      }
+    }
+    if (next.length && depth + 1 >= OPS_WALK.depth) {
+      return `ops import graph from ${entryFile} is deeper than ${OPS_WALK.depth} hops; cannot prove fake-free`;
+    }
+    if (seen.size > OPS_WALK.files) {
+      return `ops import graph from ${entryFile} exceeds ${OPS_WALK.files} files; cannot prove fake-free`;
+    }
+    frontier = next;
+  }
+  return null;
+}
+
+/**
+ * Null when the handler cited by `handlerSource` resolves as a named symbol (`#<function>`), carries no
+ * forbidden fake literals (including across local imports), and — for `self:app/api/.../route.ts` — guards
+ * every exported HTTP handler method.
+ */
+export function opsHandlerProblem(
+  handlerSource: string,
+  tree: SourceTree,
+  ws: WorkspaceReader,
+  opts: {
+    strict?: boolean;
+    skipFiles?: ReadonlySet<string>;
+    strippedCache?: Map<string, string>;
+    appDirs?: string[];
+    expectedPath?: string;
+  } = {},
+): string | null {
+  const res = resolveCitedHandler(handlerSource, "handlerSource", tree, ws, { ...opts, rejectLine: true });
+  if ("problem" in res) return res.problem;
+  if (res.repo !== "self") {
+    return `ops handlerSource must cite this app (self:<path>#<symbol>), not ${res.repo}`;
+  }
+  if (opts.expectedPath && res.path !== opts.expectedPath) {
+    return `ops handlerSource must cite this surface's own file (${opts.expectedPath}), not ${res.path}`;
+  }
+  const hit = FORBIDDEN_OPS_BODY_LITERALS.exec(res.body);
+  if (hit) {
+    return `${res.at} contains forbidden fake/stub literal ${JSON.stringify(hit[0])}; contain or remove the fake path before citing it as ops`;
+  }
+  const graphHit = opsImportGraphProblem(tree, res.path, opts.skipFiles, opts.strippedCache);
+  if (graphHit) return graphHit;
+  const apiRoutePrefixes = (opts.appDirs?.length ? opts.appDirs : ["app", "src/app"]).map((d) => d.replace(/\/+$/, ""));
+  const isApiRoute =
+    /^(?:src\/)?app\/api\/(?:.*\/)?route\.(?:tsx?|jsx?|mjs|mts|cts)$/.test(res.path) ||
+    apiRoutePrefixes.some(
+      (dir) => res.path.startsWith(`${dir}/api/`) && /\/route\.(?:tsx?|jsx?|mjs|mts|cts)$/.test(res.path),
+    );
+  if (isApiRoute) {
+    const handlers = exportedHttpMethodHandlers(res.src, res.path);
+    if ("problem" in handlers) return handlers.problem;
+    for (const h of handlers) {
+      if (!OPS_ROUTE_AUTH_GUARD.test(h.body)) {
+        return `${res.path}#${h.method} has no recognized ops auth/HMAC guard (${OPS_ROUTE_AUTH_GUARD.source})`;
+      }
+    }
+  }
+  return null;
 }
 
 /**
@@ -1515,31 +1742,23 @@ export function writerProblem(
   cache: Map<string, string[]>,
   opts: { strict?: boolean } = {},
 ): string | null {
-  const c = parseWriterSource(writerSource);
-  if (!c) return `writerSource must be "<repo>:<path>#<function>" or "<repo>:<path>:<line>" (repo "self" for this app), not ${JSON.stringify(writerSource)}`;
-  const { repo, path } = c;
-  if ("line" in c && repo !== "self" && opts.strict) {
-    return `${writerSource} cites a line in another repo, which drifts on its unrelated edits: cite the function as ${repo}:${path}#<function>`;
-  }
-  const at = "line" in c ? `${repo}:${path}:${c.line}` : `${repo}:${path}#${c.symbol}`;
-  const src = repo === "self" ? tree.read(path) : ws.read(repo, path);
-  if (src === null) return `the writer's handler ${repo}:${path} cannot be read (workspace ${ws.origin}), so it cannot be verified`;
+  const resolved = resolveCitedHandler(writerSource, "writerSource", tree, ws, opts);
+  if ("problem" in resolved) return resolved.problem;
+  const { body, at, path, py } = resolved;
+  const c = parseWriterSource(writerSource)!;
+  const { repo } = c;
   const bare = table.replace(/^(hockey_db|supabase:public|public)\./, "");
   if (bare === table && !/^[a-z0-9_]+$/.test(bare)) return `the table ${JSON.stringify(table)} names no schema-qualified table`;
-  const py = path.endsWith(".py");
-  let body: string;
-  if ("line" in c) body = handlerBody(src, c.line, py);
-  else {
-    const r = symbolBody(src, c.symbol, py, path);
-    if ("problem" in r) return `${repo}:${path} ${r.problem}, so ${at} cannot be verified`;
-    body = r.body;
-  }
   if (!py) {
     const re = new RegExp(`\\.from\\(\\s*["'\`]${escRe(bare)}["'\`]\\s*\\)[\\s\\S]{0,400}?\\.(?:insert|upsert)\\s*\\(`);
     return re.test(body) ? null : `${at} does not .insert()/.upsert() into ${bare} (a select, an update or a stamp is not a writer)`;
   }
-  if (new RegExp(`\\bINSERT\\s+INTO\\s+["']?${escRe(bare)}\\b`, "i").test(body)) return null;
-  const rootDir = path.includes("/app/") ? path.slice(0, path.indexOf("/app/") + 5) : path.split("/").slice(0, -1).join("/");
+  if (new RegExp(`\\bINSERT\\s+INTO\\s+(?:["']?[a-z0-9_]+["']?\\.)?["']?${escRe(bare)}\\b`, "i").test(body)) return null;
+  const rootDir = path.includes("/app/")
+    ? path.slice(0, path.indexOf("/app/") + 5)
+    : path.includes("/api/")
+      ? path.slice(0, path.indexOf("/api/") + 5)
+      : path.split("/").slice(0, -1).join("/");
   const models = modelsFor(ws, repo, rootDir, bare, cache);
   if (!models.length) return `no ORM model with __tablename__ "${bare}" under ${repo}:${rootDir}`;
   for (const mod of models) {
@@ -1556,13 +1775,13 @@ export function judgeProvenance(
   tree: SourceTree,
   sidecar: ProvenanceSidecar,
   rows: Map<string, RegisterRow>,
-  config: Pick<GuardConfig, "app" | "rowPrefixes">,
+  config: Pick<GuardConfig, "app" | "rowPrefixes"> & Partial<Pick<GuardConfig, "appDirs">>,
   ws: WorkspaceReader,
   opts: { strict?: boolean } = {},
 ): ProvenanceVerdict {
   const modelCache = new Map<string, string[]>();
   const surfaces = head.entries.filter((e) => PROVENANCE_KINDS.includes(e.kind) && e.polarity === "present");
-  const v: ProvenanceVerdict = { surfaces, endpoint: [], register: [], static: [], unresolved: [], invalid: [] };
+  const v: ProvenanceVerdict = { surfaces, endpoint: [], register: [], static: [], ops: [], unresolved: [], invalid: [] };
   if (!surfaces.length) {
     v.invalid.push({ id: "(all)", why: "the extractor found no route or tab at HEAD — it is out of date, which is never a pass" });
     return v;
@@ -1570,6 +1789,22 @@ export function judgeProvenance(
   const byId = new Map(surfaces.map((e) => [e.id, e]));
   for (const id of Object.keys(sidecar.surfaces).sort()) {
     if (!byId.has(id)) v.invalid.push({ id, why: "stale: no such route or tab at HEAD (delete the entry, so it cannot describe a future surface)" });
+  }
+  const registerEvidenceFiles = new Set<string>();
+  const opsStrippedCache = new Map<string, string>();
+  for (const [id, entry] of Object.entries(sidecar.surfaces)) {
+    const ev = typeof entry?.evidence === "string" ? entry.evidence.trim() : "";
+    if (
+      id.startsWith("tab:") &&
+      entry &&
+      "register" in entry &&
+      filled(entry.register) &&
+      ev &&
+      /\.(tsx|jsx)$/.test(ev) &&
+      ev !== "dashboard.tsx"
+    ) {
+      registerEvidenceFiles.add(ev);
+    }
   }
   for (const e of surfaces) {
     const p = sidecar.surfaces[e.id];
@@ -1581,9 +1816,9 @@ export function judgeProvenance(
       v.invalid.push({ id: e.id, why: "the entry is not an object" });
       continue;
     }
-    const shapes = (["endpoint", "register", "static"] as const).filter((k) => k in p);
+    const shapes = (["endpoint", "register", "static", "ops"] as const).filter((k) => k in p);
     if (shapes.length !== 1) {
-      v.invalid.push({ id: e.id, why: `an entry is exactly one of {endpoint, table, writer}, {register} or {static}; this one has ${shapes.length ? shapes.join(" + ") : "none"}` });
+      v.invalid.push({ id: e.id, why: `an entry is exactly one of {endpoint, table, writer}, {register}, {static} or {ops, connector, handlerSource}; this one has ${shapes.length ? shapes.join(" + ") : "none"}` });
       continue;
     }
     const shape = shapes[0];
@@ -1653,6 +1888,35 @@ export function judgeProvenance(
         continue;
       }
       v.register.push(e.id);
+    } else if (shape === "ops") {
+      const missing = (["ops", "connector", "handlerSource"] as const).filter((k) => !filled(p[k]));
+      if (missing.length) {
+        v.invalid.push({ id: e.id, why: `an ops entry must name ${missing.join(", ")}` });
+        continue;
+      }
+      const connector = (p.connector as string).trim();
+      const colonIdx = connector.indexOf(":");
+      const prefix = colonIdx > 0 ? connector.slice(0, colonIdx).trim() : "";
+      const suffix = colonIdx > 0 ? connector.slice(colonIdx + 1).trim() : "";
+      if (!OPS_CONNECTOR_PREFIXES.includes(prefix as (typeof OPS_CONNECTOR_PREFIXES)[number]) || !suffix) {
+        v.invalid.push({
+          id: e.id,
+          why: `ops connector must start with an allowlisted prefix (${OPS_CONNECTOR_PREFIXES.join(", ")}) followed by ":<target>", not ${JSON.stringify(connector)}`,
+        });
+        continue;
+      }
+      const op = opsHandlerProblem(p.handlerSource as string, tree, ws, {
+        ...opts,
+        skipFiles: prefix === "ui-shell" ? registerEvidenceFiles : undefined,
+        strippedCache: opsStrippedCache,
+        appDirs: config.appDirs,
+        expectedPath: e.kind === "route" ? e.source : undefined,
+      });
+      if (op) {
+        v.invalid.push({ id: e.id, why: `ops handler check failed: ${op}` });
+        continue;
+      }
+      v.ops.push(e.id);
     } else {
       if (!filled(p.static)) {
         v.invalid.push({ id: e.id, why: "a static entry must say why the surface renders no domain data" });
@@ -1706,7 +1970,7 @@ export function formatProvenanceReport(r: ProvenanceResult, app: string, strict:
   const v = r.verdict;
   const lines = [
     `surface-guard provenance (${app}, ${strict ? "strict" : "report mode"}): ${v.surfaces.length} routed surfaces; ` +
-      `${v.endpoint.length} mapped to an endpoint, ${v.register.length} to an open register row, ${v.static.length} static, ` +
+      `${v.endpoint.length} mapped to an endpoint, ${v.register.length} to an open register row, ${v.static.length} static, ${v.ops.length} ops, ` +
       `${v.unresolved.length} UNRESOLVED, ${v.invalid.length} invalid.`,
     `register: ${r.registerOrigin}`,
   ];
