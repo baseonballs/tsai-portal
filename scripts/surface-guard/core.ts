@@ -1141,7 +1141,7 @@ const DATA_ACCESS: { re: RegExp; what: string }[] = [
 ];
 /** Bounds on the static tripwire's import walk; a graph larger than this cannot be proven static, which is a failure. */
 const STATIC_WALK = { depth: 8, files: 400 };
-const SOURCE_EXT = ["", ".ts", ".tsx", ".js", ".jsx", ".mjs", "/index.ts", "/index.tsx", "/index.js"];
+const SOURCE_EXT = ["", ".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", "/index.ts", "/index.tsx", "/index.js"];
 
 /** JSON with comments and trailing commas (tsconfig.json) → JSON. String-aware: a glob such as a double star, slash, star inside a string is not a comment. */
 export function jsonc(raw: string): string {
@@ -1590,13 +1590,22 @@ function exportedHttpMethodHandlers(
       handlers.push({ method: st.name.text, body: st.body ? printer.printNode(ts.EmitHint.Unspecified, st.body, sf) : "" });
     } else if (ts.isVariableStatement(st) && isExported(st)) {
       for (const d of st.declarationList.declarations) {
-        if (!ts.isIdentifier(d.name) || !methodSet.has(d.name.text)) continue;
-        const f = fnInitializer(d.initializer);
-        const bodyNode = f?.body ?? d.initializer;
-        handlers.push({
-          method: d.name.text,
-          body: bodyNode ? printer.printNode(ts.EmitHint.Unspecified, bodyNode, sf) : "",
-        });
+        if (ts.isIdentifier(d.name) && methodSet.has(d.name.text)) {
+          const f = fnInitializer(d.initializer);
+          const bodyNode = f?.body ?? d.initializer;
+          handlers.push({
+            method: d.name.text,
+            body: bodyNode ? printer.printNode(ts.EmitHint.Unspecified, bodyNode, sf) : "",
+          });
+        } else if (ts.isObjectBindingPattern(d.name)) {
+          const initBody = d.initializer ? printer.printNode(ts.EmitHint.Unspecified, d.initializer, sf) : "";
+          for (const el of d.name.elements) {
+            if (!ts.isIdentifier(el.name)) continue;
+            const exportedName = el.name.text;
+            if (!methodSet.has(exportedName)) continue;
+            handlers.push({ method: exportedName, body: initBody });
+          }
+        }
       }
     } else if (ts.isExportDeclaration(st) && st.exportClause && ts.isNamedExports(st.exportClause)) {
       for (const spec of st.exportClause.elements) {
@@ -1637,7 +1646,7 @@ function opsImportGraphProblem(
     for (const f of frontier) {
       if (/\.(test|spec)\.[jt]sx?$/.test(f)) continue;
       const src = tree.read(f);
-      if (src === null || !/\.(tsx?|jsx?|mjs)$/.test(f)) continue;
+      if (src === null || !/\.(tsx?|jsx?|mjs|mts|cts)$/.test(f)) continue;
       let code = strippedCache.get(f);
       if (code === undefined) {
         code = /\.(tsx?|mts|cts)$/.test(f) ? stripTsComments(src, f) : stripComments(src);
@@ -1676,24 +1685,40 @@ export function opsHandlerProblem(
   handlerSource: string,
   tree: SourceTree,
   ws: WorkspaceReader,
-  opts: { strict?: boolean; skipFiles?: ReadonlySet<string>; strippedCache?: Map<string, string> } = {},
+  opts: {
+    strict?: boolean;
+    skipFiles?: ReadonlySet<string>;
+    strippedCache?: Map<string, string>;
+    appDirs?: string[];
+    expectedPath?: string;
+  } = {},
 ): string | null {
   const res = resolveCitedHandler(handlerSource, "handlerSource", tree, ws, { ...opts, rejectLine: true });
   if ("problem" in res) return res.problem;
+  if (res.repo !== "self") {
+    return `ops handlerSource must cite this app (self:<path>#<symbol>), not ${res.repo}`;
+  }
+  if (opts.expectedPath && res.path !== opts.expectedPath) {
+    return `ops handlerSource must cite this surface's own file (${opts.expectedPath}), not ${res.path}`;
+  }
   const hit = FORBIDDEN_OPS_BODY_LITERALS.exec(res.body);
   if (hit) {
     return `${res.at} contains forbidden fake/stub literal ${JSON.stringify(hit[0])}; contain or remove the fake path before citing it as ops`;
   }
-  if (res.repo === "self") {
-    const graphHit = opsImportGraphProblem(tree, res.path, opts.skipFiles, opts.strippedCache);
-    if (graphHit) return graphHit;
-    if (/^app\/api\/.*\/route\.ts$/.test(res.path)) {
-      const handlers = exportedHttpMethodHandlers(res.src, res.path);
-      if ("problem" in handlers) return handlers.problem;
-      for (const h of handlers) {
-        if (!OPS_ROUTE_AUTH_GUARD.test(h.body)) {
-          return `${res.path}#${h.method} has no recognized ops auth/HMAC guard (${OPS_ROUTE_AUTH_GUARD.source})`;
-        }
+  const graphHit = opsImportGraphProblem(tree, res.path, opts.skipFiles, opts.strippedCache);
+  if (graphHit) return graphHit;
+  const apiRoutePrefixes = (opts.appDirs?.length ? opts.appDirs : ["app", "src/app"]).map((d) => d.replace(/\/+$/, ""));
+  const isApiRoute =
+    /^(?:src\/)?app\/api\/(?:.*\/)?route\.(?:tsx?|jsx?|mjs|mts|cts)$/.test(res.path) ||
+    apiRoutePrefixes.some(
+      (dir) => res.path.startsWith(`${dir}/api/`) && /\/route\.(?:tsx?|jsx?|mjs|mts|cts)$/.test(res.path),
+    );
+  if (isApiRoute) {
+    const handlers = exportedHttpMethodHandlers(res.src, res.path);
+    if ("problem" in handlers) return handlers.problem;
+    for (const h of handlers) {
+      if (!OPS_ROUTE_AUTH_GUARD.test(h.body)) {
+        return `${res.path}#${h.method} has no recognized ops auth/HMAC guard (${OPS_ROUTE_AUTH_GUARD.source})`;
       }
     }
   }
@@ -1750,7 +1775,7 @@ export function judgeProvenance(
   tree: SourceTree,
   sidecar: ProvenanceSidecar,
   rows: Map<string, RegisterRow>,
-  config: Pick<GuardConfig, "app" | "rowPrefixes">,
+  config: Pick<GuardConfig, "app" | "rowPrefixes"> & Partial<Pick<GuardConfig, "appDirs">>,
   ws: WorkspaceReader,
   opts: { strict?: boolean } = {},
 ): ProvenanceVerdict {
@@ -1767,9 +1792,17 @@ export function judgeProvenance(
   }
   const registerEvidenceFiles = new Set<string>();
   const opsStrippedCache = new Map<string, string>();
-  for (const entry of Object.values(sidecar.surfaces)) {
+  for (const [id, entry] of Object.entries(sidecar.surfaces)) {
     const ev = typeof entry?.evidence === "string" ? entry.evidence.trim() : "";
-    if (entry && "register" in entry && filled(entry.register) && ev && /\.(tsx?|jsx?|mjs)$/.test(ev) && ev !== "dashboard.tsx") {
+    if (
+      id.startsWith("tab:") &&
+      entry &&
+      "register" in entry &&
+      filled(entry.register) &&
+      ev &&
+      /\.(tsx|jsx)$/.test(ev) &&
+      ev !== "dashboard.tsx"
+    ) {
       registerEvidenceFiles.add(ev);
     }
   }
@@ -1874,8 +1907,10 @@ export function judgeProvenance(
       }
       const op = opsHandlerProblem(p.handlerSource as string, tree, ws, {
         ...opts,
-        skipFiles: registerEvidenceFiles,
+        skipFiles: prefix === "ui-shell" ? registerEvidenceFiles : undefined,
         strippedCache: opsStrippedCache,
+        appDirs: config.appDirs,
+        expectedPath: e.kind === "route" ? e.source : undefined,
       });
       if (op) {
         v.invalid.push({ id: e.id, why: `ops handler check failed: ${op}` });
