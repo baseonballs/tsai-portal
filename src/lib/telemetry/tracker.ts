@@ -6,7 +6,7 @@
  * PORT-PERF-TELEM-006:
  * - Memoizes `tsai_vid` in memory (`cachedVisitorId`) so `document.cookie` is not split on every event.
  * - Coalesces duplicate `page_view` / `section_view` beacons within `RECENT_BEACON_DEDUP_MS` (2,000ms).
- * - Normalizes any non-standard `event_type` onto `"feature_use"` (`custom_event_type` in `event_properties`).
+ * - Normalizes any non-standard `event_type` onto `"custom"` (`custom_event_type` in `event_properties`).
  * - Applies `AbortSignal.timeout(5_000)` on fallback `fetch` so stalled telemetry endpoints never tie up browser sockets.
  */
 
@@ -105,7 +105,7 @@ export async function trackEvent(payload: TelemetryPayload): Promise<void> {
   const sessionId = payload.session_id?.trim() || getOrCreateSessionId();
   const pagePath = payload.page_path || window.location.pathname;
   const isKnownType = PORTAL_ALLOWED_EVENT_TYPES.has(payload.event_type);
-  const normalizedEventType = isKnownType ? payload.event_type : "feature_use";
+  const normalizedEventType = isKnownType ? payload.event_type : "custom";
 
   // Coalesce identical rapid page_view / section_view beacons within 2s (e.g., StrictMode double-mount)
   if (normalizedEventType === "page_view" || normalizedEventType === "section_view") {
@@ -122,15 +122,18 @@ export async function trackEvent(payload: TelemetryPayload): Promise<void> {
     recentBeaconBySignature.set(signature, now);
   }
 
+  const { custom_event_type: _ignoredCustomType, ...cleanProps } = payload.event_properties ?? {};
+  void _ignoredCustomType;
+
   const eventData = {
+    ...payload,
     visitor_id: visitorId,
     session_id: sessionId,
     page_path: pagePath,
-    ...payload,
     event_type: normalizedEventType,
     event_properties: {
+      ...cleanProps,
       ...(isKnownType ? {} : { custom_event_type: payload.event_type }),
-      ...payload.event_properties,
       session_id: sessionId,
       referrer: document.referrer || null,
       screen_width: window.innerWidth,

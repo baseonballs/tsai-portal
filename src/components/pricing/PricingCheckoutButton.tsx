@@ -48,8 +48,10 @@ export function PricingCheckoutButton({
     isValidUrl: (raw: unknown) => raw is string,
     messages: { unavailable: string; failed: string; badRedirect: string },
   ) => {
+    if (submitting) return;
     setInlineError(null);
     setSubmitting(true);
+    let navigating = false;
     try {
       const res = await fetch(endpoint, {
         method: "POST",
@@ -60,6 +62,7 @@ export function PricingCheckoutButton({
       const data = (await res.json().catch(() => null)) as { url?: unknown; error?: string } | null;
 
       if (res.status === 401) {
+        navigating = true;
         window.location.href = "/login?next=/pricing";
         return;
       }
@@ -75,11 +78,15 @@ export function PricingCheckoutButton({
         setInlineError(messages.badRedirect);
         return;
       }
+      navigating = true;
       window.location.assign(data.url);
     } catch {
       setInlineError("Could not reach the billing service. Please try again.");
     } finally {
-      setSubmitting(false);
+      // Keep the button locked while browser navigation is in flight.
+      if (!navigating) {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -146,11 +153,14 @@ export function PricingCheckoutButton({
     authenticated &&
     (hasActiveSubscription ||
       normalizedStatus === "paused" ||
+      normalizedStatus === "incomplete" ||
       Boolean(activePlan && activePlan.trim().toUpperCase() !== "FREE"));
 
   if (hasManageableSub) {
     const isPaused = normalizedStatus === "paused";
     const isPastDue = normalizedStatus === "past_due";
+    const isIncomplete = normalizedStatus === "incomplete";
+    const needsAttention = isPaused || isPastDue || isIncomplete;
     const ctaLabel = submitting
       ? "Opening Billing Portal..."
       : isPaused
@@ -158,9 +168,11 @@ export function PricingCheckoutButton({
         : "Manage Billing";
     const statusText = isPaused
       ? "Subscription paused. Resume or update billing in Stripe."
-      : isPastDue
-        ? `Subscription payment past due (${activePlan ?? "Active"}). Update billing in Stripe.`
-        : `Active account plan: ${activePlan ?? "Active"}.`;
+      : isIncomplete
+        ? "Payment Incomplete — Action Required. Complete or update payment in Stripe."
+        : isPastDue
+          ? `Subscription payment past due (${activePlan ?? "Active"}). Update billing in Stripe.`
+          : `Active account plan: ${activePlan ?? "Active"}.`;
 
     return (
       <div className="space-y-2">
@@ -170,7 +182,7 @@ export function PricingCheckoutButton({
           onClick={() => void handleManageBilling()}
           data-testid={isPaused ? `portal-resume-${planSku}` : `portal-manage-${planSku}`}
           className={`w-full rounded-xl py-3 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 ${
-            isPaused || isPastDue
+            needsAttention
               ? "bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-950/40"
               : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950/40"
           }`}
@@ -180,7 +192,7 @@ export function PricingCheckoutButton({
         </button>
         <p
           className={`text-[11px] text-center leading-snug ${
-            isPaused || isPastDue ? "text-amber-300" : "text-emerald-300"
+            needsAttention ? "text-amber-300" : "text-emerald-300"
           }`}
         >
           {statusText}

@@ -205,6 +205,11 @@ function validateLiveTableWrite(table: string, payload: Row) {
       throw new Error(`Unexpected product_id: ${String(payload.product_id)}`);
     }
   }
+  if (table === "stripe_customers") {
+    if (!["stripe_webhook", "checkout_session", "admin"].includes(String(payload.bound_via))) {
+      throw new Error(`stripe_customers_bound_via_check violation: ${String(payload.bound_via)}`);
+    }
+  }
 }
 
 function createFakeAdminClient(state: MockDbState) {
@@ -229,6 +234,14 @@ function createFakeAdminClient(state: MockDbState) {
 
         if (op === "insert" && writePayload) {
           validateLiveTableWrite(table, writePayload);
+          if (table === "stripe_customers") {
+            const exists = rows.some(
+              (r) =>
+                r.user_id === writePayload!.user_id ||
+                r.stripe_customer_id === writePayload!.stripe_customer_id,
+            );
+            if (exists) return { data: null, error: { code: "23505", message: "duplicate stripe_customers key" } };
+          }
           if (table === "stripe_webhook_events") {
             const exists = rows.some((r) => r.event_id === writePayload!.event_id);
             if (exists) return { data: null, error: { code: "23505", message: "duplicate key value" } };
@@ -353,15 +366,29 @@ async function run() {
   let globalSignOutCalls = 0;
   let capturedCheckoutParams: Record<string, unknown>[] = [];
   let capturedCheckoutOptions: Array<Record<string, unknown> | undefined> = [];
+  let capturedCustomerCreates: Array<{ params: Record<string, unknown>; options?: Record<string, unknown> }> = [];
+  let capturedExpiredSessionIds: string[] = [];
   let capturedPortalParams: Record<string, unknown>[] = [];
   let capturedSubsListParams: Record<string, unknown>[] = [];
   const nextCheckoutUrl = "https://checkout.stripe.com/c/pay/cs_test_portal_123";
   const nextPortalUrl = "https://billing.stripe.com/p/session/bps_test_portal_123";
   let mockCanonicalSubStatus: string = "active";
   let mockLiveStripeSubscriptions: Array<{ id: string; status: string }> = [];
+  let mockLiveStripeSubPages: Array<Array<{ id: string; status: string }>> | null = null;
+  let mockStripeCustomers: Array<{ id: string; metadata?: Record<string, string>; deleted?: boolean }> = [];
+  let mockOpenCheckoutSessions: Array<{
+    id: string;
+    status: string;
+    url: string | null;
+    expires_at?: number;
+    metadata?: Record<string, string>;
+  }> = [];
+  let mockRecentCheckoutSessions: Array<{ id: string; status: string }> = [];
   let mockStripeSubsListError: Error | null = null;
   let mockStripePortalCreateError: Error | null = null;
   let mockEntitlementThrow = false;
+  let customerSeq = 0;
+  const seenSessionIdempotency = new Map<string, { paramsHash: string; res: { id: string; url: string } }>();
 
   const MI = Module as unknown as { _load: (r: string, p: unknown, m: boolean) => unknown };
   const origLoad = MI._load;
@@ -409,20 +436,72 @@ async function run() {
       const realStripe = new Stripe(REAL_STRIPE_KEY, { apiVersion: "2026-07-29.dahlia" });
       return class MockedStripe {
         webhooks = realStripe.webhooks;
+        customers = {
+          search: async ({ query }: { query: string }) => {
+            const match = query.match(/metadata\['userId'\]:'([^']+)'/);
+            const uid = match?.[1];
+            return {
+              data: mockStripeCustomers.filter((c) => !c.deleted && c.metadata?.userId === uid),
+            };
+          },
+          create: async (params: Record<string, unknown>, options?: Record<string, unknown>) => {
+            capturedCustomerCreates.push({ params, options });
+            const meta = (params.metadata ?? {}) as Record<string, string>;
+            const existing = mockStripeCustomers.find((c) => !c.deleted && c.metadata?.userId === meta.userId);
+            if (existing) return existing;
+            customerSeq += 1;
+            const created = { id: `cus_created_${customerSeq}`, metadata: meta };
+            mockStripeCustomers.push(created);
+            return created;
+          },
+        };
         subscriptions = {
           retrieve: async (id: string) => ({ id, status: mockCanonicalSubStatus }),
           list: async (params: Record<string, unknown>) => {
             capturedSubsListParams.push(params);
             if (mockStripeSubsListError) throw mockStripeSubsListError;
-            return { data: mockLiveStripeSubscriptions };
+            if (mockLiveStripeSubPages) {
+              const idx = capturedSubsListParams.length - 1;
+              const page = mockLiveStripeSubPages[idx] ?? [];
+              return { data: page, has_more: idx + 1 < mockLiveStripeSubPages.length };
+            }
+            return { data: mockLiveStripeSubscriptions, has_more: false };
           },
         };
         checkout = {
           sessions: {
+            list: async (params: Record<string, unknown>) => {
+              if (params.status === "open") {
+                return { data: mockOpenCheckoutSessions.filter((s) => s.status === "open") };
+              }
+              return { data: mockRecentCheckoutSessions };
+            },
+            expire: async (id: string) => {
+              capturedExpiredSessionIds.push(id);
+              const found = mockOpenCheckoutSessions.find((s) => s.id === id);
+              if (found) found.status = "expired";
+              return found ?? { id, status: "expired" };
+            },
+            retrieve: async (id: string) => {
+              return mockOpenCheckoutSessions.find((s) => s.id === id) ?? { id, status: "expired" };
+            },
             create: async (params: Record<string, unknown>, options?: Record<string, unknown>) => {
+              const key = typeof options?.idempotencyKey === "string" ? options.idempotencyKey : null;
+              const paramsHash = JSON.stringify(params);
+              if (key && seenSessionIdempotency.has(key)) {
+                const prev = seenSessionIdempotency.get(key)!;
+                if (prev.paramsHash !== paramsHash) {
+                  throw new Error(`Stripe IdempotencyError: mismatched params for key ${key}`);
+                }
+                capturedCheckoutParams.push(params);
+                capturedCheckoutOptions.push(options);
+                return prev.res;
+              }
               capturedCheckoutParams.push(params);
               capturedCheckoutOptions.push(options);
-              return { id: "cs_test_123", url: nextCheckoutUrl };
+              const res = { id: `cs_test_${capturedCheckoutParams.length}`, url: nextCheckoutUrl };
+              if (key) seenSessionIdempotency.set(key, { paramsHash, res });
+              return res;
             },
           },
         };
@@ -448,6 +527,7 @@ async function run() {
       "src/app/auth/entitlement/route.ts",
       "src/app/login/page.tsx",
       "src/lib/billing/stripe-client.ts",
+      "src/lib/billing/stripe-checkout-guard.ts",
       "src/lib/billing/stripe-origin.ts",
       "src/lib/billing/stripe-plans.ts",
       "src/lib/billing/stripe-webhook-claim.ts",
@@ -690,6 +770,9 @@ async function run() {
         { userId: BUYER_USER_ID, planSku: sku, tier: expectedTier },
       );
     }
+    assert.equal(db.stripe_customers.length, 1, "first-time customer persisted once across 5 SKU calls");
+    db.stripe_customers.length = 0;
+    mockStripeCustomers = [];
 
     // Reuse existing stripe_customer_id when already present on subscriptions + live concurrency check
     db.subscriptions[0].stripe_customer_id = "cus_existing_sub";
@@ -707,14 +790,33 @@ async function run() {
     assert.deepEqual(capturedSubsListParams[0], {
       customer: "cus_existing_sub",
       status: "all",
-      limit: 10,
+      limit: 100,
     });
     assert.equal(capturedCheckoutParams[0].customer, "cus_existing_sub");
     assert.equal(capturedCheckoutParams[0].customer_email, undefined);
-    assert.match(
-      String(capturedCheckoutOptions[0]?.idempotencyKey ?? ""),
-      new RegExp(`^checkout:${BUYER_USER_ID}:SPOT-PRO-PLUS:\\d+$`),
+    assert.equal(
+      capturedCheckoutOptions[0]?.idempotencyKey,
+      `checkout:${BUYER_USER_ID}:SPOT-PRO-PLUS:cus_existing_sub:none`,
     );
+
+    // Paginated subscriptions.list (m3): active sub on page 2 behind canceled page 1 still blocks with 409!
+    capturedCheckoutParams = [];
+    capturedSubsListParams = [];
+    mockLiveStripeSubPages = [
+      [{ id: "sub_canceled_p1", status: "canceled" }],
+      [{ id: "sub_active_p2", status: "active" }],
+    ];
+    const pagedRaceRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(pagedRaceRes.status, 409);
+    assert.equal(capturedSubsListParams.length, 2);
+    assert.equal(capturedSubsListParams[1].starting_after, "sub_canceled_p1");
+    assert.equal(capturedCheckoutParams.length, 0);
+    mockLiveStripeSubPages = null;
 
     // Live Stripe concurrency check blocks double-checkout across all EXISTING_ACTIVE_SUB_STATUSES
     for (const liveStatus of ["active", "trialing", "past_due", "paused", "incomplete"]) {
@@ -732,6 +834,47 @@ async function run() {
       assert.equal(capturedCheckoutParams.length, 0, "must not create Checkout Session when live sub exists");
     }
 
+    // Open session reuse for same planSku and expiry of conflicting open session for different planSku (M1)
+    mockLiveStripeSubscriptions = [];
+    capturedCheckoutParams = [];
+    mockOpenCheckoutSessions = [
+      {
+        id: "cs_open_same",
+        status: "open",
+        url: "https://checkout.stripe.com/c/pay/cs_open_same",
+        expires_at: Math.floor(Date.now() / 1000) + 1800,
+        metadata: { userId: BUYER_USER_ID, planSku: "SPOT-PRO-PLUS" },
+      },
+    ];
+    const reuseRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(reuseRes.status, 200);
+    assert.deepEqual(await reuseRes.json(), { url: "https://checkout.stripe.com/c/pay/cs_open_same" });
+    assert.equal(capturedCheckoutParams.length, 0, "matching open session reused without creating a duplicate");
+
+    capturedCheckoutParams = [];
+    capturedCheckoutOptions = [];
+    capturedExpiredSessionIds = [];
+    mockRecentCheckoutSessions = [{ id: "cs_open_same", status: "open" }];
+    const switchRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-TEAM-SEASON-24" }),
+      }),
+    );
+    assert.equal(switchRes.status, 200);
+    assert.deepEqual(capturedExpiredSessionIds, ["cs_open_same"]);
+    assert.equal(
+      capturedCheckoutOptions[0]?.idempotencyKey,
+      `checkout:${BUYER_USER_ID}:SPOT-TEAM-SEASON-24:cus_existing_sub:cs_open_same`,
+    );
+    mockOpenCheckoutSessions = [];
+    mockRecentCheckoutSessions = [];
+
     // Live Stripe subscriptions.list failure fails closed with sanitized 502
     mockLiveStripeSubscriptions = [];
     mockStripeSubsListError = new Error("stripe internal cus_existing_sub error");
@@ -746,8 +889,11 @@ async function run() {
     assert.doesNotMatch(listFailJson.error ?? "", /cus_existing_sub/);
     mockStripeSubsListError = null;
     db.subscriptions[0].stripe_customer_id = null;
+    db.stripe_customers.length = 0;
+    mockStripeCustomers = [];
+    capturedCustomerCreates = [];
 
-    // Fresh customer_email + DB price precedence + redirect URLs + deterministic idempotencyKey
+    // First-time buyer: resolves/creates Stripe customer idempotently + persists stripe_customers + deterministic key
     capturedCheckoutParams = [];
     capturedCheckoutOptions = [];
     const postOk = await checkoutRoute.POST(
@@ -759,15 +905,19 @@ async function run() {
     assert.equal(postOk.status, 200);
     assert.equal(postOk.headers.get("cache-control"), "private, no-store");
     assert.deepEqual(await postOk.json(), { url: nextCheckoutUrl });
+    assert.equal(capturedCustomerCreates.length, 1);
+    assert.equal(capturedCustomerCreates[0].options?.idempotencyKey, `customer:${BUYER_USER_ID}`);
+    assert.equal(db.stripe_customers[0]?.stripe_customer_id, capturedCheckoutParams[0].customer);
+    assert.equal(db.stripe_customers[0]?.bound_via, "checkout_session");
     assert.equal(capturedCheckoutParams.length, 1);
-    assert.match(
-      String(capturedCheckoutOptions[0]?.idempotencyKey ?? ""),
-      new RegExp(`^checkout:${BUYER_USER_ID}:SPOT-PRO-PLUS:\\d+$`),
+    assert.equal(
+      capturedCheckoutOptions[0]?.idempotencyKey,
+      `checkout:${BUYER_USER_ID}:SPOT-PRO-PLUS:${String(capturedCheckoutParams[0].customer)}:none`,
     );
     assert.equal((capturedCheckoutParams[0].line_items as Array<{ price: string }>)[0].price, "price_db_pro_plus");
     assert.equal(capturedCheckoutParams[0].mode, "subscription");
     assert.equal(capturedCheckoutParams[0].client_reference_id, BUYER_USER_ID);
-    assert.equal(capturedCheckoutParams[0].customer_email, BUYER_EMAIL);
+    assert.equal(capturedCheckoutParams[0].customer_email, undefined);
     assert.deepEqual(capturedCheckoutParams[0].metadata, {
       userId: BUYER_USER_ID,
       planSku: "SPOT-PRO-PLUS",
@@ -848,7 +998,39 @@ async function run() {
     assert.equal(portalUnconfigured.status, 503);
     env.STRIPE_SECRET_KEY = REAL_STRIPE_KEY;
 
+    // Concurrent first-time buyer double-click creates one customer & identical idempotencyKey (M1 + m4)
+    db.stripe_customers.length = 0;
+    mockStripeCustomers = [];
+    capturedCustomerCreates = [];
+    capturedCheckoutParams = [];
+    capturedCheckoutOptions = [];
+    seenSessionIdempotency.clear();
+    const [raceFirst1, raceFirst2] = await Promise.all([
+      checkoutRoute.POST(
+        new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+          method: "POST",
+          body: JSON.stringify({ planSku: "SPOT-PRO-STD" }),
+        }),
+      ),
+      checkoutRoute.POST(
+        new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+          method: "POST",
+          body: JSON.stringify({ planSku: "SPOT-PRO-STD" }),
+        }),
+      ),
+    ]);
+    assert.equal(raceFirst1.status, 200);
+    assert.equal(raceFirst2.status, 200);
+    assert.equal(mockStripeCustomers.length, 1, "concurrent first-time buyer resolves single Stripe customer");
+    assert.equal(
+      capturedCheckoutOptions[0]?.idempotencyKey,
+      capturedCheckoutOptions[1]?.idempotencyKey,
+      "concurrent double-click shares identical non-wall-clock idempotencyKey",
+    );
+
     // No stripe_customers row -> 404 honest message
+    db.stripe_customers.length = 0;
+    mockStripeCustomers = [];
     const portalNoCust = await portalRoute.POST(
       new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
         method: "POST",
@@ -1380,12 +1562,31 @@ async function run() {
     assert.match(pastDueSubHtml, /Manage Billing/);
     assert.match(pastDueSubHtml, /Subscription payment past due/);
 
+    const incompleteSubHtml = renderToStaticMarkup(
+      React.createElement(PricingCheckoutButton, {
+        planSku: "SPOT-PRO-PLUS",
+        planLabel: "Premier Plus",
+        loading: false,
+        catalogError: null,
+        authenticated: true,
+        checkoutReady: true,
+        activePlan: "FREE",
+        subscriptionStatus: "incomplete",
+        hasActiveSubscription: true,
+        variant: "teal",
+      }),
+    );
+    assert.match(incompleteSubHtml, /Manage Billing/);
+    assert.match(incompleteSubHtml, /Payment Incomplete — Action Required/);
+    assert.doesNotMatch(incompleteSubHtml, /Active account plan:/);
+
     const buttonSrc = fs.readFileSync(path.join(ROOT, "src/components/pricing/PricingCheckoutButton.tsx"), "utf8");
     assert.match(buttonSrc, /\/api\/billing\/stripe\/portal/);
     assert.match(buttonSrc, /isAllowedStripePortalUrl/);
+    assert.match(buttonSrc, /if \(!navigating\)/, "button stays locked while navigation is in flight");
     const pricingPageSrc = fs.readFileSync(path.join(ROOT, "src/app/pricing/page.tsx"), "utf8");
     assert.match(pricingPageSrc, /subscriptionStatus=\{subscriptionStatus\}/);
-    console.log("✓ 6. PricingCheckoutButton renders signed-out, unconfigured, active (Manage Billing), paused (Resume Subscription), past_due, and ready states");
+    console.log("✓ 6. PricingCheckoutButton renders signed-out, unconfigured, active (Manage Billing), paused (Resume Subscription), past_due, incomplete, and ready states");
 
     console.log("\n🎉 ALL PORTAL STRIPE CHECKOUT & BUYER SIGN-IN TESTS PASSED!\n");
   } finally {

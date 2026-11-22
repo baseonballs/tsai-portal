@@ -1,11 +1,12 @@
 /**
  * Wave 6 W-S29 verification suite:
  *   - Strict live-schema enforcement against `20260725160000_create_telemetry_and_retention.sql`
- *     (`user_telemetry_events`, `user_session_journeys`, `public.lifecycle_stage` enum)
- *   - `total_sessions` truthful `+ 1` increments on distinct new `session_id` (and no double-count on repeat / >200 event history)
- *   - Monotonic `current_lifecycle_stage` progression (`anonymous_visitor` -> `engaged_prospect` -> `beta_applicant` -> `activated_user` -> `power_user`)
- *   - Verified GoTrue session gate (anonymous events never promote past `beta_applicant`; higher stages never regress)
- *   - Client `tracker.ts` `session_id` generation & beacon payload
+ *   - M2: Unauthenticated/client telemetry (including `conversion_submit` and forged `custom_event_type`)
+ *     never promotes to `beta_applicant` or stamps `converted_at`; server-linked `lead_id` / stage preserved
+ *   - m2: Unknown event types normalize to `"custom"`, never `"feature_use"` (cannot inflate `power_user`)
+ *   - M3: Concurrent first-visit `23505` recovery, concurrent same-session beacons, & concurrent distinct-session CAS
+ *   - m5: `visitor_id` collision never overwrites an existing authenticated `journey.user_id`
+ *   - Client `tracker.ts`: `session_id` (`tsai_sid`), `"custom"` coercion, & `custom_event_type` stripping
  *
  * Run: npx tsx scripts/test-portal-telemetry-journeys.ts
  */
@@ -14,6 +15,8 @@ import Module from "node:module";
 import { NextRequest } from "next/server";
 
 const USER_1_ID = "00000000-0000-4000-8000-000000000301";
+const USER_2_ID = "00000000-0000-4000-8000-000000000302";
+const LEAD_1_ID = "00000000-0000-4000-8000-000000000901";
 
 const REAL_EVENT_COLS = new Set([
   "id",
@@ -90,8 +93,11 @@ function createFakeTelemetryDbClient(state: TelemetryMockDb) {
       let orderCol: string | null = null;
       let orderAsc = true;
       let rowLimit: number | null = null;
+      let wantSelect = false;
 
-      const execute = async (): Promise<{ data: unknown; error: { message: string } | null }> => {
+      const execute = async (): Promise<{ data: unknown; error: { code?: string; message: string } | null }> => {
+        // Yield a microtask so Promise.all concurrent requests genuinely interleave.
+        await Promise.resolve();
         const rows = state[table];
         const matched = () => {
           let list = rows.filter((r) => filters.every((fn) => fn(r)));
@@ -112,11 +118,12 @@ function createFakeTelemetryDbClient(state: TelemetryMockDb) {
 
         if (op === "insert" && payload) {
           const items = Array.isArray(payload) ? payload : [payload];
+          const inserted: Row[] = [];
           for (const item of items) {
             validateRowPayload(table, item);
             if (table === "user_session_journeys") {
               if (rows.some((r) => r.visitor_id === item.visitor_id)) {
-                return { data: null, error: { message: "duplicate visitor_id" } };
+                return { data: null, error: { code: "23505", message: "duplicate key value violates unique constraint" } };
               }
             }
             const created = {
@@ -125,15 +132,16 @@ function createFakeTelemetryDbClient(state: TelemetryMockDb) {
               ...item,
             };
             rows.push(created);
+            inserted.push({ ...created });
           }
-          return { data: null, error: null };
+          return { data: wantSelect ? inserted : null, error: null };
         }
 
         if (op === "update" && payload && !Array.isArray(payload)) {
           validateRowPayload(table, payload);
           const targets = rows.filter((r) => filters.every((fn) => fn(r)));
           for (const row of targets) Object.assign(row, payload);
-          return { data: null, error: null };
+          return { data: wantSelect ? targets.map((r) => ({ ...r })) : null, error: null };
         }
 
         return { data: [], error: null };
@@ -143,6 +151,7 @@ function createFakeTelemetryDbClient(state: TelemetryMockDb) {
         select: (cols: string) => {
           const parsed = cols.split(",").map((c) => c.trim()).filter(Boolean);
           assertColumns(table, parsed);
+          if (op !== "select") wantSelect = true;
           return q;
         },
         insert: (p: Row | Row[]) => {
@@ -242,7 +251,7 @@ async function run() {
         }),
       );
 
-    // 1. Visitor A full monotonic lifecycle + truthful total_sessions increments
+    // 1. M2: Behavioral progression & anti-forgery (conversion_submit & spoofed custom_event_type)
     mockUser = null;
     assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "page_view", session_id: "sid_1", session_duration_sec: 5 })).status, 200);
     let journeyA = db.user_session_journeys.find((j) => j.visitor_id === "vid_a")!;
@@ -251,31 +260,36 @@ async function run() {
     assert.equal(journeyA.current_lifecycle_stage, "anonymous_visitor");
     assert.equal(journeyA.converted_at, null);
 
-    // Same session_id does NOT increment total_sessions; section_view promotes to engaged_prospect
-    assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "section_view", session_id: "sid_1", session_duration_sec: 10 })).status, 200);
+    // Spoofed custom_event_type on page_view is stripped and cannot forge beta_applicant / converted_at
+    assert.equal(
+      (await postEvent({
+        visitor_id: "vid_a",
+        event_type: "page_view",
+        session_id: "sid_1",
+        event_properties: { custom_event_type: "beta_signup" },
+      })).status,
+      200,
+    );
+    const spoofedStored = db.user_telemetry_events[db.user_telemetry_events.length - 1];
+    assert.equal((spoofedStored.event_properties as Record<string, unknown>).custom_event_type, undefined);
     journeyA = db.user_session_journeys.find((j) => j.visitor_id === "vid_a")!;
-    assert.equal(journeyA.total_sessions, 1);
-    assert.equal(journeyA.total_duration_sec, 15);
     assert.equal(journeyA.current_lifecycle_stage, "engaged_prospect");
+    assert.equal(journeyA.converted_at, null);
 
-    // Page view never regresses engaged_prospect; omitting session_id keeps total_sessions unchanged
-    assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "page_view" })).status, 200);
-    journeyA = db.user_session_journeys.find((j) => j.visitor_id === "vid_a")!;
-    assert.equal(journeyA.total_sessions, 1);
-    assert.equal(journeyA.current_lifecycle_stage, "engaged_prospect");
-
-    // Distinct new session_id increments total_sessions + 1; conversion_submit advances to beta_applicant
+    // Unauthenticated conversion_submit also cannot forge beta_applicant or stamp converted_at
     assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "conversion_submit", session_id: "sid_2" })).status, 200);
     journeyA = db.user_session_journeys.find((j) => j.visitor_id === "vid_a")!;
     assert.equal(journeyA.total_sessions, 2);
-    assert.equal(journeyA.current_lifecycle_stage, "beta_applicant");
-    assert.ok(journeyA.converted_at, "beta_applicant sets converted_at");
+    assert.equal(journeyA.current_lifecycle_stage, "engaged_prospect");
+    assert.equal(journeyA.converted_at, null);
 
-    // Repeat event with sid_2 keeps total_sessions at 2; lower event never regresses beta_applicant
-    assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "button_click", session_id: "sid_2" })).status, 200);
+    // Server-linked lead_id / beta_applicant stage IS respected monotonically and preserved
+    journeyA.lead_id = LEAD_1_ID;
+    journeyA.current_lifecycle_stage = "beta_applicant";
+    assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "page_view", session_id: "sid_2" })).status, 200);
     journeyA = db.user_session_journeys.find((j) => j.visitor_id === "vid_a")!;
-    assert.equal(journeyA.total_sessions, 2);
     assert.equal(journeyA.current_lifecycle_stage, "beta_applicant");
+    assert.ok(journeyA.converted_at, "server-linked lead sets converted_at");
 
     // Verified GoTrue session advances to activated_user; new sid_3 increments total_sessions to 3
     mockUser = { id: USER_1_ID };
@@ -285,7 +299,16 @@ async function run() {
     assert.equal(journeyA.total_sessions, 3);
     assert.equal(journeyA.current_lifecycle_stage, "activated_user");
 
-    // 3 feature_use events as authenticated user advance to power_user
+    // m2: Unknown event types normalize to "custom" (NOT "feature_use"), so 5 custom events stay activated_user
+    for (let i = 0; i < 5; i++) {
+      assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "custom_scroll_ping", session_id: "sid_3" })).status, 200);
+      const lastEv = db.user_telemetry_events[db.user_telemetry_events.length - 1];
+      assert.equal(lastEv.event_type, "custom");
+    }
+    journeyA = db.user_session_journeys.find((j) => j.visitor_id === "vid_a")!;
+    assert.equal(journeyA.current_lifecycle_stage, "activated_user");
+
+    // 3 real feature_use events as authenticated owner advance to power_user
     for (let i = 0; i < 3; i++) {
       assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "feature_use", session_id: "sid_3" })).status, 200);
     }
@@ -293,33 +316,59 @@ async function run() {
     assert.equal(journeyA.total_sessions, 3);
     assert.equal(journeyA.current_lifecycle_stage, "power_user");
 
-    // Signed-out bounce / page_view NEVER regresses power_user
+    // Signed-out bounce never regresses power_user
     mockUser = null;
     assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "bounce", session_id: "sid_3" })).status, 200);
+    assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_a")?.current_lifecycle_stage, "power_user");
+    console.log("✓ 1. M2 & m2: anti-forgery, custom coercion, server-lead preservation & monotonic progression verified");
+
+    // 2. m5: visitor_id collision never overwrites existing journey.user_id
+    mockUser = { id: USER_2_ID };
+    assert.equal((await postEvent({ visitor_id: "vid_a", event_type: "feature_use", session_id: "sid_u2" })).status, 200);
     journeyA = db.user_session_journeys.find((j) => j.visitor_id === "vid_a")!;
-    assert.equal(journeyA.current_lifecycle_stage, "power_user");
-    console.log("✓ 1. Monotonic 5-stage lifecycle progression & truthful total_sessions verified");
+    assert.equal(journeyA.user_id, USER_1_ID, "different authenticated user must not overwrite journey owner");
 
-    // 2. Anonymous visitor cannot reach activated_user/power_user even with many feature_use events or spoofed body user_id
-    for (let i = 0; i < 5; i++) {
-      assert.equal(
-        (await postEvent({
-          visitor_id: "vid_anon",
-          user_id: USER_1_ID,
-          lead_id: "00000000-0000-4000-8000-000000000999",
-          event_type: "feature_use",
-          session_id: "sid_anon_1",
-        })).status,
-        200,
-      );
+    mockUser = { id: USER_1_ID };
+    assert.equal((await postEvent({ visitor_id: "vid_owner", event_type: "page_view", session_id: "sid_o1" })).status, 200);
+    mockUser = { id: USER_2_ID };
+    for (let i = 0; i < 4; i++) {
+      assert.equal((await postEvent({ visitor_id: "vid_owner", event_type: "feature_use", session_id: "sid_o1" })).status, 200);
     }
-    const journeyAnon = db.user_session_journeys.find((j) => j.visitor_id === "vid_anon")!;
-    assert.equal(journeyAnon.user_id, null);
-    assert.equal(journeyAnon.lead_id, null);
-    assert.equal(journeyAnon.current_lifecycle_stage, "engaged_prospect");
-    console.log("✓ 2. Anonymous callers stay capped at engaged_prospect/beta_applicant and cannot spoof identity");
+    const ownerJourney = db.user_session_journeys.find((j) => j.visitor_id === "vid_owner")!;
+    assert.equal(ownerJourney.user_id, USER_1_ID);
+    assert.equal(ownerJourney.current_lifecycle_stage, "activated_user", "other user's events cannot escalate owner");
+    console.log("✓ 2. m5: existing journey.user_id is protected against visitor_id collision");
 
-    // 3. Multi-session > 200 event window check: older seen session_id is NOT double-counted
+    // 3. M3: Concurrent first-visit 23505 race, concurrent same-session, & concurrent distinct-session CAS
+    mockUser = null;
+    const firstRaceResponses = await Promise.all([
+      postEvent({ visitor_id: "vid_race", event_type: "page_view", session_id: "sid_r1", session_duration_sec: 4 }),
+      postEvent({ visitor_id: "vid_race", event_type: "section_view", session_id: "sid_r1", session_duration_sec: 6 }),
+    ]);
+    assert.ok(firstRaceResponses.every((r) => r.status === 200), "23505 insert race must recover cleanly to 200");
+    let raceJourney = db.user_session_journeys.find((j) => j.visitor_id === "vid_race")!;
+    assert.equal(raceJourney.total_sessions, 1, "concurrent beacons in initial session stay total_sessions=1");
+    assert.equal(raceJourney.total_duration_sec, 10);
+    assert.equal(raceJourney.current_lifecycle_stage, "engaged_prospect");
+
+    const sameNewSidResponses = await Promise.all([
+      postEvent({ visitor_id: "vid_race", event_type: "page_view", session_id: "sid_r2" }),
+      postEvent({ visitor_id: "vid_race", event_type: "button_click", session_id: "sid_r2" }),
+    ]);
+    assert.ok(sameNewSidResponses.every((r) => r.status === 200));
+    raceJourney = db.user_session_journeys.find((j) => j.visitor_id === "vid_race")!;
+    assert.equal(raceJourney.total_sessions, 2, "concurrent same new session_id increments once to 2");
+
+    const diffNewSidResponses = await Promise.all([
+      postEvent({ visitor_id: "vid_race", event_type: "page_view", session_id: "sid_r3" }),
+      postEvent({ visitor_id: "vid_race", event_type: "page_view", session_id: "sid_r4" }),
+    ]);
+    assert.ok(diffNewSidResponses.every((r) => r.status === 200));
+    raceJourney = db.user_session_journeys.find((j) => j.visitor_id === "vid_race")!;
+    assert.equal(raceJourney.total_sessions, 4, "concurrent distinct session_ids both persist via CAS retry");
+    console.log("✓ 3. M3: concurrent 23505 recovery, same-session dedupe & distinct-session CAS verified");
+
+    // 4. >200-event window check + retention-managed stage preservation
     db.user_session_journeys.push({
       id: "journey-hist",
       visitor_id: "vid_hist",
@@ -354,9 +403,7 @@ async function run() {
     assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_hist")?.total_sessions, 2);
     assert.equal((await postEvent({ visitor_id: "vid_hist", event_type: "page_view", session_id: "sid_brand_new" })).status, 200);
     assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_hist")?.total_sessions, 3);
-    console.log("✓ 3. >200-event fallback check avoids double-counting older session_id while counting brand-new sessions");
 
-    // 4. Retention-managed stages (at_risk / churned_exit) are preserved without regression
     db.user_session_journeys.push({
       id: "journey-risk",
       visitor_id: "vid_risk",
@@ -373,21 +420,9 @@ async function run() {
     });
     assert.equal((await postEvent({ visitor_id: "vid_risk", event_type: "page_view", session_id: "sid_r1" })).status, 200);
     assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_risk")?.current_lifecycle_stage, "at_risk");
-    console.log("✓ 4. Externally managed at_risk/churned_exit stages are preserved cleanly");
+    console.log("✓ 4. >200-event window check and at_risk preservation verified");
 
-    // 4b. Multi-session authenticated usage (2+ sessions & 5+ non-bounce events) also advances to power_user
-    mockUser = { id: USER_1_ID };
-    for (let i = 0; i < 3; i++) {
-      assert.equal((await postEvent({ visitor_id: "vid_multi", event_type: "page_view", session_id: "sid_m1" })).status, 200);
-    }
-    assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_multi")?.current_lifecycle_stage, "activated_user");
-    assert.equal((await postEvent({ visitor_id: "vid_multi", event_type: "page_view", session_id: "sid_m2" })).status, 200);
-    assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_multi")?.current_lifecycle_stage, "activated_user");
-    assert.equal((await postEvent({ visitor_id: "vid_multi", event_type: "section_view", session_id: "sid_m2" })).status, 200);
-    assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_multi")?.current_lifecycle_stage, "power_user");
-    assert.equal(db.user_session_journeys.find((j) => j.visitor_id === "vid_multi")?.total_sessions, 2);
-
-    // 5. Client tracker generates & attaches session_id
+    // 5. Client tracker generates tsai_sid, normalizes unknown -> "custom", & strips custom_event_type spoof
     const tracker = await import("../src/lib/telemetry/tracker");
     const store = new Map<string, string>();
     const beacons: string[] = [];
@@ -422,22 +457,29 @@ async function run() {
     try {
       tracker.resetPortalTelemetryCacheForTests();
       const sid1 = tracker.getOrCreateSessionId();
-      const sid2 = tracker.getOrCreateSessionId();
       assert.ok(sid1.startsWith("sid_"));
-      assert.equal(sid1, sid2, "session ID is stable within a tab session");
-      await tracker.trackEvent({ event_type: "button_click", event_category: "pricing" });
+      await tracker.trackEvent({
+        event_type: "button_click",
+        session_id: "   ",
+        event_properties: { custom_event_type: "beta_signup" },
+      });
+      await tracker.trackEvent({ event_type: "video_hover" });
       await new Promise((r) => setTimeout(r, 10));
-      assert.equal(beacons.length, 1);
-      const sent = JSON.parse(beacons[0]) as { session_id?: string; event_properties?: { session_id?: string } };
-      assert.equal(sent.session_id, sid1);
-      assert.equal(sent.event_properties?.session_id, sid1);
+      assert.equal(beacons.length, 2);
+      const b0 = JSON.parse(beacons[0]) as { event_type?: string; session_id?: string; event_properties?: Record<string, unknown> };
+      assert.equal(b0.event_type, "button_click");
+      assert.equal(b0.session_id, sid1);
+      assert.equal(b0.event_properties?.custom_event_type, undefined);
+      const b1 = JSON.parse(beacons[1]) as { event_type?: string; event_properties?: Record<string, unknown> };
+      assert.equal(b1.event_type, "custom");
+      assert.equal(b1.event_properties?.custom_event_type, "video_hover");
     } finally {
       delete (globalThis as Record<string, unknown>).window;
       delete (globalThis as Record<string, unknown>).document;
       if (origNavDescriptor) Object.defineProperty(globalThis, "navigator", origNavDescriptor);
       else delete (globalThis as Record<string, unknown>).navigator;
     }
-    console.log("✓ 5. Client tracker memoizes tsai_sid and transmits session_id");
+    console.log("✓ 5. Client tracker tsai_sid, custom normalization & anti-spoof verified");
 
     console.log("\n🎉 ALL PORTAL TELEMETRY SESSION & LIFECYCLE TESTS PASSED!\n");
   } finally {

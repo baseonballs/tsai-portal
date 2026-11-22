@@ -9,11 +9,10 @@ import {
   matchesIfNoneMatch,
 } from "@/lib/perf/server-timing";
 import {
-  computeNextJourneyState,
   resolveSessionIdFromEvent,
   type ExistingJourneyRecord,
-  type TelemetryEventSummary,
 } from "@/lib/telemetry/journey-lifecycle";
+import { persistSessionJourneyWithRetry } from "@/lib/telemetry/journey-persistence";
 import { resolveServerAuthUrl } from "@/utils/supabase/resolve-server-auth-url";
 import { createClient as createSessionClient } from "@/utils/supabase/server";
 
@@ -100,14 +99,17 @@ export async function POST(req: NextRequest) {
     ]);
     const rawEventType = event_type.trim();
     const isAllowedEventType = PORTAL_ALLOWED_EVENT_TYPES.has(rawEventType);
-    const normalizedEventType = isAllowedEventType ? rawEventType : "feature_use";
+    const normalizedEventType = isAllowedEventType ? rawEventType : "custom";
     const safeProps =
       event_properties && typeof event_properties === "object" && !Array.isArray(event_properties)
         ? (event_properties as Record<string, unknown>)
         : {};
-    const resolvedSessionId = resolveSessionIdFromEvent(session_id, safeProps);
+    // Strip caller-supplied custom_event_type so standard events cannot spoof custom types.
+    const { custom_event_type: _ignoredCustomType, ...sanitizedProps } = safeProps;
+    void _ignoredCustomType;
+    const resolvedSessionId = resolveSessionIdFromEvent(session_id, sanitizedProps);
     const normalizedEventProperties: Record<string, unknown> = {
-      ...safeProps,
+      ...sanitizedProps,
       ...(isAllowedEventType ? {} : { custom_event_type: rawEventType }),
       ...(resolvedSessionId ? { session_id: resolvedSessionId } : {}),
     };
@@ -139,11 +141,12 @@ export async function POST(req: NextRequest) {
           event_properties: normalizedEventProperties,
           ip_hash: ipHash,
           user_agent: userAgent,
+          created_at: nowIso,
         },
       ]),
       supabase
         .from("user_session_journeys")
-        .select("lead_id, user_id, total_sessions, total_duration_sec, current_lifecycle_stage, converted_at")
+        .select("lead_id, user_id, total_sessions, total_duration_sec, current_lifecycle_stage, converted_at, updated_at")
         .eq("visitor_id", normalizedVisitorId)
         .maybeSingle(),
     ]);
@@ -155,52 +158,10 @@ export async function POST(req: NextRequest) {
       throw new Error(`session journey lookup failed: ${journeyRes.error.message}`);
     }
 
-    // All user_session_journeys reads/writes use only live columns from
-    // tsai-spotlight/supabase/migrations/20260725160000_create_telemetry_and_retention.sql.
-    const existingJourney = journeyRes.data as ExistingJourneyRecord | null;
-    let priorEvents: TelemetryEventSummary[] = [];
-    let hasOlderMatchingSession = false;
-
-    if (existingJourney) {
-      const { data: priorRows, error: priorErr } = await supabase
-        .from("user_telemetry_events")
-        .select("id, user_id, event_type, event_properties")
-        .eq("visitor_id", normalizedVisitorId)
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (priorErr) {
-        throw new Error(`prior telemetry events lookup failed: ${priorErr.message}`);
-      }
-      priorEvents = (priorRows ?? []) as TelemetryEventSummary[];
-
-      if (
-        resolvedSessionId &&
-        priorEvents.length >= 200 &&
-        !priorEvents.some(
-          (row) =>
-            row.id !== eventId &&
-            row.event_properties &&
-            typeof row.event_properties === "object" &&
-            !Array.isArray(row.event_properties) &&
-            (row.event_properties as { session_id?: unknown }).session_id === resolvedSessionId,
-        )
-      ) {
-        const { data: olderMatch, error: olderErr } = await supabase
-          .from("user_telemetry_events")
-          .select("id")
-          .eq("visitor_id", normalizedVisitorId)
-          .contains("event_properties", { session_id: resolvedSessionId })
-          .neq("id", eventId)
-          .limit(1);
-        if (olderErr) {
-          throw new Error(`prior session lookup failed: ${olderErr.message}`);
-        }
-        hasOlderMatchingSession = Array.isArray(olderMatch) && olderMatch.length > 0;
-      }
-    }
-
-    const nextJourney = computeNextJourneyState({
-      existingJourney,
+    await persistSessionJourneyWithRetry({
+      supabase,
+      visitorId: normalizedVisitorId,
+      initialJourney: journeyRes.data as ExistingJourneyRecord | null,
       currentEvent: {
         id: eventId,
         event_type: normalizedEventType,
@@ -208,53 +169,11 @@ export async function POST(req: NextRequest) {
         session_id: resolvedSessionId,
         duration_sec: durationSec,
         user_id,
+        created_at: nowIso,
       },
-      priorEvents,
-      hasOlderMatchingSession,
+      leadId: lead_id,
       nowIso,
     });
-
-    if (existingJourney) {
-      const updatePayload: Record<string, unknown> = {
-        user_id: nextJourney.userId,
-        total_duration_sec: nextJourney.totalDurationSec,
-        last_active_at: nowIso,
-        current_lifecycle_stage: nextJourney.lifecycleStage,
-        updated_at: nowIso,
-      };
-      if (nextJourney.shouldWriteTotalSessions) {
-        updatePayload.total_sessions = nextJourney.totalSessions;
-      }
-      if (nextJourney.convertedAt && !existingJourney.converted_at) {
-        updatePayload.converted_at = nextJourney.convertedAt;
-      }
-      const { error: journeyUpdateError } = await supabase
-        .from("user_session_journeys")
-        .update(updatePayload)
-        .eq("visitor_id", normalizedVisitorId);
-      if (journeyUpdateError) {
-        throw new Error(`session journey update failed: ${journeyUpdateError.message}`);
-      }
-    } else {
-      const referrer = normalizedEventProperties.referrer;
-      const { error: journeyInsertError } = await supabase.from("user_session_journeys").insert([
-        {
-          visitor_id: normalizedVisitorId,
-          lead_id,
-          user_id: nextJourney.userId,
-          acquisition_source: typeof referrer === "string" && referrer ? referrer : "direct",
-          total_sessions: nextJourney.totalSessions,
-          total_duration_sec: nextJourney.totalDurationSec,
-          current_lifecycle_stage: nextJourney.lifecycleStage,
-          converted_at: nextJourney.convertedAt,
-          first_seen_at: nowIso,
-          last_active_at: nowIso,
-        },
-      ]);
-      if (journeyInsertError) {
-        throw new Error(`session journey insert failed: ${journeyInsertError.message}`);
-      }
-    }
     timing.record("db", performance.now() - dbStartedAt, "Telemetry persistence");
 
     return NextResponse.json(

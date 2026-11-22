@@ -2,12 +2,16 @@ import { NextRequest } from "next/server";
 
 import { createPortalAdminClient } from "@/lib/auth/portal-entitlement";
 import {
-  EXISTING_ACTIVE_SUB_STATUSES,
   getStripe,
   isActiveSubscriptionRecord,
   jsonNoStore,
   MissingSecretError,
 } from "@/lib/billing/stripe-client";
+import {
+  hasLiveActiveStripeSubscription,
+  prepareCheckoutSessionCreation,
+  resolveOrCreateCheckoutCustomerId,
+} from "@/lib/billing/stripe-checkout-guard";
 import { resolveBillingOrigin } from "@/lib/billing/stripe-origin";
 import {
   derivePlanType,
@@ -152,48 +156,87 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existingCustomerId =
+    const existingDbCustomerId =
       (customerRow as { stripe_customer_id?: string | null } | null)?.stripe_customer_id ??
       subRecord?.stripe_customer_id ??
       null;
 
-    // Live Stripe concurrency check: prevent mid-flight webhook race double-checkout.
-    if (existingCustomerId) {
-      let liveSubs: { data: Array<{ status?: string | null }> };
-      try {
-        liveSubs = await stripe.subscriptions.list({
-          customer: existingCustomerId,
-          status: "all",
-          limit: 10,
-        });
-      } catch (stripeListErr) {
-        console.error(
-          "[StripeCheckout POST] Live subscription lookup failed:",
-          errorMessage(stripeListErr),
-        );
-        return jsonNoStore({ error: "Billing service is temporarily unavailable." }, 502);
-      }
-      const hasLiveActiveSub = liveSubs.data.some((sub) =>
-        EXISTING_ACTIVE_SUB_STATUSES.has((sub.status ?? "").trim().toLowerCase()),
+    // Resolve or create Stripe customer idempotently first so even first-time buyers
+    // share open-session reuse, expiry, and deterministic non-wall-clock idempotency.
+    let customerId: string;
+    try {
+      customerId = await resolveOrCreateCheckoutCustomerId({
+        stripe,
+        adminClient,
+        userId: user.id,
+        email: user.email,
+        existingDbCustomerId,
+      });
+    } catch (stripeCustErr) {
+      console.error(
+        "[StripeCheckout POST] Stripe customer resolution failed:",
+        errorMessage(stripeCustErr),
       );
-      if (hasLiveActiveSub) {
-        return jsonNoStore(
-          {
-            error:
-              "An active or pending subscription already exists on this account. Manage your plan in the Billing Portal.",
-          },
-          409,
-        );
-      }
+      return jsonNoStore({ error: "Billing service is temporarily unavailable." }, 502);
+    }
+
+    let hasLiveActiveSub: boolean;
+    try {
+      hasLiveActiveSub = await hasLiveActiveStripeSubscription(stripe, customerId);
+    } catch (stripeListErr) {
+      console.error(
+        "[StripeCheckout POST] Live subscription lookup failed:",
+        errorMessage(stripeListErr),
+      );
+      return jsonNoStore({ error: "Billing service is temporarily unavailable." }, 502);
+    }
+
+    if (hasLiveActiveSub) {
+      return jsonNoStore(
+        {
+          error:
+            "An active or pending subscription already exists on this account. Manage your plan in the Billing Portal.",
+        },
+        409,
+      );
+    }
+
+    let sessionPrep;
+    try {
+      sessionPrep = await prepareCheckoutSessionCreation({
+        stripe,
+        customerId,
+        userId: user.id,
+        planSku: planRow.sku,
+      });
+    } catch (prepErr) {
+      console.error(
+        "[StripeCheckout POST] Open session guard failed:",
+        errorMessage(prepErr),
+      );
+      return jsonNoStore({ error: "Billing service is temporarily unavailable." }, 502);
+    }
+
+    if (sessionPrep.action === "reuse") {
+      return jsonNoStore({ url: sessionPrep.url });
+    }
+    if (sessionPrep.action === "conflict") {
+      return jsonNoStore(
+        {
+          error:
+            "An active or pending subscription already exists on this account. Manage your plan in the Billing Portal.",
+        },
+        409,
+      );
     }
 
     const origin = resolveBillingOrigin(req);
-    const idempotencyKey = `checkout:${user.id}:${planRow.sku}:${Math.floor(Date.now() / 60000)}`;
     let session: { url?: string | null };
     try {
       session = await stripe.checkout.sessions.create(
         {
           mode: "subscription",
+          customer: customerId,
           line_items: [{ price: priceId, quantity: 1 }],
           client_reference_id: user.id,
           metadata: {
@@ -210,13 +253,8 @@ export async function POST(req: NextRequest) {
           },
           success_url: `${origin}/pricing?checkout=success`,
           cancel_url: `${origin}/pricing?checkout=canceled`,
-          ...(existingCustomerId
-            ? { customer: existingCustomerId }
-            : user.email
-              ? { customer_email: user.email }
-              : {}),
         },
-        { idempotencyKey },
+        { idempotencyKey: sessionPrep.idempotencyKey },
       );
     } catch (stripeSessionErr) {
       console.error(
