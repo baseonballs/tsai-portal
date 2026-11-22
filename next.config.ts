@@ -8,7 +8,14 @@ const nextConfig: NextConfig = {
     // callback (sets session cookies) and the licence-gated /docs. A shared cache honouring it
     // could hand one user's tokens or pages to the next. It now covers only the public
     // marketing surface; signed-in and API paths are private and never stored.
-    const PRIVATE_PATHS = ["/api/:path*", "/auth/:path*", "/supabase/:path*", "/docs/:path*", "/login/:path*"];
+    const PRIVATE_PATHS = [
+      "/api/:path*",
+      "/auth/:path*",
+      "/supabase/:path*",
+      "/docs/:path*",
+      "/login/:path*",
+      "/tournament/:path*",
+    ];
     return [
       ...PRIVATE_PATHS.map((source) => ({
         source,
@@ -18,7 +25,7 @@ const nextConfig: NextConfig = {
         ],
       })),
       {
-        source: "/((?!api/|api$|auth/|auth$|supabase/|supabase$|docs/|docs$|login/|login$).*)",
+        source: "/((?!api/|api$|auth/|auth$|supabase/|supabase$|docs/|docs$|login/|login$|tournament/|tournament$).*)",
         headers: [
           {
             key: "Vary",

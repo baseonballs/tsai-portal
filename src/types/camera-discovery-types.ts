@@ -2,7 +2,6 @@
 //  camera-discovery-types.ts
 //  tsai-portal
 //
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Patent Track: Track 16 (TSAI-PATENT-VISION-01)
 //  Option 5 / Horizon C: Turnkey Camera Discovery & Stream Health Validator

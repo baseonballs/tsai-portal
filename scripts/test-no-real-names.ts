@@ -30,8 +30,6 @@ const sha = (s: string) => createHash("sha256").update(s).digest("hex").slice(0,
 const KNOWN_COLLISIONS: Record<string, Record<string, number>> = {
   // pnpm-lock.yaml: a third-party package name
   [sha("pnpm-lock.yaml")]: { "name:eb687afb0f48": 1 },
-  // scripts/check-no-hardcoded-credentials.mjs: part of a historical script file name in a comment
-  [sha("scripts/check-no-hardcoded-credentials.mjs")]: { "name:7cadab457ad8": 1 },
 };
 
 function files(): string[] {

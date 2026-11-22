@@ -1,7 +1,6 @@
 /**
  * Transcend Vision Club Revenue Share Calculator & Specifications
  * Governed by: 06-competitive-autopsy-and-gtm.md (Section 3.2: 50% Club Revenue Share)
- * Author: Jeffrey T. Lucas
  * Assignee: Transcendental Sports AI LLC
  */
 

@@ -47,7 +47,7 @@ const PUBLIC_PAGES: Record<string, string> = {
   "/spotlight-and-periodical": "marketing page, no account data",
   "/technology-solutions": "marketing page, no account data",
   "/tournament/director":
-    "client-side demo of the director console; reads no account data (its built-in sheets are a separate live-data finding)",
+    "client-side director shell; renders no account data and loads live tournaments via authenticated /api/tournaments* BFF (401 -> sign-in prompt)",
 };
 
 /** Route handlers with no session check, and why that is correct. */

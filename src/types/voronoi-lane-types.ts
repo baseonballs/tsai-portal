@@ -2,7 +2,6 @@
 //  voronoi-lane-types.ts
 //  tsai-portal
 //
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Patent Track: Track 16 (TSAI-PAT-P384)
 //

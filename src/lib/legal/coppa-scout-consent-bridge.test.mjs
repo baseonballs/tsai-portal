@@ -2,7 +2,6 @@
 //  coppa-scout-consent-bridge.test.mjs
 //  tsai-portal
 //
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Patent Track: Track 16 / Track 15 (Watson Legal Compliance & Digital Signature Verification)
 //

@@ -2,7 +2,6 @@
  * test-club-monetization.ts
  * TsaiPortal / Commercial Verification Script
  *
- * Author / Inventor: Jeffrey T. Lucas
  * Assignee: Transcendental Sports AI LLC
  * Commercial Strategy: Option D - Club Director Commercial Self-Service & 50% Net Rev Share
  *

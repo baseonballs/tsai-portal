@@ -80,7 +80,7 @@ function walk(dir, out = []) {
 // ALSO scan loose source files at the repo ROOT, non-recursively.
 //
 // The directory walk misses them entirely, and that is not hypothetical: tsai-watson carried
-// add_license.js, check_lucas.js and test_profiles.js at the root, each holding a literal
+// add_license.js, check_<person>.js and test_profiles.js at the root, each holding a literal
 // service_role JWT, while this guard printed "no hardcoded credentials in source". One-off
 // debugging scripts are exactly where a key gets pasted, and exactly where a subdirectory-only
 // scanner cannot see.

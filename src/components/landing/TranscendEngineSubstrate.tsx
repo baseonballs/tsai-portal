@@ -7,8 +7,7 @@ import {
   Sparkles, 
   ShieldCheck, 
   Zap, 
-  Database, 
-  GitMerge, 
+  GitMerge,  
   Network,
   Terminal,
   ArrowUp
@@ -16,8 +15,6 @@ import {
 
 export function TranscendEngineSubstrate() {
   const [activeTab, setActiveTab] = useState<number>(0);
-  // GA-030 O-03 (T0.4): there is no live engine-throughput feed yet, so the badge shows no number.
-  // It said "<n> events/sec" with n invented by a random generator. Rebuilt on a real metric in T8.1, or retired.
 
   const pillars = [
     {
@@ -103,9 +100,6 @@ export function TranscendEngineSubstrate() {
           <span className="text-zinc-200 font-semibold uppercase tracking-wider text-[11px]">
             Transcend AI Substrate
           </span>
-          <span className="text-cyan-400 font-bold text-[11px] bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded">
-            <span data-testid="engine-throughput-unavailable">Live throughput: not yet available</span>
-          </span>
         </div>
 
         {/* Right Arrow Conduit (Pointing up to Periodical Card) */}
@@ -137,22 +131,6 @@ export function TranscendEngineSubstrate() {
             <p className="text-sm md:text-base text-zinc-300 max-w-2xl font-light leading-relaxed">
               Spotlight sees the film. Periodical captures the athlete&apos;s voice. <strong className="text-white font-medium">Transcend is the decision-grade AI engine underneath</strong> — fusing computer vision, semantic synthesis, and hockey domain graphs into one unified intelligence substrate.
             </p>
-          </div>
-
-          {/* ENGINE STATUS TELEMETRY BADGE */}
-          <div className="bg-black/80 border border-white/15 p-4 rounded-2xl font-mono text-xs space-y-2 shrink-0 shadow-inner">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-zinc-400 text-[11px]">PLATFORM STATUS</span>
-              <span data-testid="platform-status-unavailable" className="text-zinc-400 font-bold flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-zinc-600" /> Live status: not yet available
-              </span>
-            </div>
-            <div className="text-zinc-200 font-semibold text-[11px] flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-cyan-400" /> MASCE Neural Core v2.4
-            </div>
-            <div className="text-[10px] text-zinc-500">
-              No live engine metrics are connected
-            </div>
           </div>
         </div>
 
@@ -259,7 +237,6 @@ export function TranscendEngineSubstrate() {
                     <span className="flex items-center gap-1.5 text-cyan-400">
                       <Terminal className="w-3.5 h-3.5" /> Engine Architecture
                     </span>
-                    <span className="text-zinc-500">Live sync: not yet available</span>
                   </div>
                   <div className="text-[11px] text-zinc-300 space-y-1">
                     <div className="flex justify-between">

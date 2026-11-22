@@ -1,10 +1,10 @@
 /**
- * GA-030 T0.4 containment — Portal public false claims (rows O-01, O-02, O-03, O-08, O-09, O-10).
+ * GA-030 T0.4 / Wave 5 portal verification — remaining containment & retired/rebuilt surfaces
+ * (O-01 rebuilt, O-02/O-03 retired under OD-17, O-08, O-09, O-10).
  *
- * Each surface STAYS and renders an honest "not yet available" marker instead of invented data.
  * Rendered with react-dom/server, so this checks what a visitor actually receives, not only source.
- * It FAILS if any built-in club, score, clock, stream key, payout, calibration reading or random
- * counter comes back, or if the owner-only real-name list cannot be loaded.
+ * It FAILS if any built-in club, score, clock, stream key, payout, calibration reading, retired
+ * telemetry widget, or random counter comes back, or if the owner-only real-name list cannot be loaded.
  *
  * Run: npx tsx scripts/test-t0-containment-routes.tsx
  */
@@ -19,7 +19,7 @@ import ClubRevSharePage from "../src/app/club-revshare/page";
 import TournamentDirectorPage from "../src/app/tournament/director/page";
 import BYODSetupPage from "../src/app/byod-setup/page";
 import { ICalProvisioningModal } from "../src/components/tournaments/ICalProvisioningModal";
-import { RinkTelemetryChart } from "../src/components/landing/RinkTelemetryChart";
+import { LiveTournamentBracketView } from "../src/components/tournaments/LiveTournamentBracketView";
 import { TranscendEngineSubstrate } from "../src/components/landing/TranscendEngineSubstrate";
 import { ClubRevenueShareConsole } from "../src/components/commercial/ClubRevenueShareConsole";
 import { ClubStripeConnectOnboarding } from "../src/components/commercial/ClubStripeConnectOnboarding";
@@ -64,9 +64,6 @@ const src = (p: string) => readFileSync(join(ROOT, p), "utf8");
 /** Source with comments removed, so a containment note that quotes the old claim does not count. */
 const code = (p: string) => src(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
 
-// Real names come only from the OWNER-ONLY list (scripts/lib/real-names.ts, TSAI_REAL_NAME_LIST); this public
-// repo never carries a name, a hash of one, or a pattern for one. If the list cannot be loaded the suite FAILS:
-// a missing list must never turn into a silent pass.
 const listVerdict = loadRealNameList();
 if (listVerdict.verdict !== "ok") {
   console.error(`test-t0-containment: FAILED — real-name check cannot run: ${listVerdict.reason}`);
@@ -74,7 +71,6 @@ if (listVerdict.verdict !== "ok") {
 }
 const matcher = new NameMatcher(listVerdict.data);
 const realNameHits = (text: string) => matcher.hits(text).length;
-/** Visible text of the element carrying data-testid=`id` (static markup, no nested element of the same tag). */
 function textOfTestId(html: string, id: string): string {
   const start = html.indexOf(`data-testid="${id}"`);
   assert.ok(start >= 0, `marker ${id} missing`);
@@ -91,9 +87,9 @@ function textOfTestId(html: string, id: string): string {
   throw new Error(`unterminated ${id}`);
 }
 
-console.log("\n=== T0.4 containment: Portal public false claims ===\n");
+console.log("\n=== Portal containment & Wave 5 cleanup verification ===\n");
 
-console.log("O-08 /club-revshare");
+console.log("O-08 / O-06 /club-revshare");
 check("partner block says not yet available and names no club", () => {
   const html = render(<ClubRevSharePage />);
   assert.match(html, /data-testid="club-partner-unavailable"/);
@@ -101,7 +97,6 @@ check("partner block says not yet available and names no club", () => {
   assert.doesNotMatch(html, /acct_/, "no invented Stripe Connect account");
   assert.doesNotMatch(html, /Next Payout|Active Direct Deposit|Stripe Connect Account/i, "no invented payout schedule");
   assert.doesNotMatch(html, /Direct deposit to team bank account/i);
-  // Structural (needs no name): the partner block holds ONLY the not-yet-available marker — no partner of any name.
   assert.equal(
     textOfTestId(html, "club-partner-unavailable"),
     "Club partner payouts: not yet available No club is connected and no payouts are made today. The figures above are a calculator, not account data.",
@@ -110,43 +105,112 @@ check("partner block says not yet available and names no club", () => {
   assert.equal(realNameHits(html), 0, "no listed real name on /club-revshare");
 });
 
-console.log("O-01 /tournament/director");
-check("sheets and bracket show not yet available; no invented stream, score or clock", () => {
+console.log("O-01 /tournament/director (live B8 wiring)");
+check("director shell renders no fake sheets, stream keys, or unavailable markers", () => {
   const html = render(<TournamentDirectorPage />);
-  assert.match(html, /data-testid="tournament-director-unavailable"/);
-  assert.match(html, /data-testid="tournament-bracket-unavailable"/);
+  assert.doesNotMatch(html, /tournament-director-unavailable|tournament-bracket-unavailable|ical-provisioning-unavailable/);
   assert.doesNotMatch(html, /live_tsai|rtmps:\/\/|youtube\.com\/watch/i, "no invented stream key or URL");
   assert.doesNotMatch(html, /LIVE P\d|WATCH (LIVE|YOUTUBE)/, "no invented live state");
   assert.doesNotMatch(html, /\b\d+ - \d+\b/, "no invented score");
-  assert.match(html, /Tournament Director/, "a neutral heading, no built-in tournament name");
-  assert.match(html, /No tournament connected/);
+  assert.match(html, /Tournament Director/);
   assert.equal(realNameHits(html), 0, "no listed real name on /tournament/director");
 });
-check("a sheet without xG shows it as missing, never an even split", () => {
+check("a sheet without xG shows it as missing and omits stream keys / RTMPS", () => {
   const sheet = {
-    sheetId: "fixture-sheet", sheetNumber: 1, rinkName: "Fixture Rink", streamState: "UNINITIALIZED" as const,
-    youtubeBroadcastId: "", youtubeStreamKey: "", rtmpsIngestUrl: "", playbackUrl: "", bitrateKbps: 0, fps: 0,
-    activeAngle: "TACTICAL_PRIMARY" as const, isPublicShowcase: false,
-    matchInfo: { matchId: "m", homeTeam: "", awayTeam: "", period: 0, gameClockSeconds: 0, scoreHome: 0, scoreAway: 0, isOvertime: false },
-    hardwareHealth: { temperatureCelsius: 0, droppedFramesCount: 0, ispLoadPercentage: 0, thermalThrottled: false },
+    sheetId: "fixture-sheet",
+    sheetNumber: 1,
+    rinkName: "Fixture Rink",
+    streamState: "UNINITIALIZED" as const,
+    youtubeBroadcastId: null,
+    playbackUrl: null,
+    bitrateKbps: null,
+    fps: null,
+    activeAngle: "TACTICAL_PRIMARY" as const,
+    isPublicShowcase: false,
+    matchInfo: {
+      matchId: "m",
+      homeTeam: null,
+      awayTeam: null,
+      period: null,
+      gameClockSeconds: null,
+      scoreHome: null,
+      scoreAway: null,
+      isOvertime: false,
+    },
+    hardwareHealth: null,
     acousticShieldMuted: false,
   };
-  const html = render(<MultiSheetCommandCenter initialSheets={[sheet]} />);
+  const html = render(<MultiSheetCommandCenter sheets={[sheet]} />);
   assert.match(html, /xG not available/);
   assert.doesNotMatch(html, /xG 1\.50/);
-  assert.doesNotMatch(code("src/components/tournaments/MultiSheetCommandCenter.tsx"), /\?\? 1\.5/);
+  assert.doesNotMatch(html, /RTMPS:/i);
+  assert.doesNotMatch(code("src/components/tournaments/MultiSheetCommandCenter.tsx"), /youtubeStreamKey|rtmpsIngestUrl|\?\? 1\.5/);
+  assert.doesNotMatch(code("src/components/tournaments/multi-sheet-types.ts"), /youtubeStreamKey|rtmpsIngestUrl/);
 });
-check("director page source carries no built-in sheets", () => {
+check("director page and BFF routes use live /api/tournaments* without built-in sheets or service-role bypass", () => {
   const s = code("src/app/tournament/director/page.tsx");
   assert.doesNotMatch(s, /INITIAL_SHEETS|youtubeStreamKey|rtmps/);
   assert.doesNotMatch(code("src/components/tournaments/LiveTournamentBracketView.tsx"), /DEFAULT_MATCHES|homeTeam: \{ name: "/);
+  const hockeyApi = code("src/lib/hockey-api.ts");
+  assert.match(hockeyApi, /HOCKEY_API_URL/);
+  assert.match(hockeyApi, /API_GATEWAY_URL/);
+  assert.doesNotMatch(hockeyApi, /TSAI_DGX_ORIGIN/);
+  assert.doesNotMatch(hockeyApi, /SUPABASE_SERVICE_ROLE_KEY/);
+  for (const routeFile of [
+    "src/app/api/tournaments/teams/route.ts",
+    "src/app/api/tournaments/route.ts",
+    "src/app/api/tournaments/[tournamentId]/route.ts",
+    "src/app/api/tournaments/[tournamentId]/sheets/route.ts",
+    "src/app/api/tournaments/[tournamentId]/sheets/[sheetId]/route.ts",
+    "src/app/api/tournaments/[tournamentId]/matches/route.ts",
+    "src/app/api/tournaments/[tournamentId]/matches/[matchId]/route.ts",
+  ]) {
+    const r = code(routeFile);
+    assert.match(r, /auth\.getUser\(\)/, `${routeFile} must verify supabase.auth.getUser()`);
+    assert.doesNotMatch(r, /SUPABASE_SERVICE_ROLE_KEY/, `${routeFile} must never use service-role key`);
+  }
 });
-check("iCal modal: provisioning not yet available, no sample calendar, apply disabled", () => {
-  const html = render(<ICalProvisioningModal isOpen onClose={() => {}} onApplyProvisioning={() => {}} />);
-  assert.match(html, /data-testid="ical-provisioning-unavailable"/);
+check("bracket view supports all 6 B8 rounds, CANCELLED, and nullable fields without unavailable markers", () => {
+  const matches = (["POOL", "ROUND_OF_16", "QUARTERFINALS", "SEMIFINALS", "THIRD_PLACE", "CHAMPIONSHIP"] as const).map(
+    (round, i) => ({
+      matchId: `m-${i}`,
+      round,
+      matchLabel: `M-${i + 1}`,
+      sortOrder: i,
+      sheetId: null,
+      homeTeamName: null,
+      awayTeamName: null,
+      homeSeed: null,
+      awaySeed: null,
+      homeScore: null,
+      awayScore: null,
+      status: i === 5 ? ("CANCELLED" as const) : ("UPCOMING" as const),
+      period: null,
+      clockSeconds: null,
+      isOvertime: false,
+      winnerSide: null,
+      nextMatchId: null,
+      nextMatchSlot: null,
+      startsAt: null,
+    }),
+  );
+  const html = render(<LiveTournamentBracketView matches={matches} />);
+  assert.doesNotMatch(html, /tournament-bracket-unavailable/);
+  assert.match(html, /Pool Play/);
+  assert.match(html, /Round of 16/);
+  assert.match(html, /Quarterfinals/);
+  assert.match(html, /Semifinals/);
+  assert.match(html, /Third Place/);
+  assert.match(html, /Championship Final/);
+  assert.match(html, /CANCELLED/);
+  assert.match(html, /TBD/);
+});
+check("iCal modal applies to BFF without sample calendar, stream keys, or unavailable marker", () => {
+  const html = render(<ICalProvisioningModal isOpen onClose={() => {}} />);
+  assert.doesNotMatch(html, /data-testid="ical-provisioning-unavailable"/);
   assert.doesNotMatch(html, /Load .*Sample/i);
-  assert.match(html, /<button[^>]*disabled=""[^>]*>Apply \(not yet available\)/);
-  assert.doesNotMatch(src("src/lib/tournament/ical-tournament-provisioner.ts"), /generateSampleTournamentICal|live_tsai_|rtmps:\/\/a\.rtmps/);
+  assert.doesNotMatch(src("src/lib/tournament/ical-tournament-provisioner.ts"), /generateSampleTournamentICal|live_tsai_|rtmps:\/\/a\.rtmps|youtubeStreamKey|rtmpsIngestUrl/);
+  assert.match(code("src/components/tournaments/ICalProvisioningModal.tsx"), /createTournamentSheet/);
 });
 
 console.log("O-09 /byod-setup");
@@ -176,23 +240,21 @@ check("wizard claims no pairing or calibration", () => {
   assert.ok((s.match(/data-testid="byod-not-measured"/g) ?? []).length >= 10, "each reading is marked not yet available");
 });
 
-console.log("O-02 landing RinkTelemetryChart");
-check("no named players, chart stays mounted with an empty state", () => {
+console.log("O-02 retired RinkTelemetryChart (OD-17)");
+check("RinkTelemetryChart.tsx is deleted and unimported across landing & technology-solutions", () => {
   assert.equal(existsSync(join(ROOT, "src/data/players-telemetry.ts")), false, "built-in player list must stay deleted");
-  const html = render(<RinkTelemetryChart />);
-  assert.match(html, /data-testid="rink-telemetry-unavailable"/);
-  assert.doesNotMatch(html, /km\/h|bpm|#\d+ [A-Z]/);
-  assert.doesNotMatch(code("src/components/landing/RinkTelemetryChart.tsx"), /PLAYERS_DATA|@\/data\/players-telemetry/);
-  assert.match(src("src/components/landing/DesktopLanding.tsx"), /<RinkTelemetryChart \/>/, "the chart stays mounted on /");
-  assert.match(src("src/app/technology-solutions/page.tsx"), /<RinkTelemetryChart \/>/, "and on /technology-solutions");
+  assert.equal(existsSync(join(ROOT, "src/components/landing/RinkTelemetryChart.tsx")), false, "RinkTelemetryChart must be deleted");
+  assert.doesNotMatch(src("src/components/landing/DesktopLanding.tsx"), /RinkTelemetryChart/);
+  assert.doesNotMatch(src("src/app/technology-solutions/page.tsx"), /RinkTelemetryChart/);
 });
 
-console.log("O-03 TranscendEngineSubstrate");
-check("no random events/sec counter", () => {
+console.log("O-03 retired telemetry badges on TranscendEngineSubstrate (OD-17)");
+check("no retired telemetry badges, fake counters, or live status claims", () => {
   const html = render(<TranscendEngineSubstrate />);
-  assert.match(html, /data-testid="engine-throughput-unavailable"/);
+  assert.doesNotMatch(html, /data-testid="engine-throughput-unavailable"/);
+  assert.doesNotMatch(html, /data-testid="platform-status-unavailable"/);
+  assert.doesNotMatch(html, /Live sync: not yet available/);
   assert.doesNotMatch(html, /events\/sec/);
-  assert.match(html, /data-testid="platform-status-unavailable"/);
   assert.doesNotMatch(html, /\bONLINE\b|SYNC OK|Sync: Realtime/, "no live-status claim");
   assert.doesNotMatch(code("src/components/landing/TranscendEngineSubstrate.tsx"), /Math\.random|setInterval|pulseCount/);
 });
@@ -258,14 +320,12 @@ check("no built-in data constants remain in the component and type trees", () =>
       if (e.isDirectory()) walk(rel);
       else if (/\.(ts|tsx)$/.test(e.name)) {
         const text = src(rel);
-        // Thresholds are configuration, not data; DEFAULT_FAILOVER_THRESHOLDS stays.
         const m = text.match(/^(export\s+)?const\s+(DEFAULT|INITIAL|SAMPLE)_(?!FAILOVER_THRESHOLDS\b)[A-Z0-9_]+\b/gm);
         if (m) offenders.push(`${rel}: ${m.join(", ")}`);
       }
     }
   };
   for (const d of dirs) walk(d);
-  // Any exception must be listed here with its register row, so a NEW constant fails the suite.
   const allowed: string[] = [];
   const unexpected = offenders.filter((o) => !allowed.some((a) => o.startsWith(a)));
   assert.deepEqual(unexpected, [], `built-in data constants found:\n${unexpected.join("\n")}`);
@@ -274,9 +334,7 @@ check("no built-in data constants remain in the component and type trees", () =>
 console.log("Real names (owner-only list)");
 check("no listed real name in any rendered T0.4 surface", () => {
   for (const [name, el] of EMPTY) assert.equal(realNameHits(render(el)), 0, `${name}: listed real name rendered`);
-  assert.equal(realNameHits(render(<RinkTelemetryChart />)), 0);
   assert.equal(realNameHits(render(<TranscendEngineSubstrate />)), 0);
-  // The tree-wide scan against the same list is scripts/test-no-real-names.ts (also in pnpm test).
 });
 
-console.log(`\n=== T0.4 containment: ${passed} checks passed ===\n`);
+console.log(`\n=== Portal containment & Wave 5 checks: ${passed} checks passed ===\n`);

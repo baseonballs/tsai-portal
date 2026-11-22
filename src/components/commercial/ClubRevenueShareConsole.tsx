@@ -3,7 +3,6 @@
 //
 //  ClubRevenueShareConsole.tsx
 //  tsai-portal
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Commercial Rollout: Horizon D 50% Club Revenue Share & Scout Cutover
 //  Palette: slate/zinc/cyan/emerald/amber/rose only

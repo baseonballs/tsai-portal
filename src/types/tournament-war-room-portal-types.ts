@@ -2,7 +2,6 @@
 //  tournament-war-room-portal-types.ts
 //  tsai-portal
 //
-//  Author: Jeffrey T. Lucas
 //  Assignee: Transcendental Sports AI LLC
 //  Patent Track: Track 16 (TSAI-PAT-P398)
 //  Sprint 40: Multi-Camera Cross-Sheet Tournament War Room Centralizer

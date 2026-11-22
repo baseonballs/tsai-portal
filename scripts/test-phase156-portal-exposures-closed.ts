@@ -219,7 +219,7 @@ async function main() {
       });
       return hits.flatMap((r) => r.headers.filter((h) => h.key === "Cache-Control").map((h) => h.value));
     };
-    for (const p of ["/supabase/auth/v1/token", "/auth/callback", "/auth/entitlement", "/api/telemetry/event", "/api/beta-requests", "/docs", "/docs/", "/docs/spotlight/roadmap", "/login", "/login/"]) {
+    for (const p of ["/supabase/auth/v1/token", "/auth/callback", "/auth/entitlement", "/api/telemetry/event", "/api/beta-requests", "/api/tournaments", "/api/tournaments/teams", "/docs", "/docs/", "/docs/spotlight/roadmap", "/login", "/login/", "/tournament/director"]) {
       const values = cacheOf(p);
       assert.deepEqual(values, ["private, no-store"], `${p} must be private, no-store (got ${JSON.stringify(values)})`);
     }

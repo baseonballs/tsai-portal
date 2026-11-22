@@ -2,7 +2,6 @@
  * test-ical-tournament-provisioner.ts
  * TsaiPortal / Verification Script
  *
- * Author / Inventor: Jeffrey T. Lucas
  * Assignee: Transcendental Sports AI LLC
  * Patent Track 16: TSAI-PATENT-VISION-01 (Docket P229, Claims 9 & 10)
  *
@@ -146,21 +145,25 @@ async function runICalProvisionerTests() {
 
   const sheet1 = report.sheets[0];
   assert.equal(sheet1.sheetNumber, 1);
-  assert.equal(sheet1.matchInfo.homeTeam, "Fixture Home 1");
-  assert.equal(sheet1.matchInfo.awayTeam, "Fixture Away 1");
+  assert.equal(sheet1.matchInfo?.homeTeam, "Fixture Home 1");
+  assert.equal(sheet1.matchInfo?.awayTeam, "Fixture Away 1");
   for (const sheet of report.sheets) {
     assert.equal(sheet.streamState, "UNINITIALIZED", `Sheet ${sheet.sheetNumber}: a calendar never makes a stream LIVE`);
-    assert.equal(sheet.youtubeStreamKey, "", `Sheet ${sheet.sheetNumber}: no invented stream key`);
-    assert.equal(sheet.youtubeBroadcastId, "", `Sheet ${sheet.sheetNumber}: no invented broadcast id`);
-    assert.equal(sheet.rtmpsIngestUrl, "", `Sheet ${sheet.sheetNumber}: no invented RTMPS URL`);
-    assert.equal(sheet.playbackUrl, "", `Sheet ${sheet.sheetNumber}: no invented playback URL`);
+    assert.equal("youtubeStreamKey" in sheet, false, `Sheet ${sheet.sheetNumber}: no stream key field`);
+    assert.equal("rtmpsIngestUrl" in sheet, false, `Sheet ${sheet.sheetNumber}: no RTMPS field`);
+    assert.equal(sheet.youtubeBroadcastId, null, `Sheet ${sheet.sheetNumber}: no invented broadcast id`);
+    assert.equal(sheet.playbackUrl, null, `Sheet ${sheet.sheetNumber}: no invented playback URL`);
     assert.equal(sheet.isPublicShowcase, false, `Sheet ${sheet.sheetNumber}: never public by default`);
-    assert.equal(sheet.matchInfo.scoreHome + sheet.matchInfo.scoreAway, 0, "no invented score");
-    assert.equal(sheet.matchInfo.gameClockSeconds, 0, "no invented clock");
-    assert.equal(sheet.hardwareHealth.temperatureCelsius, 0, "no invented hardware reading");
+    assert.equal(sheet.matchInfo?.scoreHome, null, "no invented home score");
+    assert.equal(sheet.matchInfo?.scoreAway, null, "no invented away score");
+    assert.equal(sheet.matchInfo?.gameClockSeconds, null, "no invented clock");
+    assert.equal(sheet.hardwareHealth, null, "no invented hardware reading");
   }
   const idle = provisionTournamentSheetsFromICal([], { currentTime: simulatedCurrentTime });
-  assert.ok(idle.sheets.every((s) => s.matchInfo.homeTeam === "" && s.matchInfo.awayTeam === ""), "no placeholder teams");
+  assert.ok(
+    idle.sheets.every((s) => s.matchInfo?.homeTeam === null && s.matchInfo?.awayTeam === null),
+    "no placeholder teams",
+  );
 
   console.log("   ✅ PASS: calendar provisioning carries schedule data only.");
 

@@ -29,6 +29,55 @@
       "evidence": "src/app/api/telemetry/event/route.ts:104",
       "writerSource": "self:src/app/api/telemetry/event/route.ts:104"
     },
+    "route:/api/tournaments": {
+      "endpoint": "hockey-api GET/POST /api/v1/teams/{teamId}/tournaments",
+      "table": "hockey_db.tournaments",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/tournaments",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/tournaments.py#create_team_tournament",
+      "evidence": "src/app/api/tournaments/route.ts"
+    },
+    "route:/api/tournaments/:param": {
+      "endpoint": "hockey-api GET/PATCH/DELETE /api/v1/teams/{teamId}/tournaments/{tournamentId}",
+      "table": "hockey_db.tournaments",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/tournaments",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/tournaments.py#create_team_tournament",
+      "evidence": "src/app/api/tournaments/[tournamentId]/route.ts"
+    },
+    "route:/api/tournaments/:param/matches": {
+      "endpoint": "hockey-api POST /api/v1/teams/{teamId}/tournaments/{tournamentId}/matches",
+      "table": "hockey_db.tournament_bracket_matches",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/tournaments/{tournamentId}/matches",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/tournaments.py#create_tournament_match",
+      "evidence": "src/app/api/tournaments/[tournamentId]/matches/route.ts"
+    },
+    "route:/api/tournaments/:param/matches/:param": {
+      "endpoint": "hockey-api PATCH/DELETE /api/v1/teams/{teamId}/tournaments/{tournamentId}/matches/{matchId}",
+      "table": "hockey_db.tournament_bracket_matches",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/tournaments/{tournamentId}/matches",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/tournaments.py#create_tournament_match",
+      "evidence": "src/app/api/tournaments/[tournamentId]/matches/[matchId]/route.ts"
+    },
+    "route:/api/tournaments/:param/sheets": {
+      "endpoint": "hockey-api POST /api/v1/teams/{teamId}/tournaments/{tournamentId}/sheets",
+      "table": "hockey_db.tournament_sheets",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/tournaments/{tournamentId}/sheets",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/tournaments.py#create_tournament_sheet",
+      "evidence": "src/app/api/tournaments/[tournamentId]/sheets/route.ts"
+    },
+    "route:/api/tournaments/:param/sheets/:param": {
+      "endpoint": "hockey-api PATCH/DELETE /api/v1/teams/{teamId}/tournaments/{tournamentId}/sheets/{sheetId}",
+      "table": "hockey_db.tournament_sheets",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/tournaments/{tournamentId}/sheets",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/tournaments.py#create_tournament_sheet",
+      "evidence": "src/app/api/tournaments/[tournamentId]/sheets/[sheetId]/route.ts"
+    },
+    "route:/api/tournaments/teams": {
+      "endpoint": "hockey-api GET /api/v1/teams/mine",
+      "table": "hockey_db.teams",
+      "writer": "user-action: POST /api/v1/teams/",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/teams.py#create_team",
+      "evidence": "src/app/api/tournaments/teams/route.ts"
+    },
     "route:/auth/callback": {
       "endpoint": "platform GoTrue POST /auth/v1/token (exchangeCodeForSession)",
       "table": "auth.users",
@@ -55,7 +104,7 @@
       "evidence": "src/components/vision/BYODSetupWizard.tsx:404"
     },
     "route:/club-revshare": {
-      "register": "O-08",
+      "register": "O-06",
       "via": "unavailable:testid:club-partner-unavailable",
       "evidence": "src/components/billing/ClubRevShareDashboard.tsx:308"
     },
@@ -111,9 +160,11 @@
       "evidence": "src/app/pricing/page.tsx:135"
     },
     "route:/spotlight-and-periodical": {
-      "register": "O-03",
-      "via": "unavailable:testid:engine-throughput-unavailable",
-      "evidence": "src/components/landing/TranscendEngineSubstrate.tsx:107"
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/supabase/*?": {
       "endpoint": "platform GoTrue /auth/v1/* (same-origin proxy)",
@@ -122,14 +173,18 @@
       "evidence": "src/app/supabase/[[...path]]/route.ts:89"
     },
     "route:/technology-solutions": {
-      "register": "O-02",
-      "via": "unavailable:testid:rink-telemetry-unavailable",
-      "evidence": "src/components/landing/RinkTelemetryChart.tsx:295"
+      "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
+      "table": "supabase:public.lead_submissions",
+      "writer": "user-action: the beta sign-up form (src/components/landing/BetaSignupForm.tsx:33) posting to /api/beta-requests",
+      "evidence": "src/app/api/beta-requests/route.ts:63",
+      "writerSource": "self:src/app/api/beta-requests/route.ts:64"
     },
     "route:/tournament/director": {
-      "register": "O-01",
-      "via": "unavailable:testid:tournament-director-unavailable",
-      "evidence": "src/components/tournaments/MultiSheetCommandCenter.tsx:86"
+      "endpoint": "GET /api/tournaments/teams + GET/POST/PATCH/DELETE /api/tournaments* → hockey-api /api/v1/teams/{teamId}/tournaments*",
+      "table": "hockey_db.tournaments",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/tournaments",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/tournaments.py#create_team_tournament",
+      "evidence": "src/app/tournament/director/page.tsx"
     }
   }
 }
