@@ -352,8 +352,15 @@ async function run() {
   let mockUser: { id: string; email?: string; app_metadata?: Record<string, unknown> } | null = null;
   let globalSignOutCalls = 0;
   let capturedCheckoutParams: Record<string, unknown>[] = [];
+  let capturedCheckoutOptions: Array<Record<string, unknown> | undefined> = [];
+  let capturedPortalParams: Record<string, unknown>[] = [];
+  let capturedSubsListParams: Record<string, unknown>[] = [];
   const nextCheckoutUrl = "https://checkout.stripe.com/c/pay/cs_test_portal_123";
+  const nextPortalUrl = "https://billing.stripe.com/p/session/bps_test_portal_123";
   let mockCanonicalSubStatus: string = "active";
+  let mockLiveStripeSubscriptions: Array<{ id: string; status: string }> = [];
+  let mockStripeSubsListError: Error | null = null;
+  let mockStripePortalCreateError: Error | null = null;
   let mockEntitlementThrow = false;
 
   const MI = Module as unknown as { _load: (r: string, p: unknown, m: boolean) => unknown };
@@ -404,12 +411,27 @@ async function run() {
         webhooks = realStripe.webhooks;
         subscriptions = {
           retrieve: async (id: string) => ({ id, status: mockCanonicalSubStatus }),
+          list: async (params: Record<string, unknown>) => {
+            capturedSubsListParams.push(params);
+            if (mockStripeSubsListError) throw mockStripeSubsListError;
+            return { data: mockLiveStripeSubscriptions };
+          },
         };
         checkout = {
           sessions: {
-            create: async (params: Record<string, unknown>) => {
+            create: async (params: Record<string, unknown>, options?: Record<string, unknown>) => {
               capturedCheckoutParams.push(params);
+              capturedCheckoutOptions.push(options);
               return { id: "cs_test_123", url: nextCheckoutUrl };
+            },
+          },
+        };
+        billingPortal = {
+          sessions: {
+            create: async (params: Record<string, unknown>) => {
+              capturedPortalParams.push(params);
+              if (mockStripePortalCreateError) throw mockStripePortalCreateError;
+              return { id: "bps_test_123", url: nextPortalUrl };
             },
           },
         };
@@ -426,6 +448,7 @@ async function run() {
       "src/app/auth/entitlement/route.ts",
       "src/app/login/page.tsx",
       "src/lib/billing/stripe-client.ts",
+      "src/lib/billing/stripe-origin.ts",
       "src/lib/billing/stripe-plans.ts",
       "src/lib/billing/stripe-webhook-claim.ts",
       "src/lib/billing/stripe-webhook-handlers.ts",
@@ -435,6 +458,7 @@ async function run() {
       "src/components/pricing/PricingCheckoutButton.tsx",
       "src/components/pricing/PricingStatusBanner.tsx",
       "src/app/api/billing/stripe/checkout/route.ts",
+      "src/app/api/billing/stripe/portal/route.ts",
       "src/app/api/billing/stripe/webhook/route.ts",
     ];
     for (const rel of runtimeFiles) {
@@ -444,7 +468,9 @@ async function run() {
     console.log(`✓ 1. All ${runtimeFiles.length} new/updated runtime modules are strictly < 300 lines`);
 
     const { isAllowedUnlicensedNextPath } = await import("../src/lib/auth/buyer-session-paths");
-    const { isAllowedStripeCheckoutUrl } = await import("../src/lib/billing/pricing-catalog-client");
+    const { isAllowedStripeCheckoutUrl, isAllowedStripePortalUrl } = await import(
+      "../src/lib/billing/pricing-catalog-client"
+    );
 
     for (const p of ["/pricing", "/pricing?checkout=canceled", "/tournament/director", "/tournament/director?team=1"]) {
       assert.equal(isAllowedUnlicensedNextPath(p), true, `buyer path allowed: ${p}`);
@@ -456,7 +482,11 @@ async function run() {
     assert.equal(isAllowedStripeCheckoutUrl("http://checkout.stripe.com/c/pay/cs_test_1"), false);
     assert.equal(isAllowedStripeCheckoutUrl("https://checkout.stripe.com.evil.example/pay"), false);
     assert.equal(isAllowedStripeCheckoutUrl("https://evil.example/checkout.stripe.com"), false);
-    console.log("✓ 2. Buyer path & Stripe Checkout URL host guards behave strictly");
+    assert.equal(isAllowedStripePortalUrl("https://billing.stripe.com/p/session/bps_test_1"), true);
+    assert.equal(isAllowedStripePortalUrl("http://billing.stripe.com/p/session/bps_test_1"), false);
+    assert.equal(isAllowedStripePortalUrl("https://billing.stripe.com.evil.example/session"), false);
+    assert.equal(isAllowedStripePortalUrl("https://checkout.stripe.com/c/pay/cs_test_1"), false);
+    console.log("✓ 2. Buyer path, Stripe Checkout & Billing Portal URL host guards behave strictly");
 
     // ── 2. Unlicensed Buyer Sign-In: /auth/entitlement & /auth/callback ──────────────────────────
     const entitlementRoute = await import("../src/app/auth/entitlement/route");
@@ -661,9 +691,12 @@ async function run() {
       );
     }
 
-    // Reuse existing stripe_customer_id when already present on subscriptions
+    // Reuse existing stripe_customer_id when already present on subscriptions + live concurrency check
     db.subscriptions[0].stripe_customer_id = "cus_existing_sub";
     capturedCheckoutParams = [];
+    capturedCheckoutOptions = [];
+    capturedSubsListParams = [];
+    mockLiveStripeSubscriptions = [{ id: "sub_old_canceled", status: "canceled" }];
     const postExistingCust = await checkoutRoute.POST(
       new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
         method: "POST",
@@ -671,12 +704,52 @@ async function run() {
       }),
     );
     assert.equal(postExistingCust.status, 200);
+    assert.deepEqual(capturedSubsListParams[0], {
+      customer: "cus_existing_sub",
+      status: "all",
+      limit: 10,
+    });
     assert.equal(capturedCheckoutParams[0].customer, "cus_existing_sub");
     assert.equal(capturedCheckoutParams[0].customer_email, undefined);
+    assert.match(
+      String(capturedCheckoutOptions[0]?.idempotencyKey ?? ""),
+      new RegExp(`^checkout:${BUYER_USER_ID}:SPOT-PRO-PLUS:\\d+$`),
+    );
+
+    // Live Stripe concurrency check blocks double-checkout across all EXISTING_ACTIVE_SUB_STATUSES
+    for (const liveStatus of ["active", "trialing", "past_due", "paused", "incomplete"]) {
+      capturedCheckoutParams = [];
+      mockLiveStripeSubscriptions = [{ id: `sub_live_${liveStatus}`, status: liveStatus }];
+      const raceRes = await checkoutRoute.POST(
+        new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+          method: "POST",
+          body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+        }),
+      );
+      assert.equal(raceRes.status, 409, `live Stripe status ${liveStatus} must block checkout with 409`);
+      const raceJson = (await raceRes.json()) as { error?: string };
+      assert.match(raceJson.error ?? "", /Billing Portal/i);
+      assert.equal(capturedCheckoutParams.length, 0, "must not create Checkout Session when live sub exists");
+    }
+
+    // Live Stripe subscriptions.list failure fails closed with sanitized 502
+    mockLiveStripeSubscriptions = [];
+    mockStripeSubsListError = new Error("stripe internal cus_existing_sub error");
+    const listFailRes = await checkoutRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ planSku: "SPOT-PRO-PLUS" }),
+      }),
+    );
+    assert.equal(listFailRes.status, 502);
+    const listFailJson = (await listFailRes.json()) as { error?: string };
+    assert.doesNotMatch(listFailJson.error ?? "", /cus_existing_sub/);
+    mockStripeSubsListError = null;
     db.subscriptions[0].stripe_customer_id = null;
 
-    // Fresh customer_email + DB price precedence + redirect URLs
+    // Fresh customer_email + DB price precedence + redirect URLs + deterministic idempotencyKey
     capturedCheckoutParams = [];
+    capturedCheckoutOptions = [];
     const postOk = await checkoutRoute.POST(
       new NextRequest("https://transcendental-sports.ai/api/billing/stripe/checkout", {
         method: "POST",
@@ -687,6 +760,10 @@ async function run() {
     assert.equal(postOk.headers.get("cache-control"), "private, no-store");
     assert.deepEqual(await postOk.json(), { url: nextCheckoutUrl });
     assert.equal(capturedCheckoutParams.length, 1);
+    assert.match(
+      String(capturedCheckoutOptions[0]?.idempotencyKey ?? ""),
+      new RegExp(`^checkout:${BUYER_USER_ID}:SPOT-PRO-PLUS:\\d+$`),
+    );
     assert.equal((capturedCheckoutParams[0].line_items as Array<{ price: string }>)[0].price, "price_db_pro_plus");
     assert.equal(capturedCheckoutParams[0].mode, "subscription");
     assert.equal(capturedCheckoutParams[0].client_reference_id, BUYER_USER_ID);
@@ -745,7 +822,120 @@ async function run() {
     );
     assert.equal(missingProfileRes.status, 409);
     mockUser = { id: BUYER_USER_ID, email: BUYER_EMAIL };
-    console.log("✓ 4. Checkout GET/POST enforces 401/400/409/503/200, trusted origins, & private, no-store");
+    console.log("✓ 4. Checkout GET/POST enforces 401/400/409/502/503/200, live sub race guard, idempotencyKey & no-store");
+
+    // ── 3b. Stripe Billing Portal Endpoint (/api/billing/stripe/portal) ──────────────────────────
+    const portalRoute = await import("../src/app/api/billing/stripe/portal/route");
+
+    // Unauthenticated -> 401
+    mockUser = null;
+    const portalUnauth = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalUnauth.status, 401);
+    assert.equal(portalUnauth.headers.get("cache-control"), "private, no-store");
+
+    // Missing STRIPE_SECRET_KEY -> 503
+    mockUser = { id: BUYER_USER_ID, email: BUYER_EMAIL };
+    delete env.STRIPE_SECRET_KEY;
+    const portalUnconfigured = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalUnconfigured.status, 503);
+    env.STRIPE_SECRET_KEY = REAL_STRIPE_KEY;
+
+    // No stripe_customers row -> 404 honest message
+    const portalNoCust = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalNoCust.status, 404);
+    assert.equal(portalNoCust.headers.get("cache-control"), "private, no-store");
+    assert.match(((await portalNoCust.json()) as { error?: string }).error ?? "", /No Stripe billing customer/i);
+
+    // Invalid returnPath / return_url / JSON rejected with 400
+    db.stripe_customers.push({ user_id: BUYER_USER_ID, stripe_customer_id: "cus_portal_buyer_1" });
+    for (const badBody of [
+      "{bad-json",
+      JSON.stringify({ returnPath: "https://evil.example/pricing" }),
+      JSON.stringify({ returnPath: "//evil.example/pricing" }),
+      JSON.stringify({ returnPath: "/\t/pricing" }),
+      JSON.stringify({ return_url: "https://evil.example/pricing" }),
+      JSON.stringify({ return_url: "https://hub.transcendental-sports.ai.evil.example/pricing" }),
+      JSON.stringify({ return_url: "http://hub.transcendental-sports.ai/pricing" }),
+      JSON.stringify({ return_url: "https://user:pass@hub.transcendental-sports.ai/pricing" }),
+    ]) {
+      const badRes = await portalRoute.POST(
+        new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+          method: "POST",
+          body: badBody,
+        }),
+      );
+      assert.equal(badRes.status, 400, `portal must refuse invalid payload: ${badBody}`);
+    }
+
+    // Valid default (empty body) with spoofed x-forwarded-host falls back to OFFICIAL_HOST
+    capturedPortalParams = [];
+    const portalDefaultRes = await portalRoute.POST(
+      new NextRequest("http://0.0.0.0:3040/api/billing/stripe/portal", {
+        method: "POST",
+        headers: { "x-forwarded-host": "evil.example", "x-forwarded-proto": "https" },
+      }),
+    );
+    assert.equal(portalDefaultRes.status, 200);
+    assert.equal(portalDefaultRes.headers.get("cache-control"), "private, no-store");
+    assert.deepEqual(await portalDefaultRes.json(), { url: nextPortalUrl });
+    assert.deepEqual(capturedPortalParams[0], {
+      customer: "cus_portal_buyer_1",
+      return_url: "https://hub.transcendental-sports.ai/pricing",
+    });
+
+    // Valid returnPath & valid allowlisted return_url
+    capturedPortalParams = [];
+    const portalPathRes = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+        body: JSON.stringify({ returnPath: "/pricing?tab=billing" }),
+      }),
+    );
+    assert.equal(portalPathRes.status, 200);
+    assert.deepEqual(capturedPortalParams[0], {
+      customer: "cus_portal_buyer_1",
+      return_url: "https://transcendental-sports.ai/pricing?tab=billing",
+    });
+
+    capturedPortalParams = [];
+    const portalUrlRes = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+        body: JSON.stringify({ return_url: "https://hub.transcendental-sports.ai/pricing?portal=1" }),
+      }),
+    );
+    assert.equal(portalUrlRes.status, 200);
+    assert.deepEqual(capturedPortalParams[0], {
+      customer: "cus_portal_buyer_1",
+      return_url: "https://hub.transcendental-sports.ai/pricing?portal=1",
+    });
+
+    // Stripe Billing Portal API failure -> sanitized 502 (never echoes internal Stripe error)
+    mockStripePortalCreateError = new Error("Internal Stripe failure for cus_portal_buyer_1 sk_test_raw");
+    const portalErrRes = await portalRoute.POST(
+      new NextRequest("https://transcendental-sports.ai/api/billing/stripe/portal", {
+        method: "POST",
+      }),
+    );
+    assert.equal(portalErrRes.status, 502);
+    assert.equal(portalErrRes.headers.get("cache-control"), "private, no-store");
+    const portalErrJson = (await portalErrRes.json()) as { error?: string };
+    assert.doesNotMatch(portalErrJson.error ?? "", /cus_portal_buyer_1|sk_test_raw/);
+    mockStripePortalCreateError = null;
+    db.stripe_customers.length = 0;
+    console.log("✓ 4b. Billing Portal POST enforces 401/400/404/502/503/200 & strict OFFICIAL_HOST allowlist");
 
     // ── 4. Webhook Endpoint: HMAC, Dedupe, Rollback, Stale Reclaim, Live Constraints ─────────────
     const webhookRoute = await import("../src/app/api/billing/stripe/webhook/route");
@@ -1143,13 +1333,59 @@ async function run() {
         authenticated: true,
         checkoutReady: true,
         activePlan: "PRO",
+        subscriptionStatus: "active",
         hasActiveSubscription: true,
         variant: "teal",
       }),
     );
-    assert.match(activeSubHtml, /Current Subscription/);
+    assert.match(activeSubHtml, /Manage Billing/);
+    assert.match(activeSubHtml, /portal-manage-SPOT-PRO-STD/);
     assert.match(activeSubHtml, /Active account plan: PRO/);
-    console.log("✓ 6. PricingCheckoutButton renders signed-out, unconfigured, active-subscription, and ready states");
+    assert.doesNotMatch(activeSubHtml, /Current Subscription/);
+    assert.doesNotMatch(activeSubHtml, /<button[^>]*\sdisabled(?:=""|\s|>)/);
+
+    const pausedSubHtml = renderToStaticMarkup(
+      React.createElement(PricingCheckoutButton, {
+        planSku: "SPOT-PRO-STD",
+        planLabel: "Premier",
+        loading: false,
+        catalogError: null,
+        authenticated: true,
+        checkoutReady: true,
+        activePlan: "FREE",
+        subscriptionStatus: "paused",
+        hasActiveSubscription: true,
+        variant: "teal",
+      }),
+    );
+    assert.match(pausedSubHtml, /Resume Subscription/);
+    assert.match(pausedSubHtml, /portal-resume-SPOT-PRO-STD/);
+    assert.match(pausedSubHtml, /Subscription paused/);
+    assert.doesNotMatch(pausedSubHtml, /<button[^>]*\sdisabled(?:=""|\s|>)/);
+
+    const pastDueSubHtml = renderToStaticMarkup(
+      React.createElement(PricingCheckoutButton, {
+        planSku: "SPOT-FAM-PRO",
+        planLabel: "Family Pro",
+        loading: false,
+        catalogError: null,
+        authenticated: true,
+        checkoutReady: true,
+        activePlan: "FAMILY",
+        subscriptionStatus: "past_due",
+        hasActiveSubscription: true,
+        variant: "sky",
+      }),
+    );
+    assert.match(pastDueSubHtml, /Manage Billing/);
+    assert.match(pastDueSubHtml, /Subscription payment past due/);
+
+    const buttonSrc = fs.readFileSync(path.join(ROOT, "src/components/pricing/PricingCheckoutButton.tsx"), "utf8");
+    assert.match(buttonSrc, /\/api\/billing\/stripe\/portal/);
+    assert.match(buttonSrc, /isAllowedStripePortalUrl/);
+    const pricingPageSrc = fs.readFileSync(path.join(ROOT, "src/app/pricing/page.tsx"), "utf8");
+    assert.match(pricingPageSrc, /subscriptionStatus=\{subscriptionStatus\}/);
+    console.log("✓ 6. PricingCheckoutButton renders signed-out, unconfigured, active (Manage Billing), paused (Resume Subscription), past_due, and ready states");
 
     console.log("\n🎉 ALL PORTAL STRIPE CHECKOUT & BUYER SIGN-IN TESTS PASSED!\n");
   } finally {

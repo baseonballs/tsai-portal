@@ -33,6 +33,7 @@ export default function PricingPage() {
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [activePlan, setActivePlan] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [plansBySku, setPlansBySku] = useState<Record<string, CheckoutCatalogPlan>>({});
 
@@ -57,6 +58,7 @@ export default function PricingPage() {
         setPlansBySku(indexed);
         setAuthenticated(Boolean(data.authenticated));
         setActivePlan(data.activePlan ?? null);
+        setSubscriptionStatus(data.subscriptionStatus ?? null);
         setHasActiveSubscription(Boolean(data.hasActiveSubscription));
         setCatalogError(null);
       } catch {
@@ -292,6 +294,7 @@ export default function PricingPage() {
                     authenticated={authenticated}
                     checkoutReady={Boolean(familyPlan?.checkoutReady)}
                     activePlan={activePlan}
+                    subscriptionStatus={subscriptionStatus}
                     hasActiveSubscription={hasActiveSubscription}
                     variant="sky"
                   />
@@ -431,6 +434,7 @@ export default function PricingPage() {
                     authenticated={authenticated}
                     checkoutReady={Boolean(proPlan?.checkoutReady)}
                     activePlan={activePlan}
+                    subscriptionStatus={subscriptionStatus}
                     hasActiveSubscription={hasActiveSubscription}
                     variant="teal"
                   />
@@ -710,6 +714,7 @@ export default function PricingPage() {
                     authenticated={authenticated}
                     checkoutReady={Boolean(teamPlan?.checkoutReady)}
                     activePlan={activePlan}
+                    subscriptionStatus={subscriptionStatus}
                     hasActiveSubscription={hasActiveSubscription}
                     variant="cyan"
                   />

@@ -3,7 +3,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, AlertCircle, Lock } from "lucide-react";
-import { isAllowedStripeCheckoutUrl } from "@/lib/billing/pricing-catalog-client";
+import {
+  isAllowedStripeCheckoutUrl,
+  isAllowedStripePortalUrl,
+} from "@/lib/billing/pricing-catalog-client";
 
 interface PricingCheckoutButtonProps {
   planSku: string;
@@ -13,6 +16,7 @@ interface PricingCheckoutButtonProps {
   authenticated: boolean;
   checkoutReady: boolean;
   activePlan?: string | null;
+  subscriptionStatus?: string | null;
   hasActiveSubscription?: boolean;
   variant?: "sky" | "teal" | "cyan";
 }
@@ -31,25 +35,26 @@ export function PricingCheckoutButton({
   authenticated,
   checkoutReady,
   activePlan,
+  subscriptionStatus,
   hasActiveSubscription = false,
   variant = "cyan",
 }: PricingCheckoutButtonProps) {
   const [submitting, setSubmitting] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
 
-  const handleClick = async () => {
+  const launchBillingRedirect = async (
+    endpoint: string,
+    payload: Record<string, unknown>,
+    isValidUrl: (raw: unknown) => raw is string,
+    messages: { unavailable: string; failed: string; badRedirect: string },
+  ) => {
     setInlineError(null);
-    if (!checkoutReady) {
-      setInlineError("Stripe checkout is not yet configured on this server.");
-      return;
-    }
-
     setSubmitting(true);
     try {
-      const res = await fetch("/api/billing/stripe/checkout", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planSku }),
+        body: JSON.stringify(payload),
         cache: "no-store",
       });
       const data = (await res.json().catch(() => null)) as { url?: unknown; error?: string } | null;
@@ -59,15 +64,15 @@ export function PricingCheckoutButton({
         return;
       }
       if (res.status === 503) {
-        setInlineError("Stripe checkout is not yet configured on this server.");
+        setInlineError(data?.error || messages.unavailable);
         return;
       }
       if (!res.ok) {
-        setInlineError(data?.error || "Unable to start Stripe checkout.");
+        setInlineError(data?.error || messages.failed);
         return;
       }
-      if (!isAllowedStripeCheckoutUrl(data?.url)) {
-        setInlineError("Checkout returned an unexpected redirect destination.");
+      if (!isValidUrl(data?.url)) {
+        setInlineError(messages.badRedirect);
         return;
       }
       window.location.assign(data.url);
@@ -76,6 +81,36 @@ export function PricingCheckoutButton({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleCheckout = async () => {
+    if (!checkoutReady) {
+      setInlineError("Stripe checkout is not yet configured on this server.");
+      return;
+    }
+    await launchBillingRedirect(
+      "/api/billing/stripe/checkout",
+      { planSku },
+      isAllowedStripeCheckoutUrl,
+      {
+        unavailable: "Stripe checkout is not yet configured on this server.",
+        failed: "Unable to start Stripe checkout.",
+        badRedirect: "Checkout returned an unexpected redirect destination.",
+      },
+    );
+  };
+
+  const handleManageBilling = async () => {
+    await launchBillingRedirect(
+      "/api/billing/stripe/portal",
+      { returnPath: "/pricing" },
+      isAllowedStripePortalUrl,
+      {
+        unavailable: "Stripe billing portal is not yet configured on this server.",
+        failed: "Unable to open Stripe billing portal.",
+        badRedirect: "Billing portal returned an unexpected redirect destination.",
+      },
+    );
   };
 
   if (loading) {
@@ -106,20 +141,55 @@ export function PricingCheckoutButton({
     );
   }
 
-  if (authenticated && (hasActiveSubscription || (activePlan && activePlan.trim().toUpperCase() !== "FREE"))) {
+  const normalizedStatus = subscriptionStatus?.trim().toLowerCase() ?? "";
+  const hasManageableSub =
+    authenticated &&
+    (hasActiveSubscription ||
+      normalizedStatus === "paused" ||
+      Boolean(activePlan && activePlan.trim().toUpperCase() !== "FREE"));
+
+  if (hasManageableSub) {
+    const isPaused = normalizedStatus === "paused";
+    const isPastDue = normalizedStatus === "past_due";
+    const ctaLabel = submitting
+      ? "Opening Billing Portal..."
+      : isPaused
+        ? "Resume Subscription"
+        : "Manage Billing";
+    const statusText = isPaused
+      ? "Subscription paused. Resume or update billing in Stripe."
+      : isPastDue
+        ? `Subscription payment past due (${activePlan ?? "Active"}). Update billing in Stripe.`
+        : `Active account plan: ${activePlan ?? "Active"}.`;
+
     return (
       <div className="space-y-2">
         <button
           type="button"
-          disabled
-          data-testid={`checkout-active-${planSku}`}
-          className="w-full rounded-xl border border-emerald-500/30 bg-emerald-950/20 py-3 text-xs font-semibold text-emerald-200 cursor-not-allowed flex items-center justify-center gap-2"
+          disabled={submitting}
+          onClick={() => void handleManageBilling()}
+          data-testid={isPaused ? `portal-resume-${planSku}` : `portal-manage-${planSku}`}
+          className={`w-full rounded-xl py-3 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 ${
+            isPaused || isPastDue
+              ? "bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-950/40"
+              : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950/40"
+          }`}
         >
-          <span>Current Subscription</span>
+          <span>{ctaLabel}</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </button>
-        <p className="text-[11px] text-emerald-300 text-center leading-snug">
-          Active account plan: {activePlan ?? "Active"}.
+        <p
+          className={`text-[11px] text-center leading-snug ${
+            isPaused || isPastDue ? "text-amber-300" : "text-emerald-300"
+          }`}
+        >
+          {statusText}
         </p>
+        {inlineError && (
+          <p className="text-[11px] text-rose-300 text-center leading-snug" role="status">
+            {inlineError}
+          </p>
+        )}
       </div>
     );
   }
@@ -168,7 +238,7 @@ export function PricingCheckoutButton({
       <button
         type="button"
         disabled={submitting}
-        onClick={() => void handleClick()}
+        onClick={() => void handleCheckout()}
         data-testid={`checkout-button-${planSku}`}
         className={`w-full rounded-xl py-3 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 ${VARIANT_CLASSES[variant]}`}
       >

@@ -2,11 +2,13 @@ import { NextRequest } from "next/server";
 
 import { createPortalAdminClient } from "@/lib/auth/portal-entitlement";
 import {
+  EXISTING_ACTIVE_SUB_STATUSES,
   getStripe,
   isActiveSubscriptionRecord,
   jsonNoStore,
   MissingSecretError,
 } from "@/lib/billing/stripe-client";
+import { resolveBillingOrigin } from "@/lib/billing/stripe-origin";
 import {
   derivePlanType,
   fetchActiveCheckoutPlan,
@@ -15,59 +17,7 @@ import {
   resolveStripePriceId,
 } from "@/lib/billing/stripe-plans";
 import { errorMessage } from "@/lib/errors";
-import { OFFICIAL_HOST } from "@/lib/legacy-host-redirect";
 import { createClient as createServerClient } from "@/utils/supabase/server";
-
-const OFFICIAL_ORIGIN = `https://${OFFICIAL_HOST}`;
-const TRANSCEND_APEX_ORIGIN = "https://transcendental-sports.ai";
-
-function buildAllowedOrigins(): Set<string> {
-  const allowed = new Set<string>([OFFICIAL_ORIGIN, TRANSCEND_APEX_ORIGIN]);
-  for (const raw of [process.env.PORTAL_PUBLIC_ORIGIN, process.env.NEXT_PUBLIC_SITE_URL]) {
-    const trimmed = raw?.trim();
-    if (!trimmed) continue;
-    try {
-      const parsed = new URL(trimmed);
-      if (parsed.protocol === "https:") {
-        allowed.add(parsed.origin);
-      }
-    } catch {
-      // Ignore malformed configured origin values.
-    }
-  }
-  return allowed;
-}
-
-function isAllowedLoopbackOrigin(origin: string): boolean {
-  if (process.env.NODE_ENV === "production") return false;
-  try {
-    const parsed = new URL(origin);
-    return (
-      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
-      (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1")
-    );
-  } catch {
-    return false;
-  }
-}
-
-function resolveCheckoutOrigin(req: NextRequest): string {
-  const allowed = buildAllowedOrigins();
-  const candidates: string[] = [req.nextUrl.origin];
-
-  const forwardedHost = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
-  if (forwardedHost && /^[a-z0-9.-]+(?::\d+)?$/i.test(forwardedHost)) {
-    const proto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() === "http" ? "http" : "https";
-    candidates.push(`${proto}://${forwardedHost}`);
-  }
-
-  for (const candidate of candidates) {
-    if (allowed.has(candidate) || isAllowedLoopbackOrigin(candidate)) {
-      return candidate;
-    }
-  }
-  return OFFICIAL_ORIGIN;
-}
 
 export async function GET() {
   try {
@@ -82,6 +32,7 @@ export async function GET() {
     const { checkoutConfigured, plans } = await resolvePublicCheckoutPlans(adminClient);
 
     let activePlan: string | null = null;
+    let subscriptionStatus: string | null = null;
     let hasActiveSubscription = false;
     if (authenticated && user) {
       const { data: subRow, error: subError } = await adminClient
@@ -100,6 +51,7 @@ export async function GET() {
         stripe_subscription_id?: string | null;
       } | null;
       activePlan = subRecord?.active_plan ?? null;
+      subscriptionStatus = subRecord?.status ?? null;
       hasActiveSubscription = isActiveSubscriptionRecord(subRecord);
     }
 
@@ -107,6 +59,7 @@ export async function GET() {
       authenticated,
       checkoutConfigured,
       activePlan,
+      subscriptionStatus,
       hasActiveSubscription,
       plans,
     });
@@ -193,7 +146,10 @@ export async function POST(req: NextRequest) {
     } | null;
 
     if (isActiveSubscriptionRecord(subRecord)) {
-      return jsonNoStore({ error: "An active subscription already exists on this account." }, 409);
+      return jsonNoStore(
+        { error: "An active subscription already exists on this account. Manage your plan in the Billing Portal." },
+        409,
+      );
     }
 
     const existingCustomerId =
@@ -201,31 +157,74 @@ export async function POST(req: NextRequest) {
       subRecord?.stripe_customer_id ??
       null;
 
-    const origin = resolveCheckoutOrigin(req);
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      line_items: [{ price: priceId, quantity: 1 }],
-      client_reference_id: user.id,
-      metadata: {
-        userId: user.id,
-        planSku: planRow.sku,
-        tier,
-      },
-      subscription_data: {
-        metadata: {
-          userId: user.id,
-          planSku: planRow.sku,
-          tier,
+    // Live Stripe concurrency check: prevent mid-flight webhook race double-checkout.
+    if (existingCustomerId) {
+      let liveSubs: { data: Array<{ status?: string | null }> };
+      try {
+        liveSubs = await stripe.subscriptions.list({
+          customer: existingCustomerId,
+          status: "all",
+          limit: 10,
+        });
+      } catch (stripeListErr) {
+        console.error(
+          "[StripeCheckout POST] Live subscription lookup failed:",
+          errorMessage(stripeListErr),
+        );
+        return jsonNoStore({ error: "Billing service is temporarily unavailable." }, 502);
+      }
+      const hasLiveActiveSub = liveSubs.data.some((sub) =>
+        EXISTING_ACTIVE_SUB_STATUSES.has((sub.status ?? "").trim().toLowerCase()),
+      );
+      if (hasLiveActiveSub) {
+        return jsonNoStore(
+          {
+            error:
+              "An active or pending subscription already exists on this account. Manage your plan in the Billing Portal.",
+          },
+          409,
+        );
+      }
+    }
+
+    const origin = resolveBillingOrigin(req);
+    const idempotencyKey = `checkout:${user.id}:${planRow.sku}:${Math.floor(Date.now() / 60000)}`;
+    let session: { url?: string | null };
+    try {
+      session = await stripe.checkout.sessions.create(
+        {
+          mode: "subscription",
+          line_items: [{ price: priceId, quantity: 1 }],
+          client_reference_id: user.id,
+          metadata: {
+            userId: user.id,
+            planSku: planRow.sku,
+            tier,
+          },
+          subscription_data: {
+            metadata: {
+              userId: user.id,
+              planSku: planRow.sku,
+              tier,
+            },
+          },
+          success_url: `${origin}/pricing?checkout=success`,
+          cancel_url: `${origin}/pricing?checkout=canceled`,
+          ...(existingCustomerId
+            ? { customer: existingCustomerId }
+            : user.email
+              ? { customer_email: user.email }
+              : {}),
         },
-      },
-      success_url: `${origin}/pricing?checkout=success`,
-      cancel_url: `${origin}/pricing?checkout=canceled`,
-      ...(existingCustomerId
-        ? { customer: existingCustomerId }
-        : user.email
-          ? { customer_email: user.email }
-          : {}),
-    });
+        { idempotencyKey },
+      );
+    } catch (stripeSessionErr) {
+      console.error(
+        "[StripeCheckout POST] Checkout session creation failed:",
+        errorMessage(stripeSessionErr),
+      );
+      return jsonNoStore({ error: "Failed to initialize checkout." }, 502);
+    }
 
     if (!session.url) {
       return jsonNoStore({ error: "Checkout session could not be initialized." }, 502);

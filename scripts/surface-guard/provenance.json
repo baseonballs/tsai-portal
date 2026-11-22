@@ -29,6 +29,13 @@
       "writerSource": "self:src/lib/billing/stripe-webhook-sync.ts#syncSubscriptionRow",
       "evidence": "src/app/api/billing/stripe/checkout/route.ts"
     },
+    "route:/api/billing/stripe/portal": {
+      "endpoint": "POST /api/billing/stripe/portal (reads supabase:public.stripe_customers and creates a Stripe Billing Portal session for caller subscriptions)",
+      "table": "supabase:public.stripe_customers",
+      "writer": "sync: Stripe webhook delivery (POST /api/billing/stripe/webhook) upserts caller stripe_customers binding and subscriptions status on checkout.session.completed and customer.subscription.updated",
+      "writerSource": "self:src/lib/billing/stripe-webhook-sync.ts#bindStripeCustomer",
+      "evidence": "src/app/api/billing/stripe/portal/route.ts"
+    },
     "route:/api/billing/stripe/webhook": {
       "endpoint": "POST /api/billing/stripe/webhook (Stripe HMAC-verified event delivery)",
       "table": "supabase:public.user_product_licenses",
@@ -40,8 +47,8 @@
       "endpoint": "platform PostgREST POST /rest/v1/user_telemetry_events (+ user_session_journeys)",
       "table": "supabase:public.user_telemetry_events",
       "writer": "user-action: the signed-in browser posting its own events to this route",
-      "evidence": "src/app/api/telemetry/event/route.ts:104",
-      "writerSource": "self:src/app/api/telemetry/event/route.ts:104"
+      "evidence": "src/app/api/telemetry/event/route.ts#POST",
+      "writerSource": "self:src/app/api/telemetry/event/route.ts#POST"
     },
     "route:/api/tournaments": {
       "endpoint": "hockey-api GET/POST /api/v1/teams/{teamId}/tournaments",
