@@ -173,9 +173,7 @@ export async function syncPersonalLicenseRow(
   };
 
   const nowIso = new Date().toISOString();
-  const initialValidFrom = opts.validFrom || nowIso;
-  const preservedValidFrom =
-    typeof existingRow?.valid_from === "string" && existingRow.valid_from.trim() ? existingRow.valid_from : initialValidFrom;
+  const hasExistingValidFrom = typeof existingRow?.valid_from === "string" && existingRow.valid_from.trim().length > 0;
   const baseFields = {
     plan_type: opts.planType,
     plan_id: opts.planId,
@@ -187,17 +185,16 @@ export async function syncPersonalLicenseRow(
   };
 
   if (existingRow?.id) {
-    const { error: updateErr } = await supabaseAdmin
-      .from("licenses")
-      .update({ ...baseFields, valid_from: preservedValidFrom })
-      .eq("id", existingRow.id);
+    const patch = !hasExistingValidFrom && opts.validFrom ? { ...baseFields, valid_from: opts.validFrom } : baseFields;
+    const { error: updateErr } = await supabaseAdmin.from("licenses").update(patch).eq("id", existingRow.id);
     if (updateErr) throw new Error(`Failed to update personal license: ${updateErr.message}`);
     return;
   }
 
-  const { error: insertErr } = await supabaseAdmin
-    .from("licenses")
-    .insert({ profile_id: opts.userId, tenant_id: null, valid_from: initialValidFrom, ...baseFields });
+  const insertRow = opts.validFrom
+    ? { profile_id: opts.userId, tenant_id: null, valid_from: opts.validFrom, ...baseFields }
+    : { profile_id: opts.userId, tenant_id: null, ...baseFields };
+  const { error: insertErr } = await supabaseAdmin.from("licenses").insert(insertRow);
   if (insertErr) throw new Error(`Failed to insert personal license: ${insertErr.message}`);
 }
 

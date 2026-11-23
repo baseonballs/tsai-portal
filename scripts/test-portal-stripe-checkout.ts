@@ -3,7 +3,7 @@
  *   - Unlicensed buyer sign-in rules (`/pricing` & `/tournament/director` only; `/docs` strictly licence-gated)
  *   - `GET`/`POST /api/billing/stripe/checkout` (allowlist SKUs, DB-first price resolution, 401/400/503/200, no-store)
  *   - `POST /api/billing/stripe/webhook` (fail-closed 503/400, real Stripe HMAC verification, atomic dedupe,
- *     failed-row rollback + retry reclaim, stale `received` reclaim, zero `valid_from` write,
+ *     failed-row rollback + retry reclaim, stale `received` reclaim, OD-25 `valid_from` write-once + untouched on revocation,
  *     live `subscriptions` / `licenses` / `user_product_licenses` constraint checks)
  *   - Portal Pillar 5 (< 300 lines per new/split runtime module) & Pricing UI safety
  *
@@ -56,6 +56,7 @@ interface MockDbState {
   subscriptions: Row[];
   stripe_customers: Row[];
   licenses: Row[];
+  licenseUpdates: Row[];
   user_product_licenses: Row[];
   stripe_webhook_events: Row[];
   failPlansQuery: boolean;
@@ -172,6 +173,7 @@ function createInitialDbState(): MockDbState {
     ],
     stripe_customers: [],
     licenses: [],
+    licenseUpdates: [],
     user_product_licenses: [],
     stripe_webhook_events: [],
     failPlansQuery: false,
@@ -188,7 +190,7 @@ function validateLiveTableWrite(table: string, payload: Row) {
     }
   }
   if (table === "licenses") {
-    if (!payload.valid_from || typeof payload.valid_from !== "string" || Number.isNaN(Date.parse(payload.valid_from))) {
+    if ("valid_from" in payload && (!payload.valid_from || typeof payload.valid_from !== "string" || Number.isNaN(Date.parse(payload.valid_from)))) {
       throw new Error(`licenses.valid_from must be a non-empty ISO timestamp (OD-25): ${String(payload.valid_from)}`);
     }
     if ("plan_type" in payload && !LICENSE_PLAN_TYPES.has(String(payload.plan_type))) {
@@ -256,13 +258,20 @@ function createFakeAdminClient(state: MockDbState) {
             const hasProfile = state.profiles.some((p) => p.id === writePayload!.user_id);
             if (!hasProfile) return { data: null, error: { code: "23503", message: "FK user_id -> profiles(id)" } };
           }
-          const created = { id: `gen-${rows.length + 1}`, ...writePayload };
+          const created = {
+            id: `gen-${rows.length + 1}`,
+            ...(table === "licenses" && !("valid_from" in writePayload) ? { valid_from: new Date().toISOString() } : {}),
+            ...writePayload,
+          };
           rows.push(created);
           return { data: wantSelect ? [created] : null, error: null };
         }
 
         if (op === "update" && writePayload) {
           validateLiveTableWrite(table, writePayload);
+          if (table === "licenses") {
+            (state.licenseUpdates as Row[]).push({ ...writePayload });
+          }
           const targets = matched();
           for (const row of targets) Object.assign(row, writePayload);
           return { data: wantSelect ? targets.map((r) => ({ ...r })) : null, error: null };
@@ -284,7 +293,11 @@ function createFakeAdminClient(state: MockDbState) {
             Object.assign(existing, writePayload);
             return { data: wantSelect ? [{ ...existing }] : null, error: null };
           }
-          const created = { id: `gen-${rows.length + 1}`, ...writePayload };
+          const created = {
+            id: `gen-${rows.length + 1}`,
+            ...(table === "licenses" && !("valid_from" in writePayload) ? { valid_from: new Date().toISOString() } : {}),
+            ...writePayload,
+          };
           rows.push(created);
           return { data: wantSelect ? [created] : null, error: null };
         }
@@ -1278,7 +1291,7 @@ async function run() {
     assert.equal(db.licenses[0].plan_type, "PRO");
     assert.equal(typeof db.licenses[0].valid_from, "string");
     const initialValidFrom = db.licenses[0].valid_from as string;
-    assert.ok(!Number.isNaN(Date.parse(initialValidFrom)));
+    assert.equal(initialValidFrom, new Date(1795000000 * 1000).toISOString());
     assert.equal(db.user_product_licenses[0].product_id, "spotlight");
     assert.equal(db.user_product_licenses[0].status, "active");
     assert.equal(db.user_product_licenses[0].granted_via, "stripe_webhook");
@@ -1357,6 +1370,7 @@ async function run() {
     assert.equal(db.subscriptions[0].status, "past_due");
     assert.equal(db.subscriptions[0].active_plan, "FAMILY");
 
+    const licUpdatesBeforeDel = (db.licenseUpdates as Row[]).length;
     // customer.subscription.deleted revokes user_product_licenses and reverts subscription/license to FREE
     const subDelRes = await webhookRoute.POST(
       signedWebhookReq({
@@ -1379,6 +1393,8 @@ async function run() {
     assert.equal(db.subscriptions[0].active_plan, "FREE");
     assert.equal(db.licenses[0].plan_type, "FREE");
     assert.equal(db.licenses[0].valid_from, initialValidFrom);
+    const revUpdatePayload = (db.licenseUpdates as Row[])[licUpdatesBeforeDel];
+    assert.equal("valid_from" in (revUpdatePayload ?? {}), false, "revocation must leave valid_from out of UPDATE payload");
     assert.equal(db.user_product_licenses[0].status, "revoked");
 
     // Out-of-order late event (older than evt_sub_del_1 @ 1795000400) is ignored without re-granting
@@ -1494,6 +1510,32 @@ async function run() {
     // Non-Stripe grant (granted_via: "invite_code") is preserved across BOTH activation and deletion!
     db.user_product_licenses[0].status = "active";
     db.user_product_licenses[0].granted_via = "invite_code";
+
+    // First-time customer.subscription.updated insert prefers sub.start_date over current_period_start (OD-25)
+    const startDateUserId = "00000000-0000-4000-8000-000000000103";
+    db.profiles.push({ id: startDateUserId, email: "renewal-buyer@example.test", is_superadmin: false, user_type: "standard" });
+    const startDateRes = await webhookRoute.POST(
+      signedWebhookReq({
+        id: "evt_sub_start_date_1",
+        type: "customer.subscription.updated",
+        created: 1795000575,
+        data: {
+          object: {
+            id: "sub_start_date_1",
+            customer: "cus_start_date_1",
+            status: "active",
+            start_date: 1700000000,
+            current_period_start: 1790000000,
+            current_period_end: 1799000000,
+            metadata: { userId: startDateUserId, planSku: "SPOT-PRO-PLUS", tier: "PRO" },
+            items: { data: [{ price: { id: "price_env_pro" }, current_period_start: 1790000000 }] },
+          },
+        },
+      }),
+    );
+    assert.equal(startDateRes.status, 200);
+    const startDateLic = db.licenses.find((l) => l.profile_id === startDateUserId);
+    assert.equal(startDateLic?.valid_from, new Date(1700000000 * 1000).toISOString());
     const preserveActivateRes = await webhookRoute.POST(
       signedWebhookReq({
         id: "evt_preserve_invite_activate",
