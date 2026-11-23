@@ -63,6 +63,7 @@ interface CapturedUpstream {
   method: string;
   url: string;
   authorization: string | undefined;
+  cookie: string | undefined;
   body: unknown;
 }
 
@@ -392,6 +393,7 @@ async function main() {
       method: req.method ?? "GET",
       url: req.url ?? "",
       authorization: req.headers.authorization,
+      cookie: typeof req.headers.cookie === "string" ? req.headers.cookie : undefined,
       body: parsed,
     };
     captured.push(item);
@@ -433,6 +435,7 @@ async function main() {
     const devicesRoute = await import("../src/app/api/byod/devices/route");
     const deviceIdRoute = await import("../src/app/api/byod/devices/[deviceId]/route");
     const calibrationsRoute = await import("../src/app/api/byod/devices/[deviceId]/calibrations/route");
+    const v1DeviceActionRoute = await import("../src/app/api/v1/byod/devices/[deviceId]/[action]/route");
 
     const sampleDeviceSnake = {
       id: deviceId,
@@ -919,6 +922,255 @@ async function main() {
       );
       assert.equal(calPostRes.status, 201);
       assert.deepEqual(captured[1].body, { die_temp_c: 31.4, mount_vacuum_kpa: 68.5 });
+
+      // 8. Release HTTPS device action proxy (/api/v1/byod/devices/[deviceId]/[action])
+      mockAccess = { status: "signed-out" };
+      // Invalid action -> 404; invalid UUID -> 400
+      const badActRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/unknown`, { method: "POST" }),
+        { params: Promise.resolve({ deviceId, action: "unknown" }) },
+      );
+      assert.equal(badActRes.status, 404);
+      const badIdRes = await v1DeviceActionRoute.POST(
+        new NextRequest("http://localhost/api/v1/byod/devices/not-a-uuid/handshake", { method: "POST" }),
+        { params: Promise.resolve({ deviceId: "not-a-uuid", action: "handshake" }) },
+      );
+      assert.equal(badIdRes.status, 400);
+
+      // Handshake requires non-empty pairing_code (400)
+      const missingCodeRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/handshake`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ mesh_service_name: "north-pod._tsai-mesh._tcp.local" }),
+        }),
+        { params: Promise.resolve({ deviceId, action: "handshake" }) },
+      );
+      assert.equal(missingCodeRes.status, 400);
+
+      // Oversized body (> 16 KB) rejected with 413 without forwarding
+      captured = [];
+      const hugeRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/telemetry`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: "Device tok-dev-1" },
+          body: JSON.stringify({ padding: "x".repeat(17_000) }),
+        }),
+        { params: Promise.resolve({ deviceId, action: "telemetry" }) },
+      );
+      assert.equal(hugeRes.status, 413);
+      assert.equal(captured.length, 0);
+
+      // Upstream 3xx redirect fails closed (502) without following
+      upstreamHandler = (_req, res) => {
+        res.writeHead(302, { location: "https://evil.example.test/steal" });
+        res.end();
+      };
+      const redirRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/telemetry`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: "Device tok-dev-1" },
+          body: JSON.stringify({ die_temp_c: 31.2 }),
+        }),
+        { params: Promise.resolve({ deviceId, action: "telemetry" }) },
+      );
+      assert.equal(redirRes.status, 502);
+
+      // Upstream error reflection strips 422 `input` echo and `.ts.net` hostnames
+      upstreamHandler = (_req, res) => {
+        res.writeHead(422, { "content-type": "application/json" });
+        res.end(
+          JSON.stringify({
+            detail: [{ msg: "Invalid code on example-node.tail00000.ts.net", input: "0112ABCD" }],
+          }),
+        );
+      };
+      const sanitizeErrRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/handshake`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ pairing_code: "0112ABCD" }),
+        }),
+        { params: Promise.resolve({ deviceId, action: "handshake" }) },
+      );
+      assert.equal(sanitizeErrRes.status, 422);
+      const sanitizeErrText = await sanitizeErrRes.text();
+      assert.ok(!sanitizeErrText.includes("0112ABCD"), "422 input must never reflect submitted pairing_code");
+      assert.ok(!sanitizeErrText.includes(".ts.net"), "error responses must never leak tailnet hosts");
+
+      // Server-side BFF CAN reach a fake `.ts.net` configured upstream when resolved from env (never blocks prod)
+      // (already verified above when resolving URL objects without rejecting `.ts.net`)
+
+      // Heartbeat & telemetry fail closed 401 without Device Authorization header
+      for (const act of ["heartbeat", "telemetry"]) {
+        const unauthActRes = await v1DeviceActionRoute.POST(
+          new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/${act}`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ die_temp_c: 31.2 }),
+          }),
+          { params: Promise.resolve({ deviceId, action: act }) },
+        );
+        assert.equal(unauthActRes.status, 401);
+      }
+
+      // Forbidden RTMPS stream secret rejected locally (422) without touching upstream
+      captured = [];
+      const rtmpsRejectRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/handshake`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ pairing_code: "0112ABCD", rtmps_stream_key: "live_secret" }),
+        }),
+        { params: Promise.resolve({ deviceId, action: "handshake" }) },
+      );
+      assert.equal(rtmpsRejectRes.status, 422);
+      assert.equal(captured.length, 0);
+
+      // Non-string pairing_code object carrying forbidden secret key is rejected locally without touching upstream
+      captured = [];
+      const nestedSecretCodeRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/handshake`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ pairing_code: { rtmps_stream_key: "secret" } }),
+        }),
+        { params: Promise.resolve({ deviceId, action: "handshake" }) },
+      );
+      assert.equal(nestedSecretCodeRes.status, 400);
+      assert.equal(captured.length, 0);
+
+      // Invalid Bearer scheme and blank Device token fail closed 401 with private no-store cache headers
+      for (const badAuth of ["Bearer jwt-token", "Device   "]) {
+        const badAuthRes = await v1DeviceActionRoute.POST(
+          new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/heartbeat`, {
+            method: "POST",
+            headers: { authorization: badAuth },
+          }),
+          { params: Promise.resolve({ deviceId, action: "heartbeat" }) },
+        );
+        assert.equal(badAuthRes.status, 401);
+        assert.equal(badAuthRes.headers.get("cache-control"), "private, no-store");
+      }
+
+      // Heartbeat invalid JSON -> 400; heartbeat/telemetry RTMPS secret -> 422 without hitting upstream
+      captured = [];
+      const badHbJson = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/heartbeat`, {
+          method: "POST",
+          headers: { authorization: "Device tok-dev-1", "content-type": "application/json" },
+          body: "{bad",
+        }),
+        { params: Promise.resolve({ deviceId, action: "heartbeat" }) },
+      );
+      assert.equal(badHbJson.status, 400);
+      for (const act of ["heartbeat", "telemetry"]) {
+        const rtmpsActRes = await v1DeviceActionRoute.POST(
+          new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/${act}`, {
+            method: "POST",
+            headers: { authorization: "Device tok-dev-1", "content-type": "application/json" },
+            body: JSON.stringify({ stream_key: "live_abc" }),
+          }),
+          { params: Promise.resolve({ deviceId, action: act }) },
+        );
+        assert.equal(rtmpsActRes.status, 422);
+      }
+      assert.equal(captured.length, 0);
+
+      // Tailnet API_GATEWAY_URL is NOT rejected with 503 (Cloud Run sidecar reachability) and strips host on error
+      const prevHockeyApiUrl = process.env.HOCKEY_API_URL;
+      const prevApiGatewayUrl = process.env.API_GATEWAY_URL;
+      delete process.env.HOCKEY_API_URL;
+      process.env.API_GATEWAY_URL = "https://edge-proxy.tail00000.ts.net:8443";
+      const tailnetAttemptRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/heartbeat`, {
+          method: "POST",
+          headers: { authorization: "Device tok-dev-1" },
+        }),
+        { params: Promise.resolve({ deviceId, action: "heartbeat" }) },
+      );
+      assert.notEqual(tailnetAttemptRes.status, 503, "tailnet API_GATEWAY_URL must be reachable via sidecar, never 503");
+      assert.equal(tailnetAttemptRes.status, 502);
+      assert.ok(!(await tailnetAttemptRes.text()).includes(".ts.net"));
+      if (prevHockeyApiUrl !== undefined) process.env.HOCKEY_API_URL = prevHockeyApiUrl;
+      if (prevApiGatewayUrl !== undefined) process.env.API_GATEWAY_URL = prevApiGatewayUrl;
+      else delete process.env.API_GATEWAY_URL;
+
+      // Preserve 403/404/409/503 and map upstream 500 -> 502 cleanly
+      for (const [upStatus, expStatus] of [[403, 403], [404, 404], [409, 409], [503, 503], [500, 502]] as const) {
+        upstreamHandler = (_req, res) => {
+          res.writeHead(upStatus, { "content-type": "application/json" });
+          res.end(JSON.stringify({ detail: `Upstream status ${upStatus} Device tok-dev-1` }));
+        };
+        const stRes = await v1DeviceActionRoute.POST(
+          new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/telemetry`, {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: "Device tok-dev-1" },
+            body: JSON.stringify({ die_temp_c: 31.2 }),
+          }),
+          { params: Promise.resolve({ deviceId, action: "telemetry" }) },
+        );
+        assert.equal(stRes.status, expStatus);
+        assert.ok(!(await stRes.text()).includes("tok-dev-1"));
+      }
+
+      // Happy-path handshake (strips incoming Authorization/Cookie), heartbeat, telemetry (201 Created)
+      captured = [];
+      upstreamHandler = (req, res) => {
+        if (req.url.endsWith("/handshake")) {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ device: { ...sampleDeviceSnake, pairing_status: "paired" }, device_token: "tok-dev-1" }));
+        } else if (req.url.endsWith("/heartbeat")) {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ device_id: deviceId, status: "paired", last_seen_at: "2026-11-23T12:00:00Z" }));
+        } else {
+          res.writeHead(201, { "content-type": "application/json" });
+          res.end(JSON.stringify(sampleCalSnake));
+        }
+      };
+
+      const hsRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/handshake`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: "Bearer stale-user-jwt",
+            cookie: "sb-access-token=stale-cookie",
+          },
+          body: JSON.stringify({ pairing_code: "0112ABCD", mesh_service_name: "north-pod._tsai-mesh._tcp.local" }),
+        }),
+        { params: Promise.resolve({ deviceId, action: "handshake" }) },
+      );
+      assert.equal(hsRes.status, 200);
+      assert.equal(hsRes.headers.get("cache-control"), "private, no-store");
+      assert.equal(captured[0].authorization, undefined, "handshake must never forward caller Authorization");
+      assert.equal(captured[0].cookie, undefined, "handshake must never forward caller Cookie");
+      assert.equal((await hsRes.json()).device_token, "tok-dev-1");
+      assert.equal(captured[0].url, `/api/v1/byod/devices/${deviceId}/handshake`);
+
+      const hbRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/heartbeat`, {
+          method: "POST",
+          headers: { authorization: "Device tok-dev-1" },
+        }),
+        { params: Promise.resolve({ deviceId, action: "heartbeat" }) },
+      );
+      assert.equal(hbRes.status, 200);
+      assert.equal(captured[1].authorization, "Device tok-dev-1");
+      assert.equal(captured[1].url, `/api/v1/byod/devices/${deviceId}/heartbeat`);
+
+      const telRes = await v1DeviceActionRoute.POST(
+        new NextRequest(`http://localhost/api/v1/byod/devices/${deviceId}/telemetry`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: "Device tok-dev-1" },
+          body: JSON.stringify({ die_temp_c: 32.1 }),
+        }),
+        { params: Promise.resolve({ deviceId, action: "telemetry" }) },
+      );
+      assert.equal(telRes.status, 201);
+      assert.equal(captured[2].authorization, "Device tok-dev-1");
+      assert.equal(captured[2].url, `/api/v1/byod/devices/${deviceId}/telemetry`);
+      mockAccess = { status: "entitled", userId: "user-1" };
     });
 
     await runTest("BFF preserves upstream 403/404/409/503, maps drift to 502, and maps unreachable upstream to 503", async () => {

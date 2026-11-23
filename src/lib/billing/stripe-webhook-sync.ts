@@ -135,7 +135,7 @@ export async function syncSubscriptionRow(
 
 /**
  * Sync the caller's personal `public.licenses` row (`tenant_id IS NULL`).
- * Never writes `valid_from` (`OD-25` awaiting owner schema decision).
+ * Sets `valid_from` on creation and preserves an existing `valid_from` on updates (`OD-25`).
  */
 export async function syncPersonalLicenseRow(
   supabaseAdmin: SupabaseClient,
@@ -146,6 +146,7 @@ export async function syncPersonalLicenseRow(
     planSku: string | null;
     customerId: string | null;
     subscriptionId: string | null;
+    validFrom: string | null;
     validUntil: string | null;
     trialEndsAt: string | null;
     eventId: string;
@@ -155,14 +156,14 @@ export async function syncPersonalLicenseRow(
 
   const { data: existing, error: lookupErr } = await supabaseAdmin
     .from("licenses")
-    .select("id, features")
+    .select("id, features, valid_from")
     .eq("profile_id", opts.userId)
     .is("tenant_id", null)
     .maybeSingle();
 
   if (lookupErr) throw new Error(`Failed to inspect personal license: ${lookupErr.message}`);
 
-  const existingRow = existing as { id: string; features?: Record<string, unknown> | null } | null;
+  const existingRow = existing as { id: string; features?: Record<string, unknown> | null; valid_from?: string | null } | null;
   const mergedFeatures: Record<string, unknown> = {
     ...(existingRow?.features && typeof existingRow.features === "object" ? existingRow.features : {}),
     stripe_customer_id: opts.customerId,
@@ -172,6 +173,7 @@ export async function syncPersonalLicenseRow(
   };
 
   const nowIso = new Date().toISOString();
+  const hasExistingValidFrom = typeof existingRow?.valid_from === "string" && existingRow.valid_from.trim().length > 0;
   const baseFields = {
     plan_type: opts.planType,
     plan_id: opts.planId,
@@ -183,19 +185,16 @@ export async function syncPersonalLicenseRow(
   };
 
   if (existingRow?.id) {
-    const { error: updateErr } = await supabaseAdmin
-      .from("licenses")
-      .update(baseFields)
-      .eq("id", existingRow.id);
+    const patch = !hasExistingValidFrom && opts.validFrom ? { ...baseFields, valid_from: opts.validFrom } : baseFields;
+    const { error: updateErr } = await supabaseAdmin.from("licenses").update(patch).eq("id", existingRow.id);
     if (updateErr) throw new Error(`Failed to update personal license: ${updateErr.message}`);
     return;
   }
 
-  const { error: insertErr } = await supabaseAdmin.from("licenses").insert({
-    profile_id: opts.userId,
-    tenant_id: null,
-    ...baseFields,
-  });
+  const insertRow = opts.validFrom
+    ? { profile_id: opts.userId, tenant_id: null, valid_from: opts.validFrom, ...baseFields }
+    : { profile_id: opts.userId, tenant_id: null, ...baseFields };
+  const { error: insertErr } = await supabaseAdmin.from("licenses").insert(insertRow);
   if (insertErr) throw new Error(`Failed to insert personal license: ${insertErr.message}`);
 }
 
@@ -249,6 +248,7 @@ export async function applyStripeEntitlements(
     subStatus: string;
     customerId: string | null;
     subscriptionId: string | null;
+    validFrom: string | null;
     periodEnd: string | null;
     trialEnd: string | null;
     eventId: string;
@@ -272,6 +272,7 @@ export async function applyStripeEntitlements(
     planSku: opts.planSku,
     customerId: opts.customerId,
     subscriptionId: opts.subscriptionId,
+    validFrom: opts.validFrom,
     validUntil: opts.periodEnd,
     trialEndsAt: opts.trialEnd,
     eventId: opts.eventId,
