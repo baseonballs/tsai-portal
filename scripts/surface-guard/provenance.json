@@ -71,6 +71,13 @@
       "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/teams.py#create_team",
       "evidence": "src/app/api/byod/teams/route.ts"
     },
+    "route:/api/v1/byod/devices/:param/:param": {
+      "endpoint": "hockey-api POST /api/v1/byod/devices/{deviceId}/{handshake|heartbeat|telemetry}",
+      "table": "hockey_db.byod_edge_devices",
+      "writer": "user-action: POST /api/v1/teams/{teamId}/byod/devices (registers device row; handshake/heartbeat/telemetry update device state and insert calibrations)",
+      "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/byod.py#register_byod_device",
+      "evidence": "src/app/api/v1/byod/devices/[deviceId]/[action]/route.ts"
+    },
     "route:/api/telemetry/event": {
       "endpoint": "platform PostgREST POST /rest/v1/user_telemetry_events (+ user_session_journeys)",
       "table": "supabase:public.user_telemetry_events",

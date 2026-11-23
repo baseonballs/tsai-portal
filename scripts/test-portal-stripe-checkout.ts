@@ -188,8 +188,8 @@ function validateLiveTableWrite(table: string, payload: Row) {
     }
   }
   if (table === "licenses") {
-    if ("valid_from" in payload) {
-      throw new Error("FORBIDDEN: licenses.valid_from must never be written (OD-25)");
+    if (!payload.valid_from || typeof payload.valid_from !== "string" || Number.isNaN(Date.parse(payload.valid_from))) {
+      throw new Error(`licenses.valid_from must be a non-empty ISO timestamp (OD-25): ${String(payload.valid_from)}`);
     }
     if ("plan_type" in payload && !LICENSE_PLAN_TYPES.has(String(payload.plan_type))) {
       throw new Error(`licenses_plan_type_check violation: ${String(payload.plan_type)}`);
@@ -1276,7 +1276,9 @@ async function run() {
     assert.equal(db.subscriptions[0].active_plan, "PRO");
     assert.equal(db.subscriptions[0].status, "active");
     assert.equal(db.licenses[0].plan_type, "PRO");
-    assert.equal("valid_from" in db.licenses[0], false);
+    assert.equal(typeof db.licenses[0].valid_from, "string");
+    const initialValidFrom = db.licenses[0].valid_from as string;
+    assert.ok(!Number.isNaN(Date.parse(initialValidFrom)));
     assert.equal(db.user_product_licenses[0].product_id, "spotlight");
     assert.equal(db.user_product_licenses[0].status, "active");
     assert.equal(db.user_product_licenses[0].granted_via, "stripe_webhook");
@@ -1376,7 +1378,7 @@ async function run() {
     assert.equal(db.subscriptions[0].status, "canceled");
     assert.equal(db.subscriptions[0].active_plan, "FREE");
     assert.equal(db.licenses[0].plan_type, "FREE");
-    assert.equal("valid_from" in db.licenses[0], false);
+    assert.equal(db.licenses[0].valid_from, initialValidFrom);
     assert.equal(db.user_product_licenses[0].status, "revoked");
 
     // Out-of-order late event (older than evt_sub_del_1 @ 1795000400) is ignored without re-granting

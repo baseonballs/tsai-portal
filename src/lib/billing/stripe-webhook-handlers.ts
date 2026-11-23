@@ -85,6 +85,7 @@ export async function handleCheckoutCompleted(
     subStatus: "active",
     customerId,
     subscriptionId,
+    validFrom: ctx.eventCreatedAt,
     periodEnd: null,
     trialEnd: null,
     eventId: ctx.eventId,
@@ -140,8 +141,10 @@ export async function handleSubscriptionLifecycle(
   }
 
   const firstItem = sub.items?.data?.[0];
-  const itemAny = firstItem as unknown as { current_period_end?: number } | undefined;
-  const subAny = sub as unknown as { current_period_end?: number };
+  const itemAny = firstItem as unknown as { current_period_end?: number; current_period_start?: number } | undefined;
+  const subAny = sub as unknown as { current_period_end?: number; current_period_start?: number; start_date?: number };
+  const periodStart =
+    unixToIso(itemAny?.current_period_start ?? subAny.current_period_start ?? subAny.start_date) ?? ctx.eventCreatedAt;
   const periodEnd = unixToIso(itemAny?.current_period_end ?? subAny.current_period_end);
   const trialEnd = unixToIso(sub.trial_end);
 
@@ -184,6 +187,7 @@ export async function handleSubscriptionLifecycle(
       subStatus: eventType === "customer.subscription.deleted" ? "canceled" : sub.status,
       customerId,
       subscriptionId,
+      validFrom: periodStart,
       periodEnd,
       trialEnd,
       eventId: ctx.eventId,
@@ -205,6 +209,7 @@ export async function handleSubscriptionLifecycle(
     subStatus: sub.status,
     customerId,
     subscriptionId,
+    validFrom: periodStart,
     periodEnd,
     trialEnd,
     eventId: ctx.eventId,

@@ -54,6 +54,7 @@ const PUBLIC_PAGES: Record<string, string> = {
 const PUBLIC_API: Record<string, string> = {
   "src/app/api/beta-requests/route.ts": "beta sign-up intake: writes a pending request, returns nothing about anyone",
   "src/app/api/billing/stripe/webhook/route.ts": "Stripe webhook intake: authenticated by Stripe HMAC signature (stripe-signature + STRIPE_WEBHOOK_SECRET), never a browser session",
+  "src/app/api/v1/byod/devices/[deviceId]/[action]/route.ts": "bench-side BYOD device proxy: handshake validates single-use pairing code and heartbeat/telemetry require Authorization: Device <token> verified by hockey-api, never a browser session",
   "src/app/auth/callback/route.ts": "OAuth/PKCE code exchange: GoTrue verifies the code, then the licence check runs",
   "src/app/supabase/[[...path]]/route.ts": "same-origin GoTrue/PostgREST gateway; GoTrue + RLS authorise",
 };
