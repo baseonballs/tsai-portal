@@ -200,6 +200,8 @@ async function main() {
       "src/app/api/billing/stripe/connect/route.ts",
       "src/app/api/billing/hardware/checkout/route.ts",
       "src/components/commercial/ClubMonetizationWorkbench.tsx",
+      "src/app/club-revshare/page.tsx",
+      "src/components/billing/ClubRevShareDashboard.tsx",
     ]) {
       assert.equal(exists(f), false, `${f} must not exist`);
     }

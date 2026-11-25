@@ -161,11 +161,6 @@
       "writerSource": "tsai-toolchain:tier-2.3-services-ai-pipelines/hockey-api/app/api/v1/endpoints/byod.py#register_byod_device",
       "evidence": "src/app/byod-setup/page.tsx"
     },
-    "route:/club-revshare": {
-      "register": "O-06",
-      "via": "unavailable:testid:club-partner-unavailable",
-      "evidence": "src/components/billing/ClubRevShareDashboard.tsx:308"
-    },
     "route:/coachs-corner": {
       "endpoint": "POST /api/beta-requests → platform PostgREST POST /rest/v1/lead_submissions (the beta sign-up form; the page reads no other domain data)",
       "table": "supabase:public.lead_submissions",

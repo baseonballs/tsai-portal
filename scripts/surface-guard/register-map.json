@@ -24,9 +24,9 @@
     "docs:watson:LOCAL-DEV": "O-04",
     "docs:watson:design/prd-ux-system-design": "O-04",
     "docs:watson:devops/tech-stacks": "O-04",
-    "route:/api/billing/hardware/checkout": "O-06",
-    "route:/api/billing/stripe/connect": "O-06",
+    "route:/api/billing/hardware/checkout": "ledger:O-06: Club Stripe Connect onboarding, rig-kit hardware checkout & ClubMonetizationWorkbench (/club-revshare)",
+    "route:/api/billing/stripe/connect": "ledger:O-06: Club Stripe Connect onboarding, rig-kit hardware checkout & ClubMonetizationWorkbench (/club-revshare)",
     "route:/api/rosters/import": "O-07",
-    "unavailable:testid:club-partner-unavailable": "O-06"
+    "route:/club-revshare": "ledger:O-06: Club Stripe Connect onboarding, rig-kit hardware checkout & ClubMonetizationWorkbench (/club-revshare)"
   }
 }
