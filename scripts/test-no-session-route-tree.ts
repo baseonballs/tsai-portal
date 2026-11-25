@@ -36,7 +36,6 @@ const PUBLIC_PAGES: Record<string, string> = {
   "/": "marketing landing page, no account data",
   "/beta": "beta sign-up form (posts to /api/beta-requests)",
   "/byod-setup": "camera set-up guide, client-side only, reads no account data",
-  "/club-revshare": "pricing illustration, client-side only, reads no account data",
   "/coachs-corner": "marketing page, no account data",
   "/legal/privacy": "public policy (Google OAuth consent screen links it)",
   "/legal/terms": "public policy (Google OAuth consent screen links it)",

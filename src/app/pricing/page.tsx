@@ -443,18 +443,18 @@ export default function PricingPage() {
 
             </div>
 
-            {/* TRANSCEND VISION COMMERCIAL and 50% CLUB REV-SHARE SECTION */}
+            {/* TRANSCEND VISION BYOD CAPTURE SECTION */}
             <div className="mb-12 border-t border-white/10 pt-16">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div>
                   <div className="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 mb-2">
-                    <Sparkles className="w-4 h-4" /> Transcend Vision Commercial Model
+                    <Sparkles className="w-4 h-4" /> Transcend Vision BYOD Model
                   </div>
                   <h2 className="text-2xl md:text-3xl font-serif text-white">
-                    BYOD Zero-Capex Capture and 50% Club Rev-Share
+                    BYOD Zero-Capex Rinkside Capture
                   </h2>
                   <p className="text-sm text-zinc-400 mt-1 max-w-2xl font-light">
-                    Transforming sports video economics: Free 4K capture, zero hardware capex, and 50% of every family subscription paid back directly to your youth club travel fund.
+                    Free 4K rinkside capture using existing iPhones or iPads on arena glass, paired with your team and family streaming workflows.
                   </p>
                 </div>
                 <div className="flex gap-3">
@@ -465,10 +465,10 @@ export default function PricingPage() {
                     BYOD Setup Wizard <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <Link
-                    href="/club-revshare"
+                    href="/beta"
                     className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-xs font-mono font-bold text-zinc-950 transition-all flex items-center gap-1.5"
                   >
-                    Rev-Share Calculator <ArrowRight className="w-3.5 h-3.5" />
+                    Club Beta Inquiry <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
@@ -525,34 +525,34 @@ export default function PricingPage() {
                   </div>
                 </div>
 
-                {/* TIER B: PRO FAMILY PASS (50% REV-SHARE HERO) */}
+                {/* TIER B: CLUB STREAMING INQUIRY */}
                 <div className="group relative rounded-3xl border border-cyan-500/50 bg-gradient-to-b from-cyan-950/30 via-zinc-900/50 to-zinc-950 p-8 backdrop-blur-md flex flex-col justify-between shadow-[0_0_40px_rgba(6,182,212,0.15)] hover:border-cyan-400 transition-all">
                   <div className="absolute -top-3 left-8 bg-gradient-to-r from-cyan-500 to-sky-600 px-3.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-white uppercase tracking-wider shadow-md">
-                    50% Club Rev-Share
+                    Club Onboarding
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-4 mt-1">
                       <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">
-                        Family Pass
+                        Club Streaming
                       </span>
                       <Sparkles className="w-5 h-5 text-cyan-400" />
                     </div>
 
-                    <h3 className="font-serif text-2xl text-white font-medium">Transcend Pro Family</h3>
+                    <h3 className="font-serif text-2xl text-white font-medium">Club Broadcast Access</h3>
                     <p className="mt-2 text-xs text-zinc-300 font-light leading-relaxed">
-                      For parents and relatives. 50% ($4.99/mo or $39.50/yr) goes directly into your youth team&apos;s fundraising wallet.
+                      For youth clubs and associations onboarding teams for live rinkside streaming and shift film workflows.
                     </p>
 
                     <div className="mt-6 mb-8 flex items-baseline gap-2">
-                      <span className="text-4xl font-serif font-bold text-white">$9.99</span>
-                      <span className="text-xs text-zinc-400 font-mono">/ mo or $79 / yr</span>
+                      <span className="text-4xl font-serif font-bold text-white">Beta</span>
+                      <span className="text-xs text-zinc-400 font-mono">/ club program inquiry</span>
                     </div>
 
                     <ul className="space-y-3.5 text-xs text-zinc-200 border-t border-white/10 pt-6">
                       <li className="flex items-start gap-2.5">
                         <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                        <span><strong className="text-cyan-300">50% Net Revenue Share</strong> deposited to your club</span>
+                        <span>Multi-device BYOD rinkside pairing via BenchHub</span>
                       </li>
                       <li className="flex items-start gap-2.5">
                         <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
@@ -571,10 +571,10 @@ export default function PricingPage() {
 
                   <div className="mt-8 pt-6 border-t border-white/10">
                     <Link
-                      href="/club-revshare"
+                      href="/beta"
                       className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 hover:opacity-95 py-3 text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/40 transition-all font-mono"
                     >
-                      <span>Calculate Team Payout</span>
+                      <span>Apply for Club Beta</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>

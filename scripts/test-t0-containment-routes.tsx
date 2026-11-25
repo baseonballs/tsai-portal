@@ -15,7 +15,6 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { NameMatcher, loadRealNameList } from "./lib/real-names";
 
-import ClubRevSharePage from "../src/app/club-revshare/page";
 import TournamentDirectorPage from "../src/app/tournament/director/page";
 import BYODSetupPage from "../src/app/byod-setup/page";
 import { ByodCalibrationReadout } from "../src/components/vision/ByodCalibrationReadout";
@@ -73,38 +72,23 @@ if (listVerdict.verdict !== "ok") {
 }
 const matcher = new NameMatcher(listVerdict.data);
 const realNameHits = (text: string) => matcher.hits(text).length;
-function textOfTestId(html: string, id: string): string {
-  const start = html.indexOf(`data-testid="${id}"`);
-  assert.ok(start >= 0, `marker ${id} missing`);
-  const open = html.lastIndexOf("<", start);
-  const tag = html.slice(open + 1).match(/^[a-z0-9]+/)![0];
-  let depth = 0;
-  const re = new RegExp(`<(/?)${tag}\\b[^>]*>`, "g");
-  re.lastIndex = open;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(html))) {
-    depth += m[1] ? -1 : 1;
-    if (depth === 0) return html.slice(open, m.index + m[0].length).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  }
-  throw new Error(`unterminated ${id}`);
-}
 
 console.log("\n=== Portal containment & Wave 5 cleanup verification ===\n");
 
-console.log("O-08 / O-06 /club-revshare");
-check("partner block says not yet available and names no club", () => {
-  const html = render(<ClubRevSharePage />);
-  assert.match(html, /data-testid="club-partner-unavailable"/);
-  assert.match(html, /Club partner payouts: not yet available/);
-  assert.doesNotMatch(html, /acct_/, "no invented Stripe Connect account");
-  assert.doesNotMatch(html, /Next Payout|Active Direct Deposit|Stripe Connect Account/i, "no invented payout schedule");
-  assert.doesNotMatch(html, /Direct deposit to team bank account/i);
-  assert.equal(
-    textOfTestId(html, "club-partner-unavailable"),
-    "Club partner payouts: not yet available No club is connected and no payouts are made today. The figures above are a calculator, not account data.",
-    "the partner block names no partner",
-  );
-  assert.equal(realNameHits(html), 0, "no listed real name on /club-revshare");
+console.log("O-06 retired /club-revshare & ClubRevShareDashboard (OD-21)");
+check("O-06 route, dashboard, calculators, and pricing rev-share claims are deleted", () => {
+  for (const retiredPath of [
+    "src/app/club-revshare/page.tsx",
+    "src/components/billing/ClubRevShareDashboard.tsx",
+    "src/lib/billing/club-rev-share.ts",
+    "src/lib/commercial/club-revenue-calculator.ts",
+  ]) {
+    assert.equal(existsSync(join(ROOT, retiredPath)), false, `${retiredPath} must be deleted`);
+  }
+  const pricingCode = code("src/app/pricing/page.tsx");
+  assert.doesNotMatch(pricingCode, /\/club-revshare|ClubRevShareDashboard/);
+  assert.doesNotMatch(pricingCode, /Rev-Share|fundraising wallet|Net Revenue Share/i);
+  assert.equal(realNameHits(src("src/app/pricing/page.tsx")), 0, "no listed real name on /pricing");
 });
 
 console.log("O-01 /tournament/director (live B8 wiring)");
